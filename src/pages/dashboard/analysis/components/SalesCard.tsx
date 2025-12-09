@@ -13,10 +13,11 @@ const rankingListData: {
   total: number;
 }[] = [];
 
+const interestGroups = ['篮球俱乐部', '前端开发交流', '摄影爱好者', '原神交流群', '考研互助', '桌游社', '街舞团'];
 for (let i = 0; i < 7; i += 1) {
   rankingListData.push({
-    title: `工专路 ${i} 号店`,
-    total: 323234,
+    title: interestGroups[i],
+    total: 323234 - i * 10000,
   });
 }
 
@@ -97,7 +98,7 @@ const SalesCard = ({
         items={[
           {
             key: 'sales',
-            label: '销售额',
+            label: '用户活跃',
             children: (
               <Row>
                 <Col xl={16} lg={12} md={12} sm={24} xs={24}>
@@ -122,7 +123,7 @@ const SalesCard = ({
                         x: { paddingInner: 0.4 },
                       }}
                       tooltip={{
-                        name: '销售量',
+                        name: '活跃用户',
                         channel: 'y',
                       }}
                     />
@@ -130,14 +131,13 @@ const SalesCard = ({
                 </Col>
                 <Col xl={8} lg={12} md={12} sm={24} xs={24}>
                   <div className={styles.salesRank}>
-                    <h4 className={styles.rankingTitle}>门店销售额排名</h4>
+                    <h4 className={styles.rankingTitle}>热门兴趣小组排名</h4>
                     <ul className={styles.rankingList}>
                       {rankingListData.map((item, i) => (
                         <li key={item.title}>
                           <span
-                            className={`${styles.rankingItemNumber} ${
-                              i < 3 ? styles.rankingItemNumberActive : ''
-                            }`}
+                            className={`${styles.rankingItemNumber} ${i < 3 ? styles.rankingItemNumberActive : ''
+                              }`}
                           >
                             {i + 1}
                           </span>
@@ -158,7 +158,7 @@ const SalesCard = ({
           },
           {
             key: 'views',
-            label: '访问量',
+            label: '帖子热度',
             children: (
               <Row>
                 <Col xl={16} lg={12} md={12} sm={24} xs={24}>
@@ -181,7 +181,7 @@ const SalesCard = ({
                         x: { paddingInner: 0.4 },
                       }}
                       tooltip={{
-                        name: '访问量',
+                        name: '帖子数',
                         channel: 'y',
                       }}
                     />
@@ -189,16 +189,15 @@ const SalesCard = ({
                 </Col>
                 <Col xl={8} lg={12} md={12} sm={24} xs={24}>
                   <div className={styles.salesRank}>
-                    <h4 className={styles.rankingTitle}>门店访问量排名</h4>
+                    <h4 className={styles.rankingTitle}>热门话题排名</h4>
                     <ul className={styles.rankingList}>
                       {rankingListData.map((item, i) => (
                         <li key={item.title}>
                           <span
-                            className={`${
-                              i < 3
-                                ? styles.rankingItemNumberActive
-                                : styles.rankingItemNumber
-                            }`}
+                            className={`${i < 3
+                              ? styles.rankingItemNumberActive
+                              : styles.rankingItemNumber
+                              }`}
                           >
                             {i + 1}
                           </span>

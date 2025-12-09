@@ -31,18 +31,18 @@ const IntroduceRow = ({
       <Col {...topColResponsiveProps}>
         <ChartCard
           bordered={false}
-          title="总销售额"
+          title="总用户数"
           action={
-            <Tooltip title="指标说明">
+            <Tooltip title="平台注册用户总量">
               <InfoCircleOutlined />
             </Tooltip>
           }
           loading={loading}
-          total={() => <Yuan>126560</Yuan>}
+          total={() => <span>126,560</span>}
           footer={
             <Field
-              label="日销售额"
-              value={`￥${numeral(12423).format('0,0')}`}
+              label="日新增用户"
+              value={numeral(123).format('0,0')}
             />
           }
           contentHeight={46}
@@ -56,7 +56,7 @@ const IntroduceRow = ({
             周同比
             <span className={styles.trendText}>12%</span>
           </Trend>
-          <Trend flag="down">
+          <Trend flag="up">
             日同比
             <span className={styles.trendText}>11%</span>
           </Trend>
@@ -67,15 +67,15 @@ const IntroduceRow = ({
         <ChartCard
           bordered={false}
           loading={loading}
-          title="访问量"
+          title="日活跃用户"
           action={
-            <Tooltip title="指标说明">
+            <Tooltip title="每日登录用户数">
               <InfoCircleOutlined />
             </Tooltip>
           }
           total={numeral(8846).format('0,0')}
           footer={
-            <Field label="日访问量" value={numeral(1234).format('0,0')} />
+            <Field label="周均活跃" value={numeral(8134).format('0,0')} />
           }
           contentHeight={46}
         >
@@ -99,14 +99,14 @@ const IntroduceRow = ({
         <ChartCard
           bordered={false}
           loading={loading}
-          title="支付笔数"
+          title="新增帖子"
           action={
-            <Tooltip title="指标说明">
+            <Tooltip title="每日新增帖子数量">
               <InfoCircleOutlined />
             </Tooltip>
           }
           total={numeral(6560).format('0,0')}
-          footer={<Field label="转化率" value="60%" />}
+          footer={<Field label="用户互动率" value="60%" />}
           contentHeight={46}
         >
           <Column
@@ -124,13 +124,13 @@ const IntroduceRow = ({
         <ChartCard
           loading={loading}
           bordered={false}
-          title="运营活动效果"
+          title="待处理举报"
           action={
-            <Tooltip title="指标说明">
+            <Tooltip title="需要人工介入处理的举报">
               <InfoCircleOutlined />
             </Tooltip>
           }
-          total="78%"
+          total="12"
           footer={
             <div
               style={{
@@ -138,19 +138,7 @@ const IntroduceRow = ({
                 overflow: 'hidden',
               }}
             >
-              <Trend
-                flag="up"
-                style={{
-                  marginRight: 16,
-                }}
-              >
-                周同比
-                <span className={styles.trendText}>12%</span>
-              </Trend>
-              <Trend flag="down">
-                日同比
-                <span className={styles.trendText}>11%</span>
-              </Trend>
+              <Field label="今日已处理" value="45" />
             </div>
           }
           contentHeight={46}

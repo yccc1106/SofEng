@@ -25,7 +25,7 @@ const ProportionSales = ({
       loading={loading}
       className={styles.salesCard}
       variant="borderless"
-      title="销售额类别占比"
+      title="用户画像分布"
       style={{
         height: '100%',
       }}
@@ -37,16 +37,16 @@ const ProportionSales = ({
             value={salesType}
             onChange={handleChangeSalesType}
             options={[
-              { label: '全部渠道', value: 'all' },
-              { label: '线上', value: 'online' },
-              { label: '门店', value: 'stores' },
+              { label: '性别分布', value: 'all' },
+              { label: '年龄分布', value: 'online' },
+              { label: '兴趣分布', value: 'stores' },
             ]}
             size="middle"
           />
         </div>
       }
     >
-      <Text>销售额</Text>
+      <Text>用户占比</Text>
       <Pie
         height={340}
         radius={0.8}
