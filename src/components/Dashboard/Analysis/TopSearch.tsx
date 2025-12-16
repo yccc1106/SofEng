@@ -3,9 +3,9 @@ import { Area } from '@ant-design/plots';
 import { Card, Col, Row, Table, Tooltip } from 'antd';
 import numeral from 'numeral';
 import React from 'react';
-import type { DataItem } from './data.d';
-import NumberInfo from './NumberInfo';
-import Trend from './Trend';
+import type { DataItem } from '@/types/analysis';
+import NumberInfo from '@/components/Shared/NumberInfo';
+import Trend from '@/components/Shared/Trend';
 
 const TopSearch = ({
   loading,

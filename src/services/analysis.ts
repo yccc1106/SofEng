@@ -1,5 +1,5 @@
 
-import type { AnalysisData } from './data';
+import type { AnalysisData } from '@/types/analysis';
 
 export async function fakeChartData(): Promise<AnalysisData> {
   try {

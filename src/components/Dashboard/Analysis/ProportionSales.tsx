@@ -2,7 +2,7 @@ import { Pie } from '@ant-design/plots';
 import { Card, Segmented, Typography } from 'antd';
 import numeral from 'numeral';
 import React from 'react';
-import type { DataItem } from './data.d';
+import type { DataItem } from '@/types/analysis';
 import useStyles from './style.style';
 
 const { Text } = Typography;

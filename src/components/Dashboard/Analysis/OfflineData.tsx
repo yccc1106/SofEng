@@ -1,8 +1,8 @@
 import { Line, Tiny } from '@ant-design/plots';
 import { Card, Col, Row, Tabs } from 'antd';
-import type { DataItem, OfflineDataType } from './data.d';
+import type { DataItem, OfflineDataType } from '@/types/analysis';
 import useStyles from './style.style';
-import NumberInfo from './NumberInfo';
+import NumberInfo from '@/components/Shared/NumberInfo';
 
 const CustomTab = ({
   data,

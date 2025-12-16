@@ -9,15 +9,15 @@ import type { FC } from 'react';
 import { Suspense, useState } from 'react';
 import IntroduceRow from './IntroduceRow';
 import OfflineData from './OfflineData';
-import PageLoading from './PageLoading';
+import PageLoading from '@/components/Shared/PageLoading';
 import ProportionSales from './ProportionSales';
 import type { TimeType } from './SalesCard';
 import SalesCard from './SalesCard';
 import TopSearch from './TopSearch';
-import type { AnalysisData } from './data.d';
-import { fakeChartData } from './service';
+import type { AnalysisData } from '@/types/analysis';
+import { fakeChartData } from '@/services/analysis';
 import useStyles from './style.style';
-import { getTimeDistance } from './utils/utils';
+import { getTimeDistance } from '@/utils';
 
 type RangePickerValue = RangePickerProps['value'];
 type AnalysisProps = {

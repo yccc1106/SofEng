@@ -2,7 +2,7 @@ import { Column } from '@ant-design/plots';
 import { Button, Card, Col, DatePicker, Row, Tabs } from 'antd';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import numeral from 'numeral';
-import type { DataItem } from './data.d';
+import type { DataItem } from '@/types/analysis';
 import useStyles from './style.style';
 
 export type TimeType = 'today' | 'week' | 'month' | 'year';

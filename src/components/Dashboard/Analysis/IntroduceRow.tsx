@@ -2,11 +2,11 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import { Area, Column } from '@ant-design/plots';
 import { Col, Progress, Row, Tooltip } from 'antd';
 import numeral from 'numeral';
-import type { DataItem } from './data.d';
+import type { DataItem } from '@/types/analysis';
 import useStyles from './style.style';
-import Yuan from './utils/Yuan';
-import { ChartCard, Field } from './Charts';
-import Trend from './Trend';
+import Yuan from '@/components/Shared/Yuan';
+import { ChartCard, Field } from '@/components/Charts';
+import Trend from '@/components/Shared/Trend';
 
 const topColResponsiveProps = {
   xs: 24,

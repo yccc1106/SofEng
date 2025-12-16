@@ -1,5 +1,5 @@
 import React from 'react';
-import { yuan } from '../components/Charts';
+import { yuan } from '@/components/Charts';
 /** 减少使用 dangerouslySetInnerHTML */
 export default class Yuan extends React.Component<{
   children: string | number;
