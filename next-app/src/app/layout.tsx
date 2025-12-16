@@ -5,6 +5,8 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 
+import BasicLayout from "@/components/Layout/BasicLayout";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -32,7 +34,9 @@ export default function RootLayout({
       >
         <AntdRegistry>
           <ConfigProvider locale={zhCN}>
-            {children}
+            <BasicLayout>
+              {children}
+            </BasicLayout>
           </ConfigProvider>
         </AntdRegistry>
       </body>
