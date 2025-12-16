@@ -1,10 +1,23 @@
 'use client';
-import { ProLayout } from '@ant-design/pro-components';
-import { Dropdown } from 'antd';
+// import { ProLayout } from '@ant-design/pro-components'; // Removed
+import { Dropdown, Spin } from 'antd';
 import { LogoutOutlined, UserOutlined, DashboardOutlined, MessageOutlined, SafetyOutlined, TagsOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import React from 'react';
+import dynamic from 'next/dynamic';
+
+const ProLayout = dynamic(
+    () => import('@ant-design/pro-components').then((mod) => mod.ProLayout),
+    {
+        ssr: false,
+        loading: () => (
+            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Spin size="large" />
+            </div>
+        )
+    }
+);
 
 export default function BasicLayout({
     children,
