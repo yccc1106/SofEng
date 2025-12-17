@@ -75,19 +75,37 @@ const Suggestions: React.FC = () => {
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ",
+                breadcrumb: {},
+            }}
+            className="p-0"
+        >
             <ProTable<SuggestionItem>
-                headerTitle="用户建议列表"
+                headerTitle="User Suggestions"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light',
+                }}
+                cardBordered
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
                 }}
                 request={async (params) => {
                     const res = await fetch('/api/admin/feedback?type=SUGGESTION');
                     return await res.json();
                 }}
                 columns={columns}
+                className="bg-white rounded-lg shadow-sm"
             />
         </PageContainer>
     );

@@ -63,17 +63,34 @@ const InterestManage: React.FC = () => {
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ",
+                breadcrumb: {},
+            }}
+            className="p-0"
+        >
             <ProTable<InterestItem>
-                headerTitle="兴趣分类管理"
+                headerTitle="Interest Categories"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light',
+                }}
+                cardBordered
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
                 }}
                 toolBarRender={() => [
                     <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => message.info('新建分类')}>
-                        新建
+                        Add Category
                     </Button>,
                 ]}
                 request={async () => {
@@ -84,6 +101,7 @@ const InterestManage: React.FC = () => {
                     };
                 }}
                 columns={columns}
+                className="bg-white rounded-lg shadow-sm"
             />
         </PageContainer>
     );

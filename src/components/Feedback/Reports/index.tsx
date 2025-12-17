@@ -73,19 +73,37 @@ const Reports: React.FC = () => {
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ",
+                breadcrumb: {},
+            }}
+            className="p-0"
+        >
             <ProTable<ReportItem>
-                headerTitle="举报处理列表"
+                headerTitle="Report Management"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light',
+                }}
+                cardBordered
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
                 }}
                 request={async (params) => {
                     const res = await fetch('/api/admin/feedback?type=REPORT');
                     return await res.json();
                 }}
                 columns={columns}
+                className="bg-white rounded-lg shadow-sm"
             />
         </PageContainer>
     );

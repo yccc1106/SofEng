@@ -37,7 +37,10 @@ const Trend: React.FC<TrendProps> = ({
     >
       <span>{children}</span>
       {flag && (
-        <span className={styles[flag]}>
+        <span className={classNames(styles[flag], {
+          'text-red-500': flag === 'up',
+          'text-green-500': flag === 'down'
+        }, "ml-1")}>
           {flag === 'up' ? <CaretUpOutlined /> : <CaretDownOutlined />}
         </span>
       )}

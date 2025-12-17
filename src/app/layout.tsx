@@ -35,7 +35,34 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AntdRegistry>
-          <ConfigProvider locale={zhCN}>
+          <ConfigProvider
+            locale={zhCN}
+            theme={{
+              token: {
+                // Global Token Overrides
+                colorPrimary: '#1877F2', // Match CSS --primary
+                borderRadius: 8,
+                fontFamily: 'var(--font-geist-sans)',
+                colorBgLayout: '#F9FAFB', // Match CSS --surface-50
+                colorTextBase: '#111827',
+              },
+              components: {
+                Layout: {
+                  bodyBg: '#F9FAFB',
+                  headerBg: '#FFFFFF',
+                },
+                Menu: {
+                  itemBorderRadius: 8,
+                  itemSelectedBg: 'rgba(24, 119, 242, 0.1)',
+                  itemSelectedColor: '#1877F2',
+                },
+                Button: {
+                  borderRadius: 6,
+                  controlHeight: 36,
+                }
+              }
+            }}
+          >
             <App>
               <SessionProvider>
                 <BasicLayout>

@@ -98,6 +98,7 @@ const ChartCard: React.FC<ChartCardProps> = (props) => {
   return (
     <Card
       loading={loading}
+      className={classNames("bg-white rounded-lg shadow-sm", rest.className)}
       styles={{
         body: {
           padding: '20px 24px 8px 24px',

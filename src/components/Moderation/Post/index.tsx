@@ -98,13 +98,30 @@ const PostModeration: React.FC = () => {
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ", // Hide default title
+                breadcrumb: {}, // Hide breadcrumb if redundant
+            }}
+            className="p-0"
+        >
             <ProTable<PostItem>
-                headerTitle="帖子内容审核"
+                headerTitle="Moderation Queue"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light', // Cleaner search
+                }}
+                cardBordered // Adds a subtle border, matching the card aesthetic
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
                 }}
                 request={async (params) => {
                     // params contains pageSize, current, and filters
@@ -114,6 +131,7 @@ const PostModeration: React.FC = () => {
                     return await res.json();
                 }}
                 columns={columns}
+                className="bg-white rounded-lg shadow-sm" // Ensure container has rounded corners/shadow
             />
         </PageContainer>
     );

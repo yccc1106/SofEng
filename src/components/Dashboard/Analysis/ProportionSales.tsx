@@ -23,7 +23,7 @@ const ProportionSales = ({
   return (
     <Card
       loading={loading}
-      className={styles.salesCard}
+      className={`${styles.salesCard} bg-white rounded-lg shadow-sm`}
       variant="borderless"
       title="用户画像分布"
       style={{

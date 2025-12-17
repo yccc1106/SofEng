@@ -41,6 +41,7 @@ const SalesCard = ({
     <Card
       loading={loading}
       variant="borderless"
+      className="bg-white rounded-lg shadow-sm"
       styles={{
         body: {
           padding: loading ? 24 : 0,

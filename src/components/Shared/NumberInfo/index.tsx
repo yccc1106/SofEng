@@ -29,12 +29,12 @@ const NumberInfo: React.FC<NumberInfoProps> = ({
     <div
       className={classNames({
         [styles[`numberInfo${theme}` as keyof typeof styles]]: !!theme,
-      })}
+      }, "font-sans")} // Enforce Geist font
       {...rest}
     >
       {title && (
         <div
-          className={styles.numberInfoTitle}
+          className={classNames(styles.numberInfoTitle, "text-gray-500 text-sm mb-2")}
           title={typeof title === 'string' ? title : ''}
         >
           {title}
@@ -42,33 +42,33 @@ const NumberInfo: React.FC<NumberInfoProps> = ({
       )}
       {subTitle && (
         <div
-          className={styles.numberInfoSubTitle}
+          className={classNames(styles.numberInfoSubTitle, "text-gray-400 text-xs mb-2")}
           title={typeof subTitle === 'string' ? subTitle : ''}
         >
           {subTitle}
         </div>
       )}
       <div
-        className={styles.numberInfoValue}
+        className={classNames(styles.numberInfoValue, "text-3xl font-semibold text-gray-900")}
         style={
           gap
             ? {
-                marginTop: gap,
-              }
+              marginTop: gap,
+            }
             : {}
         }
       >
         <span>
           {total}
-          {suffix && <em className={styles.suffix}>{suffix}</em>}
+          {suffix && <em className={classNames(styles.suffix, "text-gray-500 text-base font-normal ml-1 not-italic")}>{suffix}</em>}
         </span>
         {(status || subTotal) && (
-          <span className={styles.subTotal}>
+          <span className={classNames(styles.subTotal, "text-gray-500 text-base ml-2")}>
             {subTotal}
             {status && status === 'up' ? (
-              <CaretUpOutlined />
+              <CaretUpOutlined className="text-red-500 ml-1" />
             ) : (
-              <CaretDownOutlined />
+              <CaretDownOutlined className="text-green-500 ml-1" />
             )}
           </span>
         )}
