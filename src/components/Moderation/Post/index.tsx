@@ -103,7 +103,6 @@ const PostModeration: React.FC = () => {
                 title: " ", // Hide default title
                 breadcrumb: {}, // Hide breadcrumb if redundant
             }}
-            className="p-0"
         >
             <ProTable<PostItem>
                 headerTitle="Moderation Queue"
@@ -131,7 +130,6 @@ const PostModeration: React.FC = () => {
                     return await res.json();
                 }}
                 columns={columns}
-                className="bg-white rounded-lg shadow-sm" // Ensure container has rounded corners/shadow
             />
         </PageContainer>
     );

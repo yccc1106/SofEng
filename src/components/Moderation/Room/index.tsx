@@ -76,7 +76,6 @@ const RoomModeration: React.FC = () => {
                 title: " ",
                 breadcrumb: {},
             }}
-            className="p-0"
         >
             <ProTable<RoomItem>
                 headerTitle="Room Moderation"
@@ -104,7 +103,6 @@ const RoomModeration: React.FC = () => {
                     };
                 }}
                 columns={columns}
-                className="bg-white rounded-lg shadow-sm"
             />
         </PageContainer>
     );

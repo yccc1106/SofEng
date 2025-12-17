@@ -78,7 +78,6 @@ const ChatModeration: React.FC = () => {
                 title: " ",
                 breadcrumb: {},
             }}
-            className="p-0"
         >
             <ProTable<ChatItem>
                 headerTitle="Chat Moderation"
@@ -106,7 +105,6 @@ const ChatModeration: React.FC = () => {
                     };
                 }}
                 columns={columns}
-                className="bg-white rounded-lg shadow-sm"
             />
         </PageContainer>
     );

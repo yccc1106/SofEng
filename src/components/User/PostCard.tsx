@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Card, Avatar, Typography, Space, Button, Tag, Divider } from 'antd';
+import { Card, Avatar, Typography, Space, Button, Tag, Divider, Flex, theme } from 'antd';
 import { LikeOutlined, StarOutlined, MessageOutlined, EllipsisOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -15,65 +15,83 @@ interface PostProps {
 }
 
 const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
+    const { token } = theme.useToken();
+    const actions = showActions ? [
+        <Button key="like" type="text" icon={<LikeOutlined />} size="small" style={{ fontSize: 12, color: token.colorTextSecondary }}>
+            {post._count?.likes || 0}
+        </Button>,
+        <Button key="comment" type="text" icon={<MessageOutlined />} size="small" style={{ fontSize: 12, color: token.colorTextSecondary }}>
+            Comment
+        </Button>,
+        <Button key="collect" type="text" icon={<StarOutlined />} size="small" style={{ fontSize: 12, color: token.colorTextSecondary }}>
+            {post._count?.collections || 0}
+        </Button>
+    ] : undefined;
+
     return (
         <Card
-            className="mb-4 shadow-sm border-0 rounded-lg"
+            style={{
+                marginBottom: 16,
+                borderRadius: token.borderRadiusLG,
+                border: 'none',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            }}
             styles={{ body: { padding: '16px' } }}
+            actions={actions}
         >
-            <div className="flex items-start mb-3">
-                <Avatar src={post.author?.image} className="mr-3 flex-shrink-0" />
-                <div className="flex-1">
-                    <div className="flex justify-between">
-                        <h4 className="font-bold text-gray-900 m-0">{post.author?.name}</h4>
-                        <span className="text-gray-400 text-xs">{dayjs(post.createdAt).fromNow()}</span>
-                    </div>
-                    <div className="text-gray-500 text-xs">{post.author?.school} | {post.author?.role === 'ADMIN' ? 'Administrator' : 'Student'}</div>
+            <Flex align="start" style={{ marginBottom: 12 }}>
+                <Avatar src={post.author?.image} style={{ marginRight: 12, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                    <Flex justify="space-between">
+                        <h4 style={{ margin: 0, fontWeight: 'bold', fontSize: 16, color: token.colorTextBase }}>{post.author?.name}</h4>
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>{dayjs(post.createdAt).fromNow()}</Typography.Text>
+                    </Flex>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {post.author?.school} | {post.author?.role === 'ADMIN' ? 'Administrator' : 'Student'}
+                    </Typography.Text>
                 </div>
-            </div>
+            </Flex>
 
-            <Title level={5} className="mt-0 mb-2">{post.title}</Title>
+            <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>{post.title}</Title>
 
             <Paragraph
                 ellipsis={{ rows: 3, expandable: true, symbol: 'more' }}
-                className="text-gray-700"
+                style={{ color: token.colorText }}
             >
                 {post.content}
             </Paragraph>
 
             {post.images && post.images.length > 0 && (
-                <div className="flex gap-2 mb-3 overflow-x-auto">
+                <Flex gap={8} style={{ marginBottom: 12, overflowX: 'auto' }}>
                     {/* Placeholder for images, real app would use <Image /> */}
                     {post.images.map((img: string, idx: number) => (
-                        <div key={idx} className="h-24 w-24 bg-gray-200 rounded-md flex-shrink-0 flex items-center justify-center text-xs text-gray-500">
+                        <div
+                            key={idx}
+                            style={{
+                                height: 96,
+                                width: 96,
+                                backgroundColor: token.colorFillContent,
+                                borderRadius: token.borderRadiusSM,
+                                flexShrink: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 12,
+                                color: token.colorTextSecondary,
+                            }}
+                        >
                             Image {idx + 1}
                         </div>
                     ))}
-                </div>
+                </Flex>
             )}
 
             {post.tags && (
-                <div className="mb-3">
+                <Space style={{ marginBottom: 12 }} wrap>
                     {post.tags.map((tag: string) => (
-                        <Tag key={tag} className="text-xs">{tag}</Tag>
+                        <Tag key={tag} style={{ fontSize: 12 }}>{tag}</Tag>
                     ))}
-                </div>
-            )}
-
-            {showActions && (
-                <>
-                    <Divider className="my-2" />
-                    <div className="flex justify-around text-gray-500">
-                        <Button type="text" icon={<LikeOutlined />} size="small" className="text-gray-500 text-xs">
-                            {post._count?.likes || 0}
-                        </Button>
-                        <Button type="text" icon={<MessageOutlined />} size="small" className="text-gray-500 text-xs">
-                            Comment
-                        </Button>
-                        <Button type="text" icon={<StarOutlined />} size="small" className="text-gray-500 text-xs">
-                            {post._count?.collections || 0}
-                        </Button>
-                    </div>
-                </>
+                </Space>
             )}
         </Card>
     );
