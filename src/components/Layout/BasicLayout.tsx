@@ -27,67 +27,98 @@ export default function BasicLayout({
     const router = useRouter();
     const pathname = usePathname();
 
+    // If user route (except login potentially, but generally all user routes), bypass Admin Layout
+    if (pathname?.startsWith('/user')) {
+        return <div className="min-h-screen bg-gray-50">{children}</div>;
+    }
+
     return (
         <ProLayout
-            title="Next.js Admin"
-            logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+            title="Admin Console"
+            logo={null} // Minimalist: specific logo or just text. Let's use text title as primary.
             location={{
                 pathname,
             }}
             layout="mix"
+            siderWidth={240}
+            defaultCollapsed={false}
+            breakpoint="xl"
+
+            // Minimalist tokens for ProLayout
+            token={{
+                header: {
+                    heightLayoutHeader: 56,
+                    colorBgHeader: 'rgba(255,255,255,0.8)', // Glass effect base
+                },
+                sider: {
+                    colorMenuBackground: '#F9FAFB', // Match surface
+                    colorBgMenuItemSelected: 'rgba(24, 119, 242, 0.08)',
+                    colorTextMenuSelected: '#1877F2',
+                },
+                pageContainer: {
+                    paddingBlockPageContainerContent: 24,
+                    paddingInlinePageContainerContent: 40,
+                }
+            }}
+
+            // Custom Header Render for Glass effect
+            headerContentRender={() => <div className="text-sm text-gray-500">Welcome back</div>}
+
             splitMenus={false}
             menuItemRender={(item, dom) => (
-                <Link href={item.path || '/'}>{dom}</Link>
+                <Link href={item.path || '/'} className="flex items-center gap-2">
+                    {dom}
+                </Link>
             )}
             route={{
                 routes: [
                     {
                         path: '/dashboard',
-                        name: '数据统计及可视化',
+                        name: 'Overview', // Simpler name
                         icon: <DashboardOutlined />,
                     },
                     {
                         path: '/feedback',
-                        name: '用户反馈处理',
+                        name: 'Feedback',
                         icon: <MessageOutlined />,
                         routes: [
                             {
                                 path: '/feedback/suggestions',
-                                name: '用户建议处理',
+                                name: 'Suggestions',
                             },
                             {
                                 path: '/feedback/reports',
-                                name: '用户举报处理',
+                                name: 'Reports',
                             },
                         ],
                     },
                     {
                         path: '/moderation',
-                        name: '内容审核',
+                        name: 'Moderation',
                         icon: <SafetyOutlined />,
                         routes: [
                             {
                                 path: '/moderation/chat',
-                                name: '聊天内容审核',
+                                name: 'Chat',
                             },
                             {
                                 path: '/moderation/post',
-                                name: '帖子内容审核',
+                                name: 'Posts',
                             },
                             {
                                 path: '/moderation/room',
-                                name: '房间规范审核',
+                                name: 'Rooms',
                             },
                         ],
                     },
                     {
                         path: '/interest',
-                        name: '兴趣分类管理',
+                        name: 'Interests',
                         icon: <TagsOutlined />,
                         routes: [
                             {
                                 path: '/interest/manage',
-                                name: '增删改模块',
+                                name: 'Management',
                             },
                         ],
                     },
@@ -95,7 +126,8 @@ export default function BasicLayout({
             }}
             avatarProps={{
                 src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
-                title: 'Admin User',
+                size: 'small',
+                title: 'Admin',
                 render: (props, dom) => {
                     return (
                         <Dropdown
@@ -104,18 +136,20 @@ export default function BasicLayout({
                                     {
                                         key: 'logout',
                                         icon: <LogoutOutlined />,
-                                        label: '退出登录',
+                                        label: 'Sign Out',
                                     },
                                 ],
                             }}
                         >
-                            {dom}
+                            <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 px-2 rounded transition-colors">
+                                {dom}
+                            </div>
                         </Dropdown>
                     );
                 },
             }}
         >
-            <div style={{ height: '100vh', overflow: 'auto' }}>
+            <div className="h-full w-full overflow-auto px-4 py-4">
                 {children}
             </div>
         </ProLayout>

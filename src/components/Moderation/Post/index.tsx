@@ -26,6 +26,25 @@ const mockData: PostItem[] = Array.from({ length: 15 }).map((_, i) => ({
 const PostModeration: React.FC = () => {
     const actionRef = useRef<ActionType | null>(null);
 
+    const handleAction = async (id: string, action: 'pass' | 'reject') => {
+        try {
+            const res = await fetch('/api/admin/moderation/posts', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, action }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success('Success');
+                actionRef.current?.reload();
+            } else {
+                message.error('Failed');
+            }
+        } catch (error) {
+            message.error('Error');
+        }
+    };
+
     const columns: ProColumns<PostItem>[] = [
         {
             title: 'ID',
@@ -65,13 +84,13 @@ const PostModeration: React.FC = () => {
             title: '操作',
             valueType: 'option',
             render: (_, record) => [
-                <a key="view" onClick={() => message.info('查看详情')}>
+                <a key="view" onClick={() => message.info('查看详情: ' + record.content)}>
                     查看
                 </a>,
-                <a key="pass" onClick={() => message.success('通过')}>
+                <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
                     通过
                 </a>,
-                <a key="reject" style={{ color: 'red' }} onClick={() => message.error('拒绝')}>
+                <a key="reject" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'reject')}>
                     拒绝
                 </a>,
             ],
@@ -79,20 +98,36 @@ const PostModeration: React.FC = () => {
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ", // Hide default title
+                breadcrumb: {}, // Hide breadcrumb if redundant
+            }}
+        >
             <ProTable<PostItem>
-                headerTitle="帖子内容审核"
+                headerTitle="Moderation Queue"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light', // Cleaner search
                 }}
-                request={async () => {
-                    return {
-                        data: mockData,
-                        success: true,
-                        total: mockData.length,
-                    };
+                cardBordered // Adds a subtle border, matching the card aesthetic
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                }}
+                request={async (params) => {
+                    // params contains pageSize, current, and filters
+                    // For simplicity, we just fetch all or filter by mapped status if we implemented server side filtering strictly
+                    // Here we fetch all from our simple API
+                    const res = await fetch('/api/admin/moderation/posts');
+                    return await res.json();
                 }}
                 columns={columns}
             />

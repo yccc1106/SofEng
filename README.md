@@ -1,16 +1,24 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## 快速开始
 
-First, run the development server:
+1. **启动数据库**
+   在 **5433** 端口启动 Postgres 数据库（推荐使用 Docker）：
+   ```bash
+   docker compose up -d
 
-```bash
-pnpm dev
+   # 用完记得关
+   # docker compose down
+   ```
 
-# or
-
-pnpm build && pnpm start
-```
+2. **启动开发服务器**
+   ```bash
+   pnpm dev
+   
+   # 或
+   
+   pnpm build && pnpm start
+   ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

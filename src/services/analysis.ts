@@ -3,7 +3,7 @@ import type { AnalysisData } from '@/types/analysis';
 
 export async function fakeChartData(): Promise<AnalysisData> {
   try {
-    const response = await fetch('/api/fake_analysis_chart_data');
+    const response = await fetch('/api/admin/stats');
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }

@@ -7,6 +7,7 @@ import zhCN from "antd/locale/zh_CN";
 
 import BasicLayout from "@/components/Layout/BasicLayout";
 import { App } from 'antd';
+import { SessionProvider } from "next-auth/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,11 +35,40 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AntdRegistry>
-          <ConfigProvider locale={zhCN}>
+          <ConfigProvider
+            locale={zhCN}
+            theme={{
+              token: {
+                // Global Token Overrides
+                colorPrimary: '#1877F2', // Match CSS --primary
+                borderRadius: 8,
+                fontFamily: 'var(--font-geist-sans)',
+                colorBgLayout: '#F9FAFB', // Match CSS --surface-50
+                colorTextBase: '#111827',
+              },
+              components: {
+                Layout: {
+                  bodyBg: '#F9FAFB',
+                  headerBg: '#FFFFFF',
+                },
+                Menu: {
+                  itemBorderRadius: 8,
+                  itemSelectedBg: 'rgba(24, 119, 242, 0.1)',
+                  itemSelectedColor: '#1877F2',
+                },
+                Button: {
+                  borderRadius: 6,
+                  controlHeight: 36,
+                }
+              }
+            }}
+          >
             <App>
-              <BasicLayout>
-                {children}
-              </BasicLayout>
+              <SessionProvider>
+                <BasicLayout>
+                  {children}
+                </BasicLayout>
+              </SessionProvider>
             </App>
           </ConfigProvider>
         </AntdRegistry>

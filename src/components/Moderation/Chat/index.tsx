@@ -73,13 +73,29 @@ const ChatModeration: React.FC = () => {
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ",
+                breadcrumb: {},
+            }}
+        >
             <ProTable<ChatItem>
-                headerTitle="聊天内容审核"
+                headerTitle="Chat Moderation"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light',
+                }}
+                cardBordered
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
                 }}
                 request={async () => {
                     return {

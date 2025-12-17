@@ -1,0 +1,22 @@
+@keyframes scan {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.radar-scanner {
+  /* Additional custom styles if needed, mostly handled by tailwind */
+  position: relative;
+}

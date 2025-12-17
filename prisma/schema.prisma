@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  SECRET
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  phoneNumber   String?   @unique
+  password      String?
+  image         String?
+  role          Role      @default(USER)
+  gender        Gender?   @default(SECRET)
+  studentId     String?
+  school        String?
+  major         String?
+  grade         String?
+  bio           String?
+  
+  personalityType String? // MBTI type
+  personalityTags String[] // e.g. ["INTJ", "Analytical"]
+
+  posts         Post[]
+  likes         PostLike[]
+  collections   PostCollection[]
+  
+  teamsCreated  Team[]    @relation("TeamCreator")
+  teamMembers   TeamMember[]
+  
+  sentFriendRequests     FriendRequest[] @relation("Sender")
+  receivedFriendRequests FriendRequest[] @relation("Receiver")
+  
+  friendsAsA    Friendship[] @relation("UserA")
+  friendsAsB    Friendship[] @relation("UserB")
+  
+  sentMessages  ChatMessage[] @relation("Sender")
+  receivedMessages ChatMessage[] @relation("Receiver")
+  
+  feedback      Feedback[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String?
+  content   String
+  images    String[]
+  tags      String[]
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  likes     PostLike[]
+  collections PostCollection[]
+  
+  viewCount Int      @default(0)
+  
+  status    String   @default("PUBLISHED") // PUBLISHED, AUDITING, REJECTED, DELETED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PostLike {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model PostCollection {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String?  // e.g. GAME, STUDY, SPORT
+  maxMembers  Int
+  status      String   @default("RECRUITING") // RECRUITING, FULL, DISBANDED
+  
+  creatorId   String
+  creator     User     @relation("TeamCreator", fields: [creatorId], references: [id])
+  
+  members     TeamMember[]
+  messages    ChatMessage[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  role      String   @default("MEMBER") // LEADER, MEMBER
+  status    String   @default("JOINED") // JOINED, PENDING
+  
+  joinedAt  DateTime @default(now())
+  
+  @@unique([teamId, userId])
+}
+
+model Friendship {
+  id        String   @id @default(uuid())
+  userAId   String
+  userA     User     @relation("UserA", fields: [userAId], references: [id])
+  userBId   String
+  userB     User     @relation("UserB", fields: [userBId], references: [id])
+  
+  status    String   @default("FRIEND")
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userAId, userBId])
+}
+
+model FriendRequest {
+  id        String   @id @default(uuid())
+  senderId  String
+  sender    User     @relation("Sender", fields: [senderId], references: [id])
+  receiverId String
+  receiver  User     @relation("Receiver", fields: [receiverId], references: [id])
+  
+  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  message   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  content   String
+  type      String   @default("TEXT") // TEXT, IMAGE, AUDIO
+  
+  senderId  String
+  sender    User     @relation("Sender", fields: [senderId], references: [id])
+  
+  receiverId String?
+  receiver   User?    @relation("Receiver", fields: [receiverId], references: [id])
+  
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id])
+  
+  isRead    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  
+  content   String
+  type      String   // SUGGESTION, REPORT
+  status    String   @default("PENDING") // PENDING, PROCESSED
+  
+  contact   String?
+  images    String[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

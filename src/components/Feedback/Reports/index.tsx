@@ -1,28 +1,37 @@
 'use client';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import { Button, message, Tag } from 'antd';
 import React, { useRef } from 'react';
 
 type ReportItem = {
     id: string;
-    reporter: string;
-    reportedUser: string;
-    reason: string;
+    user: string;
+    suggestion: string; // reused field name from API mapping but logically it is report content
     status: string;
     date: string;
 };
 
-const mockData: ReportItem[] = Array.from({ length: 15 }).map((_, i) => ({
-    id: `${i + 1}`,
-    reporter: `User A${i}`,
-    reportedUser: `User B${i}`,
-    reason: ['骚扰辱骂', '发布广告', '不当言论'][i % 3],
-    status: i % 2 === 0 ? 'pending' : 'resolved',
-    date: `2024-05-${12 + i}`,
-}));
-
 const Reports: React.FC = () => {
     const actionRef = useRef<ActionType | null>(null);
+
+    const handleAction = async (id: string, status: string) => {
+        try {
+            const res = await fetch('/api/admin/feedback', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success('Processed successfully');
+                actionRef.current?.reload();
+            } else {
+                message.error('Failed to process');
+            }
+        } catch (error) {
+            message.error('Error processing report');
+        }
+    };
 
     const columns: ProColumns<ReportItem>[] = [
         {
@@ -32,22 +41,19 @@ const Reports: React.FC = () => {
         },
         {
             title: '举报人',
-            dataIndex: 'reporter',
+            dataIndex: 'user',
         },
         {
-            title: '被举报人',
-            dataIndex: 'reportedUser',
-        },
-        {
-            title: '举报原因',
-            dataIndex: 'reason',
+            title: '举报详情',
+            dataIndex: 'suggestion',
+            ellipsis: true,
         },
         {
             title: '状态',
             dataIndex: 'status',
             valueEnum: {
                 pending: { text: '待处理', status: 'Processing' },
-                resolved: { text: '已处理', status: 'Success' },
+                processed: { text: '已处理', status: 'Success' },
             },
         },
         {
@@ -58,31 +64,46 @@ const Reports: React.FC = () => {
         {
             title: '操作',
             valueType: 'option',
-            render: (_, record) => [
-                <a key="audit" onClick={() => message.info('进入审核流程')}>
-                    审核
+            render: (_, record) => record.status === 'pending' ? [
+                <a key="process" onClick={() => handleAction(record.id, 'PROCESSED')}>
+                    处理
                 </a>,
-            ],
+            ] : [],
         },
     ];
 
     return (
-        <PageContainer>
+        <PageContainer
+            header={{
+                title: " ",
+                breadcrumb: {},
+            }}
+            className="p-0"
+        >
             <ProTable<ReportItem>
-                headerTitle="用户举报列表"
+                headerTitle="Report Management"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
                     labelWidth: 120,
+                    filterType: 'light',
                 }}
-                request={async () => {
-                    return {
-                        data: mockData,
-                        success: true,
-                        total: mockData.length,
-                    };
+                cardBordered
+                options={{
+                    density: false,
+                    fullScreen: true,
+                    setting: true,
+                }}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                }}
+                request={async (params) => {
+                    const res = await fetch('/api/admin/feedback?type=REPORT');
+                    return await res.json();
                 }}
                 columns={columns}
+                className="bg-white rounded-lg shadow-sm"
             />
         </PageContainer>
     );
