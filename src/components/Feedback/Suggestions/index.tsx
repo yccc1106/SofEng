@@ -11,16 +11,29 @@ type SuggestionItem = {
     date: string;
 };
 
-const mockData: SuggestionItem[] = Array.from({ length: 20 }).map((_, i) => ({
-    id: `${i + 1}`,
-    user: `User ${i + 1}`,
-    suggestion: `这是第 ${i + 1} 条用户建议，希望平台能够改进...`,
-    status: i % 3 === 0 ? 'accepted' : i % 3 === 1 ? 'pending' : 'rejected',
-    date: `2024-05-${10 + i}`,
-}));
+
 
 const Suggestions: React.FC = () => {
     const actionRef = useRef<ActionType | null>(null);
+
+    const handleAction = async (id: string, status: string) => {
+        try {
+            const res = await fetch('/api/admin/feedback', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success('Processed successfully');
+                actionRef.current?.reload();
+            } else {
+                message.error('Failed to process');
+            }
+        } catch (error) {
+            message.error('Error processing feedback');
+        }
+    };
 
     const columns: ProColumns<SuggestionItem>[] = [
         {
@@ -42,8 +55,7 @@ const Suggestions: React.FC = () => {
             dataIndex: 'status',
             valueEnum: {
                 pending: { text: '待处理', status: 'Processing' },
-                accepted: { text: '已采纳', status: 'Success' },
-                rejected: { text: '已驳回', status: 'Error' },
+                processed: { text: '已处理', status: 'Success' },
             },
         },
         {
@@ -54,11 +66,11 @@ const Suggestions: React.FC = () => {
         {
             title: '操作',
             valueType: 'option',
-            render: (_, record) => [
-                <a key="process" onClick={() => message.success('处理成功')}>
+            render: (_, record) => record.status === 'pending' ? [
+                <a key="process" onClick={() => handleAction(record.id, 'PROCESSED')}>
                     处理
                 </a>,
-            ],
+            ] : [],
         },
     ];
 
@@ -71,13 +83,9 @@ const Suggestions: React.FC = () => {
                 search={{
                     labelWidth: 120,
                 }}
-                request={async (params, sort, filter) => {
-                    // Mock request
-                    return {
-                        data: mockData,
-                        success: true,
-                        total: mockData.length,
-                    };
+                request={async (params) => {
+                    const res = await fetch('/api/admin/feedback?type=SUGGESTION');
+                    return await res.json();
                 }}
                 columns={columns}
             />

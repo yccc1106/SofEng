@@ -27,6 +27,11 @@ export default function BasicLayout({
     const router = useRouter();
     const pathname = usePathname();
 
+    // If user route (except login potentially, but generally all user routes), bypass Admin Layout
+    if (pathname?.startsWith('/user')) {
+        return <div className="min-h-screen bg-gray-50">{children}</div>;
+    }
+
     return (
         <ProLayout
             title="Next.js Admin"

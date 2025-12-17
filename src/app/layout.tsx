@@ -7,6 +7,7 @@ import zhCN from "antd/locale/zh_CN";
 
 import BasicLayout from "@/components/Layout/BasicLayout";
 import { App } from 'antd';
+import { SessionProvider } from "next-auth/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +37,11 @@ export default function RootLayout({
         <AntdRegistry>
           <ConfigProvider locale={zhCN}>
             <App>
-              <BasicLayout>
-                {children}
-              </BasicLayout>
+              <SessionProvider>
+                <BasicLayout>
+                  {children}
+                </BasicLayout>
+              </SessionProvider>
             </App>
           </ConfigProvider>
         </AntdRegistry>
