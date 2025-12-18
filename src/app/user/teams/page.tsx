@@ -12,6 +12,7 @@ const TeamsPage = () => {
     const [teams, setTeams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [joiningTeamId, setJoiningTeamId] = useState<string | null>(null);
     const [form] = Form.useForm();
 
     const fetchTeams = async () => {
@@ -54,6 +55,28 @@ const TeamsPage = () => {
         }
     };
 
+    const handleJoinTeam = async (teamId: string) => {
+        setJoiningTeamId(teamId);
+        try {
+            const res = await fetch('/api/teams/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teamId }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success('Joined team successfully');
+                fetchTeams();
+            } else {
+                message.error(data.message || 'Failed to join team');
+            }
+        } catch (error) {
+            message.error('Error joining team');
+        } finally {
+            setJoiningTeamId(null);
+        }
+    };
+
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
             <div className="flex justify-between items-center mb-6">
@@ -82,9 +105,32 @@ const TeamsPage = () => {
                                             <span>Members: {team._count?.members}/{team.maxMembers}</span>
                                             <span>By {team.creator?.name}</span>
                                         </div>
-                                        <Button type="primary" ghost block icon={<UsergroupAddOutlined />}>
-                                            Join Team
-                                        </Button>
+                                        {(() => {
+                                            const isMember = team.members?.some((m: any) => m.userId === (session?.user as any)?.id);
+                                            const isFull = team._count?.members >= team.maxMembers;
+
+                                            if (isMember) {
+                                                return (
+                                                    <Button block disabled icon={<UsergroupAddOutlined />}>
+                                                        Already Joined
+                                                    </Button>
+                                                );
+                                            }
+
+                                            return (
+                                                <Button
+                                                    type="primary"
+                                                    ghost
+                                                    block
+                                                    icon={<UsergroupAddOutlined />}
+                                                    loading={joiningTeamId === team.id}
+                                                    disabled={isFull}
+                                                    onClick={() => handleJoinTeam(team.id)}
+                                                >
+                                                    {isFull ? 'Team Full' : 'Join Team'}
+                                                </Button>
+                                            );
+                                        })()}
                                     </div>
                                 }
                             />
