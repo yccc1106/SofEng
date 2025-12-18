@@ -10,11 +10,22 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get("type");
+        const mine = searchParams.get("mine") === "true";
+        const session = await auth();
 
-        const where: any = {
-            status: "RECRUITING"
-        };
-        if (type) where.type = type;
+        const where: any = {};
+
+        if (mine && session?.user?.id) {
+            where.members = {
+                some: {
+                    userId: session.user.id,
+                    status: "JOINED"
+                }
+            };
+        } else {
+            where.status = "RECRUITING";
+            if (type) where.type = type;
+        }
 
         const teams = await prisma.team.findMany({
             where,
