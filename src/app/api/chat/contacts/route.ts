@@ -7,10 +7,15 @@ const prisma = new PrismaClient();
 
 export async function GET() {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    // Check for email instead of id purely
+    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
 
     try {
-        const userId = session.user.id;
+        // Fetch user to get ID reliably
+        const currentUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!currentUser) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+
+        const userId = currentUser.id;
 
         // Fetch Friends
         const friendships = await prisma.friendship.findMany({

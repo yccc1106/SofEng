@@ -1,12 +1,14 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
-import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Card, Badge, Typography, Space } from 'antd';
-import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
+import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import dayjs from 'dayjs';
 
 const { Content, Sider } = Layout;
 const { Text, Title } = Typography;
+const { TextArea } = Input;
 
 interface Contact {
     id: string;
@@ -14,6 +16,8 @@ interface Contact {
     image: string | null;
     type: 'USER' | 'TEAM';
     subType?: string;
+    lastMessage?: string; // Optional: if API supports it later
+    lastActive?: string;
 }
 
 interface Message {
@@ -39,6 +43,8 @@ const ChatContent = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [loadingContacts, setLoadingContacts] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [sending, setSending] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -60,8 +66,9 @@ const ChatContent = () => {
         }
     };
 
-    const fetchMessages = async () => {
+    const fetchMessages = async (showLoading = false) => {
         if (!targetUserId && !teamId) return;
+        if (showLoading) setLoadingMessages(true);
         try {
             let url = '/api/chat?';
             if (targetUserId) url += `userId=${targetUserId}`;
@@ -74,6 +81,8 @@ const ChatContent = () => {
             }
         } catch (error) {
             console.error("Fetch message error", error);
+        } finally {
+            if (showLoading) setLoadingMessages(false);
         }
     };
 
@@ -83,8 +92,8 @@ const ChatContent = () => {
 
     useEffect(() => {
         if (targetUserId || teamId) {
-            fetchMessages();
-            const interval = setInterval(fetchMessages, 3000);
+            fetchMessages(true);
+            const interval = setInterval(() => fetchMessages(false), 3000);
             return () => clearInterval(interval);
         } else {
             setMessages([]);
@@ -96,7 +105,8 @@ const ChatContent = () => {
     }, [messages]);
 
     const handleSend = async () => {
-        if (!inputValue.trim()) return;
+        if (!inputValue.trim() || sending) return;
+        setSending(true);
 
         try {
             const res = await fetch('/api/chat', {
@@ -117,6 +127,15 @@ const ChatContent = () => {
             }
         } catch (error) {
             message.error('Error sending message');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
         }
     };
 
@@ -128,31 +147,41 @@ const ChatContent = () => {
     const activeContact = contacts.find(c => c.id === activeId);
 
     return (
-        <Layout className="h-[calc(100vh-120px)] bg-transparent">
+        <Layout className="h-[calc(100vh-100px)] bg-transparent p-4 md:p-6 gap-6">
             {/* Sidebar / Contact List */}
             <Sider
-                width={320}
+                width={360}
                 theme="light"
-                className={`rounded-2xl shadow-sm mr-4 overflow-hidden flex flex-col transition-all ${activeId ? 'hidden md:flex' : 'flex w-full'}`}
-                style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)' }}
+                className={`!bg-white/60 !backdrop-blur-xl rounded-3xl border border-white/50 shadow-xl overflow-hidden flex flex-col transition-all duration-300 ${activeId ? 'hidden md:flex' : 'flex w-full'}`}
             >
-                <div className="p-4 border-b border-gray-100">
-                    <Title level={4} className="mb-4">Messages</Title>
+                <div className="p-6 border-b border-gray-100/50">
+                    <div className="flex justify-between items-center mb-6">
+                        <Title level={3} className="!mb-0 !font-bold text-slate-800">Chats</Title>
+                        <Space>
+                            <Tooltip title="Create Group">
+                                <Button shape="circle" icon={<TeamOutlined />} type="text" />
+                            </Tooltip>
+                            {/* <Button shape="circle" icon={<MoreOutlined />} type="text" /> */}
+                        </Space>
+                    </div>
                     <Input
                         prefix={<SearchOutlined className="text-gray-400" />}
                         placeholder="Search contacts..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="rounded-full bg-gray-100 border-none h-10"
+                        className="rounded-xl bg-white/50 border-gray-200/50 h-10 hover:bg-white focus:bg-white transition-all"
+                        variant="filled"
                     />
                 </div>
-                <div className="flex-1 overflow-auto">
-                    {loadingContacts ? <div className="flex justify-center p-10"><Spin /></div> : (
+                <div className="flex-1 overflow-auto px-2 py-2 customize-scrollbar">
+                    {loadingContacts ? (
+                        <div className="flex justify-center p-10"><Spin size="large" /></div>
+                    ) : (
                         <List
                             dataSource={filteredContacts}
                             renderItem={item => (
                                 <List.Item
-                                    className={`px-4 cursor-pointer transition-colors hover:bg-white ${activeId === item.id ? 'bg-white shadow-sm border-l-4 border-blue-500' : ''}`}
+                                    className={`mx-2 mb-1 p-3 rounded-2xl cursor-pointer transition-all border-0 hover:bg-white/80 ${activeId === item.id ? 'bg-white shadow-md' : ''}`}
                                     onClick={() => {
                                         if (item.type === 'USER') router.push(`/user/chat?targetId=${item.id}`);
                                         else router.push(`/user/chat?teamId=${item.id}`);
@@ -160,36 +189,42 @@ const ChatContent = () => {
                                 >
                                     <List.Item.Meta
                                         avatar={
-                                            <Badge dot={false} offset={[-2, 32]}>
+                                            <Badge dot={false} offset={[-2, 36]} color="green">
                                                 <Avatar
                                                     src={item.image}
                                                     icon={item.type === 'USER' ? <UserOutlined /> : <TeamOutlined />}
-                                                    size="large"
-                                                    className={item.type === 'TEAM' ? 'bg-blue-100 text-blue-500' : 'bg-green-100 text-green-500'}
+                                                    size={48}
+                                                    className={item.type === 'TEAM' ? 'bg-gradient-to-tr from-blue-400 to-blue-600 text-white' : 'bg-gradient-to-tr from-emerald-400 to-emerald-600 text-white'}
                                                 />
                                             </Badge>
                                         }
-                                        title={<Text strong>{item.name}</Text>}
+                                        title={<div className="flex justify-between items-center">
+                                            <Text strong className="text-base text-slate-700">{item.name}</Text>
+                                            {/* <Text type="secondary" className="text-xs">10:30 AM</Text> */}
+                                        </div>}
                                         description={
-                                            <div className="truncate text-xs text-gray-400">
-                                                {item.type === 'TEAM' ? `Team · ${item.subType}` : 'Friend'}
+                                            <div className="flex justify-between items-center mt-1">
+                                                <Text type="secondary" className="text-sm truncate pr-2">
+                                                    {item.type === 'TEAM' ? `Team · ${item.subType}` : 'Click to chat'}
+                                                </Text>
+                                                {/* <Badge count={2} className="site-badge-count-4" color="#3b82f6" /> */}
                                             </div>
                                         }
                                     />
                                 </List.Item>
                             )}
-                            locale={{ emptyText: <Empty description="No contacts found" className="mt-20" /> }}
+                            locale={{ emptyText: <Empty description="No contacts" className="mt-20 opacity-60" /> }}
                         />
                     )}
                 </div>
             </Sider>
 
             {/* Main Chat Area */}
-            <Content className={`rounded-2xl shadow-sm flex flex-col bg-white overflow-hidden relative ${!activeId ? 'hidden md:flex' : 'flex'}`}>
+            <Content className={`rounded-3xl border border-white/50 shadow-xl flex flex-col bg-white/70 backdrop-blur-xl overflow-hidden relative transition-all duration-300 ${!activeId && 'hidden md:flex'}`}>
                 {activeId ? (
                     <>
                         {/* Chat Header */}
-                        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                        <div className="h-20 px-6 border-b border-gray-100/50 flex items-center justify-between bg-white/40 backdrop-blur-md z-10 shrink-0">
                             <Space size="middle">
                                 <Button
                                     icon={<ArrowLeftOutlined />}
@@ -200,80 +235,118 @@ const ChatContent = () => {
                                 <Avatar
                                     src={activeContact?.image}
                                     icon={activeContact?.type === 'USER' ? <UserOutlined /> : <TeamOutlined />}
-                                    className={activeContact?.type === 'TEAM' ? 'bg-blue-100 text-blue-500' : 'bg-green-100 text-green-500'}
+                                    size="large"
+                                    className={activeContact?.type === 'TEAM' ? 'bg-gradient-to-tr from-blue-400 to-blue-600' : 'bg-gradient-to-tr from-emerald-400 to-emerald-600'}
                                 />
-                                <div>
-                                    <div className="font-bold text-base leading-none">{activeContact?.name}</div>
-                                    <div className="text-xs text-green-500 mt-1 flex items-center">
-                                        <span className="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse" /> Online
+                                <div className="flex flex-col">
+                                    <Text strong className="text-lg leading-tight text-slate-800">{activeContact?.name}</Text>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                                        <Text type="secondary" className="text-xs font-medium">Online</Text>
                                     </div>
                                 </div>
                             </Space>
-                            <Button icon={<TeamOutlined />} type="text" onClick={() => activeContact?.type === 'TEAM' && router.push(`/user/teams`)} />
+                            <Space>
+                                <Button icon={<SearchOutlined />} type="text" shape="circle" className="text-gray-500" />
+                                <Button icon={<MoreOutlined />} type="text" shape="circle" className="text-gray-500" onClick={() => activeContact?.type === 'TEAM' && router.push(`/user/teams`)} />
+                            </Space>
                         </div>
 
                         {/* Messages List */}
-                        <div className="flex-1 overflow-auto p-6 bg-[#f0f2f5] bg-opacity-30">
-                            <List
-                                dataSource={messages}
-                                split={false}
-                                renderItem={(msg) => {
-                                    const isMe = msg.senderId === session?.user?.id;
-                                    return (
-                                        <div className={`flex w-full mb-6 space-x-3 ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                            {!isMe && <Avatar src={msg.sender.image} className="shadow-sm" />}
+                        <div className="flex-1 overflow-auto p-6 space-y-6 scroll-smooth customize-scrollbar bg-[#f8f9fa]/50">
+                            {loadingMessages && <div className="text-center py-4"><Spin /></div>}
+
+                            {messages.map((msg, index) => {
+                                const isMe = msg.senderId === session?.user?.id;
+                                const isSequence = index > 0 && messages[index - 1].senderId === msg.senderId;
+
+                                return (
+                                    <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
+                                        <div className={`flex max-w-[85%] md:max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'} gap-3 group`}>
+                                            {!isMe && !isSequence ? (
+                                                <Avatar src={msg.sender.image} className="mt-1 shadow-sm shrink-0" />
+                                            ) : !isMe ? (
+                                                <div className="w-8 shrink-0" />
+                                            ) : null}
+
                                             <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                                {activeContact?.type === 'TEAM' && !isMe && (
-                                                    <span className="text-[10px] text-gray-400 mb-1 ml-1">{msg.sender.name}</span>
+                                                {!isMe && activeContact?.type === 'TEAM' && !isSequence && (
+                                                    <span className="text-[11px] text-gray-400 mb-1 ml-1 font-medium">{msg.sender.name}</span>
                                                 )}
-                                                <div className={`px-4 py-3 rounded-2xl max-w-md break-words shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none'}`}>
+
+                                                <div
+                                                    className={`px-5 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed break-words relative transition-all duration-200 hover:shadow-md
+                                                    ${isMe
+                                                            ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-tr-sm'
+                                                            : 'bg-white text-slate-700 rounded-tl-sm border border-gray-100'
+                                                        }`}
+                                                >
                                                     {msg.content}
                                                 </div>
-                                                <span className="text-[10px] text-gray-400 mt-1 mx-1">
-                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <span className={`text-[10px] text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity mx-1`}>
+                                                    {dayjs(msg.createdAt).format('h:mm A')}
                                                 </span>
                                             </div>
                                         </div>
-                                    );
-                                }}
-                            />
+                                    </div>
+                                );
+                            })}
                             <div ref={messagesEndRef} />
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 bg-white border-t border-gray-100">
-                            <div className="flex gap-3 items-center">
-                                <Input
-                                    value={inputValue}
-                                    onChange={e => setInputValue(e.target.value)}
-                                    onPressEnter={handleSend}
-                                    placeholder="Write a message..."
-                                    size="large"
-                                    className="rounded-full bg-gray-50 border-none h-12 focus:bg-white transition-all shadow-inner"
-                                />
-                                <Button
-                                    type="primary"
-                                    shape="circle"
-                                    size="large"
-                                    icon={<SendOutlined />}
-                                    onClick={handleSend}
-                                    className="h-12 w-12 flex items-center justify-center shadow-lg"
-                                />
+                        <div className="p-4 md:p-5 bg-white/60 backdrop-blur-md border-t border-gray-100/50 shrink-0 z-20">
+                            <div className="bg-white rounded-3xl p-2 shadow-sm border border-gray-200/60 focus-within:border-blue-400/50 focus-within:ring-4 focus-within:ring-blue-50 focus-within:shadow-md transition-all duration-300">
+                                <div className="flex items-end gap-2">
+                                    <TextArea
+                                        value={inputValue}
+                                        onChange={e => setInputValue(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="Type a message..."
+                                        autoSize={{ minRows: 1, maxRows: 4 }}
+                                        variant="borderless"
+                                        className="!mb-0 !bg-transparent text-base !resize-none py-3"
+                                    />
+                                    <div className="flex pb-2 pr-2 gap-2">
+                                        {/* <Button type="text" shape="circle" icon={<PaperClipOutlined className="text-gray-400 text-lg" />} />
+                                        <Button type="text" shape="circle" icon={<SmileOutlined className="text-gray-400 text-lg" />} /> */}
+                                        <Button
+                                            type="primary"
+                                            shape="circle"
+                                            size="large"
+                                            icon={sending ? <Spin className="text-white" size="small" /> : <SendOutlined className="ml-0.5" />}
+                                            onClick={handleSend}
+                                            disabled={!inputValue.trim() || sending}
+                                            className={`${inputValue.trim() ? 'bg-blue-600 shadow-blue-300 shadow-lg scale-100' : 'bg-gray-300 scale-90 opacity-70'} transition-all duration-300 border-none w-10 h-10 flex items-center justify-center`}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="flex flex-col justify-center items-center h-full gap-6 p-10 text-center">
-                        <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                            <TeamOutlined className="text-4xl text-blue-500" />
+                    <div className="flex flex-col justify-center items-center h-full gap-8 p-10 text-center bg-white/40">
+                        <div className="relative">
+                            <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
+                                <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <TeamOutlined className="text-5xl text-blue-500" />
+                                </div>
+                            </div>
+                            <Badge status="processing" className="absolute bottom-2 right-2 scale-150" />
                         </div>
-                        <div>
-                            <Title level={3}>Welcome to Chat</Title>
-                            <Text type="secondary" className="block max-w-sm">Pick a friend or team from the sidebar to start a conversation. Your squads are waiting for you!</Text>
+                        <div className="space-y-2">
+                            <Title level={2} className="!mb-0 text-slate-700">Welcome to Chat</Title>
+                            <Text className="text-slate-500 text-lg block max-w-md mx-auto">
+                                Connect with your friends and teammates in real-time. Select a conversation to start messaging.
+                            </Text>
                         </div>
-                        <div className="flex gap-4">
-                            <Button size="large" type="primary" ghost onClick={() => router.push('/user/friends')}>Find Friends</Button>
-                            <Button size="large" type="primary" onClick={() => router.push('/user/teams')}>Join Teams</Button>
+                        <div className="flex gap-4 mt-4">
+                            <Button size="large" className="rounded-full px-8 h-12" onClick={() => router.push('/user/friends')}>
+                                Find Friends
+                            </Button>
+                            <Button type="primary" size="large" className="rounded-full px-8 h-12 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-200" onClick={() => router.push('/user/teams')}>
+                                Join Teams
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -284,7 +357,7 @@ const ChatContent = () => {
 
 const ChatPage = () => {
     return (
-        <React.Suspense fallback={<div className="flex justify-center py-20"><Spin size="large" /></div>}>
+        <React.Suspense fallback={<div className="flex justify-center items-center h-screen"><Spin size="large" /></div>}>
             <ChatContent />
         </React.Suspense>
     );
