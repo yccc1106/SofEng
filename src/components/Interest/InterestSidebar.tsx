@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Menu } from 'antd';
+import { Menu, MenuProps } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
 import { AppstoreOutlined, TeamOutlined, MessageOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 
@@ -16,7 +16,7 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
     const pathname = usePathname();
     const basePath = `/interest/${interest.id}`;
 
-    const items = [
+    const items: MenuProps['items'] = [
         {
             key: basePath,
             icon: <AppstoreOutlined />,
