@@ -23,7 +23,7 @@ const LoginPage = () => {
                 message.error('Login failed: ' + result.error);
             } else {
                 message.success('Login successful');
-                router.push('/user/posts');
+                router.push('/');
             }
         } catch (error) {
             message.error('Login error');
