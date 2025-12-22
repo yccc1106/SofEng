@@ -15,6 +15,7 @@ async function main() {
     console.log('Start seeding ...');
 
     // CLEANUP
+    await prisma.postComment.deleteMany();
     await prisma.postLike.deleteMany();
     await prisma.postCollection.deleteMany();
     await prisma.post.deleteMany();
@@ -135,6 +136,13 @@ async function main() {
                     collections: {
                         create: faker.helpers.arrayElements(users, { min: 0, max: 5 }).map(u => ({
                             userId: u.id
+                        }))
+                    },
+                    // Randomly add comments
+                    comments: {
+                        create: faker.helpers.arrayElements(users, { min: 0, max: 5 }).map(u => ({
+                            userId: u.id,
+                            content: faker.lorem.sentence()
                         }))
                     }
                 },

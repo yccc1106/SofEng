@@ -42,7 +42,10 @@ model User {
 
   posts         Post[]
   likes         PostLike[]
+
   collections   PostCollection[]
+  comments      PostComment[]
+
   
   teamsCreated  Team[]    @relation("TeamCreator")
   teamMembers   TeamMember[]
@@ -73,7 +76,10 @@ model Post {
   author    User     @relation(fields: [authorId], references: [id])
   
   likes     PostLike[]
+
   collections PostCollection[]
+  comments  PostComment[]
+
   
   viewCount Int      @default(0)
   
@@ -197,6 +203,20 @@ model Feedback {
   
   contact   String?
   images    String[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PostComment {
+  id        String   @id @default(uuid())
+  content   String
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

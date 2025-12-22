@@ -8,10 +8,20 @@ const prisma = new PrismaClient();
 // LIST posts
 export async function GET(req: Request) {
     try {
+        const session = await auth();
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
         const skip = (page - 1) * limit;
+
+        let userId: string | null = null;
+        if (session?.user?.email) {
+            const user = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            });
+            userId = user?.id || null;
+        }
 
         const posts = await prisma.post.findMany({
             where: { status: "PUBLISHED" },
@@ -29,16 +39,33 @@ export async function GET(req: Request) {
                     select: {
                         likes: true,
                         collections: true,
+                        comments: true,
                     }
-                }
+                },
+                likes: userId ? {
+                    where: { userId: userId },
+                    select: { userId: true }
+                } : undefined,
+                collections: userId ? {
+                    where: { userId: userId },
+                    select: { userId: true }
+                } : undefined,
             },
             orderBy: { createdAt: "desc" },
             skip,
             take: limit,
         });
 
+        const formattedPosts = posts.map(post => ({
+            ...post,
+            isLiked: post.likes ? post.likes.length > 0 : false,
+            isCollected: post.collections ? post.collections.length > 0 : false,
+            likes: undefined,
+            collections: undefined,
+        }));
+
         return NextResponse.json(
-            formatResponse(true, "Posts retrieved", posts)
+            formatResponse(true, "Posts retrieved", formattedPosts)
         );
     } catch (error: any) {
         return NextResponse.json(
