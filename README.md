@@ -11,7 +11,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
    # docker compose down
    ```
 
-2. **启动开发服务器**
+2. **建表，生成数据**
+   ```bash
+   npx prisma generate
+   npx prisma db seed
+   ```
+
+3. **启动开发服务器**
    ```bash
    pnpm dev
    
