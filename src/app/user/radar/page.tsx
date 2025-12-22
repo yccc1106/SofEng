@@ -63,9 +63,17 @@ const RadarPage = () => {
 
             {scanning ? (
                 <div className="flex flex-col items-center justify-center h-[60vh]">
-                    <div className="radar-scanner relative w-64 h-64 border-4 border-green-500 rounded-full flex items-center justify-center shadow-[0_0_20px_#0f0]">
-                        <div className="w-full h-1 bg-green-500 absolute top-1/2 left-0 animate-scan origin-center"></div>
-                        <RadarChartOutlined className="text-6xl text-green-400 opacity-80" />
+                    <div className="radar-container">
+                        <div className="radar-grid"></div>
+                        <div className="radar-sweep"></div>
+                        {/* Simulated blips */}
+                        <div className="radar-blip" style={{ top: '30%', left: '72%', animationDelay: '0.2s' }}></div>
+                        <div className="radar-blip" style={{ top: '55%', left: '25%', animationDelay: '0.9s' }}></div>
+                        <div className="radar-blip" style={{ top: '75%', left: '60%', animationDelay: '1.7s' }}></div>
+
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                            <RadarChartOutlined className="text-4xl text-green-400 opacity-90 drop-shadow-[0_0_10px_rgba(0,255,0,0.8)]" />
+                        </div>
                     </div>
                     <p className="mt-8 text-green-400 animate-pulse text-lg">Scanning for soulmates...</p>
                 </div>
