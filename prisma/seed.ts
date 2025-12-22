@@ -227,19 +227,74 @@ async function main() {
     console.log('Created chat messages.');
 
 
-    // 6. CREATE FEEDBACK
-    for (let i = 0; i < 20; i++) {
+    // 6. CREATE FEEDBACK (Suggestions & Reports)
+
+    // 6.1 Suggestions
+    for (let i = 0; i < 15; i++) {
         const user = faker.helpers.arrayElement(users);
         await prisma.feedback.create({
             data: {
                 userId: user.id,
                 content: faker.lorem.paragraph(),
-                type: faker.helpers.arrayElement(['SUGGESTION', 'REPORT']),
-                status: faker.helpers.arrayElement(['PENDING', 'PROCESSED']),
+                type: 'SUGGESTION',
+                status: faker.helpers.arrayElement(['PENDING', 'PROCESSED', 'ADOPTED', 'IGNORED']),
                 contact: user.email,
-                images: faker.helpers.arrayElements([faker.image.url(), faker.image.url()], { min: 0, max: 2 })
             }
         });
+    }
+
+    // 6.2 User Reports
+    for (let i = 0; i < 10; i++) {
+        const reporter = faker.helpers.arrayElement(users);
+        const reportedUser = faker.helpers.arrayElement(users.filter(u => u.id !== reporter.id));
+        await prisma.feedback.create({
+            data: {
+                userId: reporter.id,
+                content: `Report user: ${reportedUser.name}. Reason: ${faker.lorem.sentence()}`,
+                type: 'REPORT',
+                reportType: 'USER',
+                reportedUserId: reportedUser.id,
+                status: faker.helpers.arrayElement(['PENDING', 'RESOLVED', 'IGNORED']),
+            }
+        });
+    }
+
+    // 6.3 Post Reports
+    const allPosts = await prisma.post.findMany({ take: 50 });
+    if (allPosts.length > 0) {
+        for (let i = 0; i < 10; i++) {
+            const reporter = faker.helpers.arrayElement(users);
+            const reportedPost = faker.helpers.arrayElement(allPosts);
+            await prisma.feedback.create({
+                data: {
+                    userId: reporter.id,
+                    content: `Report post: ${reportedPost.title}. Reason: ${faker.lorem.sentence()}`,
+                    type: 'REPORT',
+                    reportType: 'POST',
+                    reportedPostId: reportedPost.id,
+                    status: faker.helpers.arrayElement(['PENDING', 'RESOLVED', 'IGNORED']),
+                }
+            });
+        }
+    }
+
+    // 6.4 Message Reports
+    const allMessages = await prisma.chatMessage.findMany({ take: 50 });
+    if (allMessages.length > 0) {
+        for (let i = 0; i < 10; i++) {
+            const reporter = faker.helpers.arrayElement(users);
+            const reportedMessage = faker.helpers.arrayElement(allMessages);
+            await prisma.feedback.create({
+                data: {
+                    userId: reporter.id,
+                    content: `Report message: "${reportedMessage.content.substring(0, 20)}...". Reason: ${faker.lorem.sentence()}`,
+                    type: 'REPORT',
+                    reportType: 'MESSAGE',
+                    reportedMessageId: reportedMessage.id,
+                    status: faker.helpers.arrayElement(['PENDING', 'RESOLVED', 'IGNORED']),
+                }
+            });
+        }
     }
     console.log('Created feedback.');
 

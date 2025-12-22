@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { content, type, contact, images } = body;
+        const { content, type, contact, images, reportType, reportedUserId, reportedPostId, reportedMessageId } = body;
 
         if (!content) return NextResponse.json(formatResponse(false, "Content is required"), { status: 400 });
 
@@ -25,7 +25,11 @@ export async function POST(req: Request) {
                 type: type || 'SUGGESTION',
                 contact,
                 images: images || [],
-                status: 'PENDING'
+                status: 'PENDING',
+                reportType,
+                reportedUserId,
+                reportedPostId,
+                reportedMessageId
             }
         });
 

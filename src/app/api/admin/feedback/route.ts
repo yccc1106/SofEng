@@ -20,7 +20,12 @@ export async function GET(req: Request) {
 
         const feedbacks = await prisma.feedback.findMany({
             where,
-            include: { user: { select: { name: true, email: true } } },
+            include: {
+                user: { select: { name: true, email: true } },
+                reportedUser: { select: { id: true, name: true, email: true, status: true } },
+                reportedPost: { select: { id: true, title: true, content: true, status: true } },
+                reportedMessage: { select: { id: true, content: true } }
+            },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -28,9 +33,13 @@ export async function GET(req: Request) {
             id: f.id,
             user: f.user?.name || 'Anonymous',
             suggestion: f.content,
-            status: f.status === 'PROCESSED' ? 'processed' : 'pending',
+            status: f.status,
             date: f.createdAt.toISOString().split('T')[0],
-            type: f.type
+            type: f.type,
+            reportType: f.reportType,
+            target: f.reportType === 'USER' ? f.reportedUser :
+                f.reportType === 'POST' ? f.reportedPost :
+                    f.reportType === 'MESSAGE' ? f.reportedMessage : null
         }));
 
         return NextResponse.json({
@@ -49,9 +58,27 @@ export async function PUT(req: Request) {
 
     try {
         const body = await req.json();
-        const { id, status } = body;
+        const { id, status, action } = body;
 
         if (!id || !status) return NextResponse.json(formatResponse(false, "Missing fields"), { status: 400 });
+
+        // Handle specific actions
+        if (action) {
+            const feedback = await prisma.feedback.findUnique({ where: { id } });
+            if (feedback) {
+                if (action === 'BAN_USER' && feedback.reportedUserId) {
+                    await prisma.user.update({
+                        where: { id: feedback.reportedUserId },
+                        data: { status: 'BANNED' }
+                    });
+                } else if (action === 'DELETE_POST' && feedback.reportedPostId) {
+                    await prisma.post.update({
+                        where: { id: feedback.reportedPostId },
+                        data: { status: 'DELETED' }
+                    });
+                }
+            }
+        }
 
         await prisma.feedback.update({
             where: { id },

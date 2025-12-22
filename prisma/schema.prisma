@@ -61,8 +61,11 @@ model User {
   
   feedback      Feedback[]
   
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  status    String   @default("ACTIVE") // ACTIVE, BANNED
+  reportsReceived Feedback[] @relation("ReportedUser")
 }
 
 model Post {
@@ -84,6 +87,8 @@ model Post {
   viewCount Int      @default(0)
   
   status    String   @default("PUBLISHED") // PUBLISHED, AUDITING, REJECTED, DELETED
+  
+  reports   Feedback[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -190,6 +195,8 @@ model ChatMessage {
   isRead    Boolean  @default(false)
   
   createdAt DateTime @default(now())
+  
+  reports   Feedback[]
 }
 
 model Feedback {
@@ -199,7 +206,18 @@ model Feedback {
   
   content   String
   type      String   // SUGGESTION, REPORT
-  status    String   @default("PENDING") // PENDING, PROCESSED
+  status    String   @default("PENDING") // PENDING, PROCESSED, RESOLVED, IGNORED
+  
+  reportType String? // USER, POST, MESSAGE
+  
+  reportedUserId String?
+  reportedUser   User?   @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  
+  reportedPostId String?
+  reportedPost   Post?   @relation(fields: [reportedPostId], references: [id])
+  
+  reportedMessageId String?
+  reportedMessage   ChatMessage? @relation(fields: [reportedMessageId], references: [id])
   
   contact   String?
   images    String[]

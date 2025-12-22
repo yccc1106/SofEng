@@ -1,7 +1,7 @@
 'use client';
-import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
+import { ActionType, ModalForm, PageContainer, ProColumns, ProFormRadio, ProFormTextArea, ProTable } from '@ant-design/pro-components';
 import { Button, message, Tag } from 'antd';
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 type SuggestionItem = {
     id: string;
@@ -15,23 +15,28 @@ type SuggestionItem = {
 
 const Suggestions: React.FC = () => {
     const actionRef = useRef<ActionType | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [currentRow, setCurrentRow] = useState<SuggestionItem | null>(null);
 
-    const handleAction = async (id: string, status: string) => {
+    const handleAction = async (id: string, status: string, note?: string) => {
         try {
             const res = await fetch('/api/admin/feedback', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, status }),
+                body: JSON.stringify({ id, status, note }),
             });
             const data = await res.json();
             if (data.success) {
                 message.success('Processed successfully');
                 actionRef.current?.reload();
+                return true;
             } else {
                 message.error('Failed to process');
+                return false;
             }
         } catch (error) {
             message.error('Error processing feedback');
+            return false;
         }
     };
 
@@ -54,8 +59,10 @@ const Suggestions: React.FC = () => {
             title: '状态',
             dataIndex: 'status',
             valueEnum: {
-                pending: { text: '待处理', status: 'Processing' },
-                processed: { text: '已处理', status: 'Success' },
+                PENDING: { text: '待处理', status: 'Processing' },
+                PROCESSED: { text: '已处理', status: 'Success' },
+                ADOPTED: { text: '已采纳', status: 'Success' },
+                IGNORED: { text: '已忽略', status: 'Default' },
             },
         },
         {
@@ -66,8 +73,11 @@ const Suggestions: React.FC = () => {
         {
             title: '操作',
             valueType: 'option',
-            render: (_, record) => record.status === 'pending' ? [
-                <a key="process" onClick={() => handleAction(record.id, 'PROCESSED')}>
+            render: (_, record) => record.status === 'PENDING' ? [
+                <a key="process" onClick={() => {
+                    setCurrentRow(record);
+                    setModalVisible(true);
+                }}>
                     处理
                 </a>,
             ] : [],
@@ -107,6 +117,33 @@ const Suggestions: React.FC = () => {
                 columns={columns}
                 className="bg-white rounded-lg shadow-sm"
             />
+            <ModalForm
+                title="处理建议"
+                open={modalVisible}
+                onOpenChange={setModalVisible}
+                onFinish={async (values) => {
+                    if (currentRow) {
+                        const success = await handleAction(currentRow.id, values.method, values.note);
+                        return success;
+                    }
+                    return false;
+                }}
+            >
+                <ProFormRadio.Group
+                    name="method"
+                    label="处理结果"
+                    options={[
+                        { label: '采纳', value: 'ADOPTED' },
+                        { label: '暂不采纳 / 忽略', value: 'IGNORED' },
+                    ]}
+                    rules={[{ required: true, message: '请选择处理结果' }]}
+                />
+                <ProFormTextArea
+                    name="note"
+                    label="处理备注"
+                    placeholder="请输入备注信息（可选）"
+                />
+            </ModalForm>
         </PageContainer>
     );
 };
