@@ -1,7 +1,7 @@
 'use client';
-import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Modal } from 'antd';
-import React, { useRef } from 'react';
+import { ActionType, ModalForm, PageContainer, ProColumns, ProFormSelect, ProFormText, ProFormTextArea, ProTable } from '@ant-design/pro-components';
+import { Button, message, Modal, Popconfirm } from 'antd';
+import React, { useRef, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
 type InterestItem = {
@@ -22,6 +22,52 @@ const mockData: InterestItem[] = [
 
 const InterestManage: React.FC = () => {
     const actionRef = useRef<ActionType | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [currentRow, setCurrentRow] = useState<InterestItem | null>(null);
+    const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([]);
+
+    const handleDelete = async (id: string) => {
+        try {
+            const res = await fetch(`/api/admin/interest?id=${id}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success('删除成功');
+                actionRef.current?.reload();
+            } else {
+                message.error('删除失败');
+            }
+        } catch (error) {
+            message.error('删除错误');
+        }
+    };
+
+    const handleSubmit = async (values: any) => {
+        const method = currentRow ? 'PUT' : 'POST';
+        const body = currentRow ? { ...values, id: currentRow.id } : values;
+
+        try {
+            const res = await fetch('/api/admin/interest', {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success(currentRow ? '更新成功' : '创建成功');
+                setModalVisible(false);
+                actionRef.current?.reload();
+                return true;
+            } else {
+                message.error('操作失败');
+                return false;
+            }
+        } catch (error) {
+            message.error('操作异常');
+            return false;
+        }
+    };
 
     const columns: ProColumns<InterestItem>[] = [
         {
@@ -52,12 +98,17 @@ const InterestManage: React.FC = () => {
             title: '操作',
             valueType: 'option',
             render: (_, record) => [
-                <a key="edit" onClick={() => message.info('编辑分类')}>
+                <a key="edit" onClick={() => {
+                    setCurrentRow(record);
+                    setModalVisible(true);
+                }}>
                     编辑
                 </a>,
-                <a key="delete" style={{ color: 'red' }} onClick={() => message.error('删除分类')}>
-                    删除
-                </a>,
+                <Popconfirm key="delete" title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
+                    <a style={{ color: 'red' }}>
+                        删除
+                    </a>
+                </Popconfirm>,
             ],
         },
     ];
@@ -89,20 +140,50 @@ const InterestManage: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 toolBarRender={() => [
-                    <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => message.info('新建分类')}>
+                    <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => {
+                        setCurrentRow(null);
+                        setModalVisible(true);
+                    }}>
                         Add Category
                     </Button>,
                 ]}
                 request={async () => {
-                    return {
-                        data: mockData,
-                        success: true,
-                        total: mockData.length,
-                    };
+                    const res = await fetch('/api/admin/interest');
+                    const json = await res.json();
+                    if (json.success) {
+                        setCategoryOptions(json.data.map((item: any) => ({ label: item.name, value: item.id })));
+                    }
+                    return json;
                 }}
                 columns={columns}
                 className="bg-white rounded-lg shadow-sm"
             />
+            <ModalForm
+                title={currentRow ? '编辑分类' : '新建分类'}
+                open={modalVisible}
+                onOpenChange={setModalVisible}
+                modalProps={{ destroyOnClose: true }}
+                initialValues={currentRow || {}}
+                onFinish={handleSubmit}
+            >
+                <ProFormText
+                    name="name"
+                    label="分类名称"
+                    placeholder="请输入名称"
+                    rules={[{ required: true, message: '请输入名称' }]}
+                />
+                <ProFormSelect
+                    name="parentId"
+                    label="父分类"
+                    placeholder="选择父分类（可选）"
+                    options={categoryOptions.filter(opt => opt.value !== currentRow?.id)}
+                />
+                <ProFormTextArea
+                    name="description"
+                    label="描述"
+                    placeholder="请输入描述"
+                />
+            </ModalForm>
         </PageContainer>
     );
 };

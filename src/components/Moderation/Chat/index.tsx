@@ -12,18 +12,32 @@ type ChatItem = {
     timestamp: string;
 };
 
-const mockData: ChatItem[] = Array.from({ length: 25 }).map((_, i) => ({
-    id: `${i + 1}`,
-    sender: `User X${i}`,
-    receiver: `User Y${i}`,
-    content: `这是一条需要审核的聊天消息内容...[敏感词汇检测]`,
-    riskLevel: i % 3 === 0 ? 'high' : i % 3 === 1 ? 'medium' : 'low',
-    timestamp: `2024-05-20 10:0${i}`,
-}));
-
 const ChatModeration: React.FC = () => {
     const { message } = App.useApp();
     const actionRef = useRef<ActionType | null>(null);
+
+    const handleAction = async (id: string, action: 'pass' | 'block') => {
+        if (action === 'pass') {
+            message.success('已通过 (Passed)');
+            return;
+        }
+        if (action === 'block') {
+            try {
+                const res = await fetch(`/api/admin/moderation/chats?id=${id}`, {
+                    method: 'DELETE',
+                });
+                const data = await res.json();
+                if (data.success) {
+                    message.success('已屏蔽并删除 (Blocked & Deleted)');
+                    actionRef.current?.reload();
+                } else {
+                    message.error('操作失败');
+                }
+            } catch (error) {
+                message.error('请求错误');
+            }
+        }
+    };
 
     const columns: ProColumns<ChatItem>[] = [
         {
@@ -62,10 +76,10 @@ const ChatModeration: React.FC = () => {
             title: '操作',
             valueType: 'option',
             render: (_, record) => [
-                <a key="pass" onClick={() => message.success('通过')}>
+                <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
                     通过
                 </a>,
-                <a key="block" style={{ color: 'red' }} onClick={() => message.error('已屏蔽')}>
+                <a key="block" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'block')}>
                     屏蔽
                 </a>,
             ],
@@ -80,7 +94,7 @@ const ChatModeration: React.FC = () => {
             }}
         >
             <ProTable<ChatItem>
-                headerTitle="Chat Moderation"
+                headerTitle="Chat Moderation (Recent Messages)"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
@@ -98,11 +112,8 @@ const ChatModeration: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 request={async () => {
-                    return {
-                        data: mockData,
-                        success: true,
-                        total: mockData.length,
-                    };
+                    const res = await fetch('/api/admin/moderation/chats');
+                    return await res.json();
                 }}
                 columns={columns}
             />

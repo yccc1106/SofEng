@@ -12,17 +12,27 @@ type RoomItem = {
     status: string;
 };
 
-const mockData: RoomItem[] = Array.from({ length: 10 }).map((_, i) => ({
-    id: `${i + 1}`,
-    name: `交友小窝 ${i}`,
-    owner: `User Owner ${i}`,
-    description: `这是一个用于交流的房间...`,
-    members: 10 + i * 5,
-    status: i % 4 === 0 ? 'reviewing' : 'active',
-}));
-
 const RoomModeration: React.FC = () => {
     const actionRef = useRef<ActionType | null>(null);
+
+    const handleAction = async (id: string, action: 'close') => {
+        try {
+            const res = await fetch('/api/admin/moderation/rooms', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, action }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                message.success('已解散房间');
+                actionRef.current?.reload();
+            } else {
+                message.error('操作失败');
+            }
+        } catch (error) {
+            message.error('操作异常');
+        }
+    };
 
     const columns: ProColumns<RoomItem>[] = [
         {
@@ -51,21 +61,23 @@ const RoomModeration: React.FC = () => {
             title: '状态',
             dataIndex: 'status',
             valueEnum: {
-                active: { text: '正常', status: 'Success' },
-                reviewing: { text: '审核中', status: 'Processing' },
-                closed: { text: '已解散', status: 'Error' },
+                recruiting: { text: '招募中', status: 'Processing' },
+                full: { text: '已满员', status: 'Success' },
+                disbanded: { text: '已解散', status: 'Error' },
             },
         },
         {
             title: '操作',
             valueType: 'option',
             render: (_, record) => [
-                <a key="check" onClick={() => message.info('检查房间信息')}>
+                <a key="check" onClick={() => message.info('检查房间信息: ' + record.name)}>
                     检查
                 </a>,
-                <a key="close" style={{ color: 'red' }} onClick={() => message.warning('解散房间')}>
-                    解散
-                </a>,
+                record.status !== 'disbanded' && (
+                    <a key="close" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'close')}>
+                        解散
+                    </a>
+                ),
             ],
         },
     ];
@@ -78,7 +90,7 @@ const RoomModeration: React.FC = () => {
             }}
         >
             <ProTable<RoomItem>
-                headerTitle="Room Moderation"
+                headerTitle="Room/Team Moderation"
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
@@ -96,11 +108,8 @@ const RoomModeration: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 request={async () => {
-                    return {
-                        data: mockData,
-                        success: true,
-                        total: mockData.length,
-                    };
+                    const res = await fetch('/api/admin/moderation/rooms');
+                    return await res.json();
                 }}
                 columns={columns}
             />

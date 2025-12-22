@@ -299,6 +299,36 @@ async function main() {
     console.log('Created feedback.');
 
 
+    // 7. CREATE CATEGORIES (Interests)
+    const categories = [
+        { name: 'Sports', children: ['Basketball', 'Soccer', 'Tennis'] },
+        { name: 'Tech', children: ['Programming', 'AI', 'Gadgets'] },
+        { name: 'Arts', children: ['Music', 'Painting', 'Photography'] },
+        { name: 'Games', children: ['RPG', 'FPS', 'MOBA'] },
+    ];
+
+    for (const cat of categories) {
+        const parent = await prisma.category.create({
+            data: {
+                name: cat.name,
+                description: `All about ${cat.name}`,
+                usageCount: faker.number.int({ min: 100, max: 1000 })
+            }
+        });
+
+        for (const childName of cat.children) {
+            await prisma.category.create({
+                data: {
+                    name: childName,
+                    parentId: parent.id,
+                    description: `${childName} related discussions`,
+                    usageCount: faker.number.int({ min: 50, max: 500 })
+                }
+            });
+        }
+    }
+    console.log('Created interest categories.');
+
     console.log('Seeding finished.');
 }
 
