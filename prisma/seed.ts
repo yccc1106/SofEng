@@ -25,7 +25,42 @@ async function main() {
     await prisma.friendRequest.deleteMany();
     await prisma.friendship.deleteMany();
     await prisma.feedback.deleteMany();
+    await prisma.category.deleteMany(); // Added cleanup
     await prisma.user.deleteMany();
+
+    // 0. CREATE CATEGORIES (Interests) - Moved up
+    const categoryDetails = [
+        { name: 'Sports', children: ['Basketball', 'Soccer', 'Tennis'] },
+        { name: 'Tech', children: ['Programming', 'AI', 'Gadgets'] },
+        { name: 'Arts', children: ['Music', 'Painting', 'Photography'] },
+        { name: 'Games', children: ['RPG', 'FPS', 'MOBA'] },
+    ];
+
+    let allCategories = [];
+
+    for (const cat of categoryDetails) {
+        const parent = await prisma.category.create({
+            data: {
+                name: cat.name,
+                description: `All about ${cat.name}`,
+                usageCount: faker.number.int({ min: 100, max: 1000 })
+            }
+        });
+        allCategories.push(parent);
+
+        for (const childName of cat.children) {
+            const child = await prisma.category.create({
+                data: {
+                    name: childName,
+                    parentId: parent.id,
+                    description: `${childName} related discussions`,
+                    usageCount: faker.number.int({ min: 50, max: 500 })
+                }
+            });
+            allCategories.push(child);
+        }
+    }
+    console.log('Created interest categories.');
 
     // 1. CREATE USERS
     const users = [];
@@ -77,6 +112,7 @@ async function main() {
     // Increase to 20 teams
     for (let i = 0; i < 20; i++) {
         const creator = faker.helpers.arrayElement(users);
+        const randomCategory = faker.helpers.arrayElement(allCategories);
         const team = await prisma.team.create({
             data: {
                 name: faker.company.name() + ' ' + faker.helpers.arrayElement(['Group', 'Club', 'Squad', 'Team']),
@@ -85,6 +121,7 @@ async function main() {
                 maxMembers: faker.number.int({ min: 5, max: 20 }),
                 status: faker.helpers.arrayElement(['RECRUITING', 'FULL', 'RECRUITING', 'RECRUITING']), // Weighted towards recruiting
                 creatorId: creator.id,
+                categoryId: randomCategory.id, // Assign category
                 members: {
                     create: {
                         userId: creator.id,
@@ -118,11 +155,13 @@ async function main() {
         // Increase posts per user to 5-10
         const numberOfPosts = faker.number.int({ min: 5, max: 10 });
         for (let i = 0; i < numberOfPosts; i++) {
+            const randomCategory = faker.helpers.arrayElement(allCategories);
             await prisma.post.create({
                 data: {
                     title: faker.lorem.sentence(),
                     content: faker.lorem.paragraphs({ min: 1, max: 5 }),
                     authorId: user.id,
+                    categoryId: randomCategory.id, // Assign category
                     tags: faker.helpers.arrayElements(['Life', 'Tech', 'Art', 'Music', 'Sport', 'Study', 'Career', 'Travel', 'Food', 'Gaming'], { min: 1, max: 4 }),
                     viewCount: faker.number.int({ min: 0, max: 5000 }),
                     status: 'PUBLISHED',
@@ -149,185 +188,6 @@ async function main() {
             });
         }
     }
-    console.log('Created posts for all users.');
-
-    // 4. CREATE FRIENDSHIPS
-    // Create random friendships
-    for (let i = 0; i < 200; i++) {
-        const userA = faker.helpers.arrayElement(users);
-        const userB = faker.helpers.arrayElement(users.filter(u => u.id !== userA.id));
-
-        const exists = await prisma.friendship.findFirst({
-            where: {
-                OR: [
-                    { userAId: userA.id, userBId: userB.id },
-                    { userAId: userB.id, userBId: userA.id }
-                ]
-            }
-        });
-
-        if (!exists) {
-            await prisma.friendship.create({
-                data: {
-                    userAId: userA.id,
-                    userBId: userB.id,
-                    status: 'FRIEND'
-                }
-            });
-        }
-    }
-    console.log('Created friendships.');
-
-    // 5. CREATE CHAT MESSAGES
-    // Direct Messages between friends
-    const friendships = await prisma.friendship.findMany();
-    for (const friendship of friendships) {
-        // Randomly decide if they have chatted
-        if (faker.datatype.boolean(0.7)) {
-            const numMessages = faker.number.int({ min: 1, max: 20 });
-            for (let m = 0; m < numMessages; m++) {
-                const senderId = faker.datatype.boolean() ? friendship.userAId : friendship.userBId;
-                const receiverId = senderId === friendship.userAId ? friendship.userBId : friendship.userAId;
-
-                await prisma.chatMessage.create({
-                    data: {
-                        content: faker.lorem.sentence(),
-                        type: 'TEXT',
-                        senderId: senderId,
-                        receiverId: receiverId,
-                        isRead: faker.datatype.boolean(0.8),
-                        createdAt: faker.date.recent({ days: 30 })
-                    }
-                });
-            }
-        }
-    }
-
-    // Team Messages
-    for (const team of teams) {
-        // Get team members
-        const teamMembers = await prisma.teamMember.findMany({ where: { teamId: team.id } });
-        if (teamMembers.length > 0) {
-            const numMessages = faker.number.int({ min: 5, max: 50 });
-            for (let m = 0; m < numMessages; m++) {
-                const senderMember = faker.helpers.arrayElement(teamMembers);
-                await prisma.chatMessage.create({
-                    data: {
-                        content: faker.lorem.sentence(),
-                        type: 'TEXT',
-                        senderId: senderMember.userId,
-                        teamId: team.id,
-                        isRead: true, // Simplified for team chat
-                        createdAt: faker.date.recent({ days: 30 })
-                    }
-                });
-            }
-        }
-    }
-    console.log('Created chat messages.');
-
-
-    // 6. CREATE FEEDBACK (Suggestions & Reports)
-
-    // 6.1 Suggestions
-    for (let i = 0; i < 15; i++) {
-        const user = faker.helpers.arrayElement(users);
-        await prisma.feedback.create({
-            data: {
-                userId: user.id,
-                content: faker.lorem.paragraph(),
-                type: 'SUGGESTION',
-                status: faker.helpers.arrayElement(['PENDING', 'PROCESSED', 'ADOPTED', 'IGNORED']),
-                contact: user.email,
-            }
-        });
-    }
-
-    // 6.2 User Reports
-    for (let i = 0; i < 10; i++) {
-        const reporter = faker.helpers.arrayElement(users);
-        const reportedUser = faker.helpers.arrayElement(users.filter(u => u.id !== reporter.id));
-        await prisma.feedback.create({
-            data: {
-                userId: reporter.id,
-                content: `Report user: ${reportedUser.name}. Reason: ${faker.lorem.sentence()}`,
-                type: 'REPORT',
-                reportType: 'USER',
-                reportedUserId: reportedUser.id,
-                status: faker.helpers.arrayElement(['PENDING', 'RESOLVED', 'IGNORED']),
-            }
-        });
-    }
-
-    // 6.3 Post Reports
-    const allPosts = await prisma.post.findMany({ take: 50 });
-    if (allPosts.length > 0) {
-        for (let i = 0; i < 10; i++) {
-            const reporter = faker.helpers.arrayElement(users);
-            const reportedPost = faker.helpers.arrayElement(allPosts);
-            await prisma.feedback.create({
-                data: {
-                    userId: reporter.id,
-                    content: `Report post: ${reportedPost.title}. Reason: ${faker.lorem.sentence()}`,
-                    type: 'REPORT',
-                    reportType: 'POST',
-                    reportedPostId: reportedPost.id,
-                    status: faker.helpers.arrayElement(['PENDING', 'RESOLVED', 'IGNORED']),
-                }
-            });
-        }
-    }
-
-    // 6.4 Message Reports
-    const allMessages = await prisma.chatMessage.findMany({ take: 50 });
-    if (allMessages.length > 0) {
-        for (let i = 0; i < 10; i++) {
-            const reporter = faker.helpers.arrayElement(users);
-            const reportedMessage = faker.helpers.arrayElement(allMessages);
-            await prisma.feedback.create({
-                data: {
-                    userId: reporter.id,
-                    content: `Report message: "${reportedMessage.content.substring(0, 20)}...". Reason: ${faker.lorem.sentence()}`,
-                    type: 'REPORT',
-                    reportType: 'MESSAGE',
-                    reportedMessageId: reportedMessage.id,
-                    status: faker.helpers.arrayElement(['PENDING', 'RESOLVED', 'IGNORED']),
-                }
-            });
-        }
-    }
-    console.log('Created feedback.');
-
-
-    // 7. CREATE CATEGORIES (Interests)
-    const categories = [
-        { name: 'Sports', children: ['Basketball', 'Soccer', 'Tennis'] },
-        { name: 'Tech', children: ['Programming', 'AI', 'Gadgets'] },
-        { name: 'Arts', children: ['Music', 'Painting', 'Photography'] },
-        { name: 'Games', children: ['RPG', 'FPS', 'MOBA'] },
-    ];
-
-    for (const cat of categories) {
-        const parent = await prisma.category.create({
-            data: {
-                name: cat.name,
-                description: `All about ${cat.name}`,
-                usageCount: faker.number.int({ min: 100, max: 1000 })
-            }
-        });
-
-        for (const childName of cat.children) {
-            await prisma.category.create({
-                data: {
-                    name: childName,
-                    parentId: parent.id,
-                    description: `${childName} related discussions`,
-                    usageCount: faker.number.int({ min: 50, max: 500 })
-                }
-            });
-        }
-    }
-    console.log('Created interest categories.');
 
     console.log('Seeding finished.');
 }

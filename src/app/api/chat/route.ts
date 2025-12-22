@@ -14,12 +14,15 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const targetUserId = searchParams.get("userId");
         const teamId = searchParams.get("teamId");
+        const categoryId = searchParams.get("categoryId");
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
 
         let where: any = {};
-        if (teamId) {
+        if (categoryId) {
+            where = { categoryId };
+        } else if (teamId) {
             where = { teamId };
         } else if (targetUserId) {
             where = {
@@ -29,7 +32,7 @@ export async function GET(req: Request) {
                 ]
             };
         } else {
-            return NextResponse.json(formatResponse(false, "Missing userId or teamId"), { status: 400 });
+            return NextResponse.json(formatResponse(false, "Missing userId or teamId or categoryId"), { status: 400 });
         }
 
         const messages = await prisma.chatMessage.findMany({
@@ -59,7 +62,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { content, receiverId, teamId, type } = body;
+        const { content, receiverId, teamId, categoryId, type } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
@@ -70,7 +73,8 @@ export async function POST(req: Request) {
                 type: type || "TEXT",
                 senderId: user.id,
                 receiverId, // Optional
-                teamId      // Optional
+                teamId,      // Optional
+                categoryId
             },
             include: {
                 sender: { select: { id: true, name: true, image: true } }

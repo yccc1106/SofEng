@@ -1,5 +1,40 @@
+import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { PrismaClient } from '@prisma/client';
+import InterestSelector from '@/components/Home/InterestSelector';
+import NavBar from '@/components/User/NavBar'; // Include NavBar for consistency
 
-export default function Home() {
-  redirect('/user/posts');
+const prisma = new PrismaClient();
+
+export default async function Home() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect('/user/login'); // Redirect to login page
+  }
+
+  // Fetch top-level categories (those without parents)
+  const categories = await prisma.category.findMany({
+    where: { parentId: null },
+    include: {
+      children: true
+    },
+    orderBy: { usageCount: 'desc' }
+  });
+
+  return (
+    <div className="min-h-screen bg-[#f9fafb]">
+      <NavBar />
+      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+            Discover Your Community
+          </h1>
+          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
+            Select an interest to explore posts, chat with others, and find your team.
+          </p>
+        </div>
+        <InterestSelector categories={categories} />
+      </main>
+    </div>
+  );
 }

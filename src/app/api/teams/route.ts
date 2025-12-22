@@ -11,6 +11,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get("type");
         const mine = searchParams.get("mine") === "true";
+        const categoryId = searchParams.get("categoryId"); // Extract categoryId
         const session = await auth();
 
         const where: any = {};
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
         } else {
             where.status = "RECRUITING";
             if (type) where.type = type;
+            if (categoryId) where.categoryId = categoryId; // Add categoryId filter
         }
 
         const teams = await prisma.team.findMany({
@@ -80,7 +82,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { name, description, type, maxMembers } = body;
+        const { name, description, type, maxMembers, categoryId } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
@@ -92,6 +94,7 @@ export async function POST(req: Request) {
                 type,
                 maxMembers: maxMembers || 5,
                 creatorId: user.id,
+                categoryId: categoryId || null,
                 members: {
                     create: {
                         userId: user.id,

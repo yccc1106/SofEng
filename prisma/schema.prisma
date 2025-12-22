@@ -88,6 +88,9 @@ model Post {
   
   status    String   @default("PUBLISHED") // PUBLISHED, AUDITING, REJECTED, DELETED
   
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  
   reports   Feedback[]
   
   createdAt DateTime @default(now())
@@ -128,6 +131,9 @@ model Team {
   creatorId   String
   creator     User     @relation("TeamCreator", fields: [creatorId], references: [id])
   
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+
   members     TeamMember[]
   messages    ChatMessage[]
   
@@ -191,6 +197,9 @@ model ChatMessage {
   
   teamId    String?
   team      Team?    @relation(fields: [teamId], references: [id])
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
   
   isRead    Boolean  @default(false)
   
@@ -248,6 +257,10 @@ model Category {
   children  Category[] @relation("CategoryToCategory")
   description String?
   
+  posts     Post[]
+  teams     Team[]
+  messages  ChatMessage[]
+
   usageCount Int      @default(0)
   
   createdAt DateTime @default(now())

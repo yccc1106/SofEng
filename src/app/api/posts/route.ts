@@ -12,6 +12,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
+        const categoryId = searchParams.get("categoryId"); // Extract categoryId
         const skip = (page - 1) * limit;
 
         let userId: string | null = null;
@@ -23,8 +24,13 @@ export async function GET(req: Request) {
             userId = user?.id || null;
         }
 
+        const where: any = { status: "PUBLISHED" };
+        if (categoryId) {
+            where.categoryId = categoryId;
+        }
+
         const posts = await prisma.post.findMany({
-            where: { status: "PUBLISHED" },
+            where: where,
             include: {
                 author: {
                     select: {
@@ -88,7 +94,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { title, content, images, tags } = body;
+        const { title, content, images, tags, categoryId } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
@@ -100,6 +106,7 @@ export async function POST(req: Request) {
                 images: images || [],
                 tags: tags || [],
                 authorId: user.id,
+                categoryId: categoryId || null
             },
         });
 

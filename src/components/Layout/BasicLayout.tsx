@@ -28,7 +28,12 @@ export default function BasicLayout({
     const pathname = usePathname();
 
     // If user route (except login potentially, but generally all user routes), bypass Admin Layout
-    if (pathname?.startsWith('/user')) {
+    const isUserRoute =
+        pathname === '/' ||
+        pathname?.startsWith('/user') ||
+        (pathname?.startsWith('/interest') && !pathname?.startsWith('/interest/manage'));
+
+    if (isUserRoute) {
         return <div className="min-h-screen bg-gray-50">{children}</div>;
     }
 
