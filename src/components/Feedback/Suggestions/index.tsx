@@ -62,7 +62,9 @@ const Suggestions: React.FC = () => {
         {
             title: '状态',
             dataIndex: 'status',
-            width: 100,
+            width: 120,
+            align: 'center',
+            fixed:'right',
             valueEnum: {
                 PENDING: { text: '待处理', status: 'Processing' },
                 PROCESSED: { text: '已处理', status: 'Success' },
@@ -80,6 +82,8 @@ const Suggestions: React.FC = () => {
             title: '操作',
             valueType: 'option',
             width: 80,
+            fixed: 'right',
+            align: 'center',
             render: (_, record) => record.status === 'PENDING' ? [
                 <a key="process" onClick={() => {
                     setCurrentRow(record);
