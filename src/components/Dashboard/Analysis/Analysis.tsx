@@ -32,7 +32,16 @@ const Analysis: FC<AnalysisProps> = () => {
   const [rangePickerValue, setRangePickerValue] = useState<RangePickerValue>(
     getTimeDistance('year'),
   );
-  const { loading, data } = useRequest(fakeChartData);
+  const { loading, data , error } = useRequest(fakeChartData);
+  // 添加调试
+  console.log('Analysis 组件数据:', {
+    loading,
+    error,
+    data,
+    dataKeys: data ? Object.keys(data) : [],
+    hasIntroduceData: !!data?.userCount,
+    hasCategoryData: Array.isArray(data?.categoryData)
+    });
   const selectDate = (type: TimeType) => {
     setRangePickerValue(getTimeDistance(type));
   };
