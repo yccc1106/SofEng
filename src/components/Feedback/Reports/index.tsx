@@ -72,11 +72,15 @@ const Reports: React.FC = () => {
         {
             title: 'ID',
             dataIndex: 'id',
-            width: 48,
+            width: 100,
+            copyable: true,
+            ellipsis: true,
         },
         {
             title: '举报人',
             dataIndex: 'user',
+            width: 120,
+            ellipsis: true,
         },
         {
             title: '举报对象',
@@ -86,7 +90,7 @@ const Reports: React.FC = () => {
                 POST: { text: '帖子', status: 'Warning' },
                 MESSAGE: { text: '消息', status: 'Processing' },
             },
-            width: 80,
+            width: 100,
         },
         {
             title: '举报详情',
@@ -107,6 +111,7 @@ const Reports: React.FC = () => {
         {
             title: '状态',
             dataIndex: 'status',
+            width: 100,
             valueEnum: {
                 PENDING: { text: '待处理', status: 'Processing' },
                 PROCESSED: { text: '已处理', status: 'Success' },
@@ -118,10 +123,12 @@ const Reports: React.FC = () => {
             title: '提交时间',
             dataIndex: 'date',
             valueType: 'date',
+            width: 120,
         },
         {
             title: '操作',
             valueType: 'option',
+            width: 80,
             render: (_, record) => record.status === 'PENDING' ? [
                 <a key="process" onClick={() => {
                     setCurrentRow(record);
@@ -145,6 +152,7 @@ const Reports: React.FC = () => {
                 headerTitle="Report Management"
                 actionRef={actionRef}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 search={{
                     labelWidth: 120,
                     filterType: 'light',

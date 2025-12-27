@@ -43,25 +43,31 @@ const ChatModeration: React.FC = () => {
         {
             title: 'ID',
             dataIndex: 'id',
-            width: 48,
+            width: 100,
+            copyable: true,
+            ellipsis: true,
         },
         {
             title: '发送者',
             dataIndex: 'sender',
+            width: 120,
+            ellipsis: true,
         },
         {
             title: '接收者',
             dataIndex: 'receiver',
+            width: 120,
+            ellipsis: true,
         },
         {
             title: '内容摘要',
             dataIndex: 'content',
-            width: 300,
             ellipsis: true,
         },
         {
             title: '风险等级',
             dataIndex: 'riskLevel',
+            width: 100,
             render: (_, record) => {
                 const color = record.riskLevel === 'high' ? 'red' : record.riskLevel === 'medium' ? 'orange' : 'green';
                 return <Tag color={color}>{record.riskLevel.toUpperCase()}</Tag>;
@@ -71,10 +77,12 @@ const ChatModeration: React.FC = () => {
             title: '时间',
             dataIndex: 'timestamp',
             valueType: 'dateTime',
+            width: 160,
         },
         {
             title: '操作',
             valueType: 'option',
+            width: 120,
             render: (_, record) => [
                 <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
                     通过
@@ -97,6 +105,7 @@ const ChatModeration: React.FC = () => {
                 headerTitle="Chat Moderation (Recent Messages)"
                 actionRef={actionRef}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 search={{
                     labelWidth: 120,
                     filterType: 'light',

@@ -44,11 +44,15 @@ const Suggestions: React.FC = () => {
         {
             title: 'ID',
             dataIndex: 'id',
-            width: 48,
+            width: 100,
+            copyable: true,
+            ellipsis: true,
         },
         {
             title: '用户',
             dataIndex: 'user',
+            width: 120,
+            ellipsis: true,
         },
         {
             title: '建议内容',
@@ -58,6 +62,7 @@ const Suggestions: React.FC = () => {
         {
             title: '状态',
             dataIndex: 'status',
+            width: 100,
             valueEnum: {
                 PENDING: { text: '待处理', status: 'Processing' },
                 PROCESSED: { text: '已处理', status: 'Success' },
@@ -69,10 +74,12 @@ const Suggestions: React.FC = () => {
             title: '提交时间',
             dataIndex: 'date',
             valueType: 'date',
+            width: 120,
         },
         {
             title: '操作',
             valueType: 'option',
+            width: 80,
             render: (_, record) => record.status === 'PENDING' ? [
                 <a key="process" onClick={() => {
                     setCurrentRow(record);
@@ -96,6 +103,7 @@ const Suggestions: React.FC = () => {
                 headerTitle="User Suggestions"
                 actionRef={actionRef}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 search={{
                     labelWidth: 120,
                     filterType: 'light',

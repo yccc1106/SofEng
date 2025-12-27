@@ -38,28 +38,37 @@ const RoomModeration: React.FC = () => {
         {
             title: 'ID',
             dataIndex: 'id',
-            width: 48,
+            width: 100,
+            copyable: true,
+            ellipsis: true,
         },
         {
             title: '房间名',
             dataIndex: 'name',
+            width: 150,
+            ellipsis: true,
         },
         {
             title: '房主',
             dataIndex: 'owner',
+            width: 120,
+            ellipsis: true,
         },
         {
             title: '简介',
             dataIndex: 'description',
+            ellipsis: true,
         },
         {
             title: '成员数',
             dataIndex: 'members',
+            width: 80,
             sorter: true,
         },
         {
             title: '状态',
             dataIndex: 'status',
+            width: 100,
             valueEnum: {
                 recruiting: { text: '招募中', status: 'Processing' },
                 full: { text: '已满员', status: 'Success' },
@@ -69,6 +78,7 @@ const RoomModeration: React.FC = () => {
         {
             title: '操作',
             valueType: 'option',
+            width: 120,
             render: (_, record) => [
                 <a key="check" onClick={() => message.info('检查房间信息: ' + record.name)}>
                     检查
@@ -93,6 +103,7 @@ const RoomModeration: React.FC = () => {
                 headerTitle="Room/Team Moderation"
                 actionRef={actionRef}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 search={{
                     labelWidth: 120,
                     filterType: 'light',

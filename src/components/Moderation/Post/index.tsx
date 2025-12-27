@@ -49,19 +49,25 @@ const PostModeration: React.FC = () => {
         {
             title: 'ID',
             dataIndex: 'id',
-            width: 48,
+            width: 100,
+            copyable: true,
+            ellipsis: true,
         },
         {
             title: '作者',
             dataIndex: 'author',
+            width: 120,
+            ellipsis: true,
         },
         {
             title: '标题',
             dataIndex: 'title',
+            ellipsis: true,
         },
         {
             title: '配图',
             dataIndex: 'imageUrl',
+            width: 80,
             render: (_, record) => {
                 return record.imageUrl ? <Image src={record.imageUrl} width={50} /> : '-';
             },
@@ -69,6 +75,7 @@ const PostModeration: React.FC = () => {
         {
             title: '状态',
             dataIndex: 'status',
+            width: 100,
             valueEnum: {
                 pending: { text: '待审核', status: 'Processing' },
                 approved: { text: '已通过', status: 'Success' },
@@ -79,10 +86,12 @@ const PostModeration: React.FC = () => {
             title: '发布时间',
             dataIndex: 'date',
             valueType: 'date',
+            width: 120,
         },
         {
             title: '操作',
             valueType: 'option',
+            width: 150,
             render: (_, record) => [
                 <a key="view" onClick={() => message.info('查看详情: ' + record.content)}>
                     查看
@@ -108,6 +117,7 @@ const PostModeration: React.FC = () => {
                 headerTitle="Moderation Queue"
                 actionRef={actionRef}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 search={{
                     labelWidth: 120,
                     filterType: 'light', // Cleaner search
