@@ -81,8 +81,8 @@ async function main() {
     console.log(`Created admin user: ${admin.email}`);
 
     // Create Normal Users
-    // Increase to 100 users
-    for (let i = 0; i < 100; i++) {
+    // Increase to 1000 users
+    for (let i = 0; i < 1000; i++) {
         const firstName = faker.person.firstName();
         const lastName = faker.person.lastName();
         const user = await prisma.user.create({

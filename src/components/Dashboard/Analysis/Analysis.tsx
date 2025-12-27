@@ -96,11 +96,29 @@ const Analysis: FC<AnalysisProps> = () => {
   const handleTabChange = (key: string) => {
     setCurrentTabKey(key);
   };
-  const activeKey = currentTabKey || data?.offlineData[0]?.name || '';
-  return (
+    const activeKey = currentTabKey || data?.offlineData?.[0]?.name || '';
+
+
+    return (
     <GridContent>
       <Suspense fallback={<PageLoading />}>
-        <IntroduceRow loading={loading} visitData={data?.visitData || []} />
+        <IntroduceRow
+            loading={loading}
+            visitData={data?.visitData || []}
+            userCount={data?.userCount}
+            dailyActiveUsers={data?.dailyActiveUsers}
+            weeklyActiveUsers={data?.weeklyActiveUsers}
+            newPosts={data?.newPosts}
+            pendingReports={data?.pendingReports}
+            processedReports={data?.processedReports}
+            newUsers={data?.newUsers}
+            interactionRate={data?.interactionRate}
+            weeklyGrowth={data?.weeklyGrowth}
+            dailyGrowth={data?.dailyGrowth}
+            todayUsers={data?.todayUsers}
+            postweeklyGrowth={data?.postweeklyGrowth || []}
+            overallProcessingRate={data?.overallProcessingRate??0}
+        />
       </Suspense>
 
       <Suspense fallback={null}>
@@ -111,6 +129,7 @@ const Analysis: FC<AnalysisProps> = () => {
           handleRangePickerChange={handleRangePickerChange}
           loading={loading}
           selectDate={selectDate}
+          categoryData={data?.categoryData || []}
         />
       </Suspense>
 

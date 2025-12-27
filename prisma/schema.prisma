@@ -36,7 +36,7 @@ model User {
   major         String?
   grade         String?
   bio           String?
-  
+
   personalityType String? // MBTI type
   personalityTags String[] // e.g. ["INTJ", "Analytical"]
 
@@ -46,24 +46,24 @@ model User {
   collections   PostCollection[]
   comments      PostComment[]
 
-  
+
   teamsCreated  Team[]    @relation("TeamCreator")
   teamMembers   TeamMember[]
-  
+
   sentFriendRequests     FriendRequest[] @relation("Sender")
   receivedFriendRequests FriendRequest[] @relation("Receiver")
-  
+
   friendsAsA    Friendship[] @relation("UserA")
   friendsAsB    Friendship[] @relation("UserB")
-  
+
   sentMessages  ChatMessage[] @relation("Sender")
   receivedMessages ChatMessage[] @relation("Receiver")
-  
+
   feedback      Feedback[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   status    String   @default("ACTIVE") // ACTIVE, BANNED
   reportsReceived Feedback[] @relation("ReportedUser")
 }
@@ -74,25 +74,25 @@ model Post {
   content   String
   images    String[]
   tags      String[]
-  
+
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
-  
+
   likes     PostLike[]
 
   collections PostCollection[]
   comments  PostComment[]
 
-  
+
   viewCount Int      @default(0)
-  
+
   status    String   @default("PUBLISHED") // PUBLISHED, AUDITING, REJECTED, DELETED
-  
+
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
-  
+
   reports   Feedback[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -127,16 +127,16 @@ model Team {
   maxMembers  Int
   status      String   @default("RECRUITING") // RECRUITING, FULL, DISBANDED
   requiresApproval Boolean @default(true)
-  
+
   creatorId   String
   creator     User     @relation("TeamCreator", fields: [creatorId], references: [id])
-  
+
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
 
   members     TeamMember[]
   messages    ChatMessage[]
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -150,9 +150,9 @@ model TeamMember {
   role      String   @default("MEMBER") // LEADER, MEMBER
   status    String   @default("JOINED") // JOINED, PENDING
   joinMessage String?
-  
+
   joinedAt  DateTime @default(now())
-  
+
   @@unique([teamId, userId])
 }
 
@@ -162,11 +162,11 @@ model Friendship {
   userA     User     @relation("UserA", fields: [userAId], references: [id])
   userBId   String
   userB     User     @relation("UserB", fields: [userBId], references: [id])
-  
+
   status    String   @default("FRIEND")
-  
+
   createdAt DateTime @default(now())
-  
+
   @@unique([userAId, userBId])
 }
 
@@ -176,10 +176,10 @@ model FriendRequest {
   sender    User     @relation("Sender", fields: [senderId], references: [id])
   receiverId String
   receiver  User     @relation("Receiver", fields: [receiverId], references: [id])
-  
+
   status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
   message   String?
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -188,23 +188,23 @@ model ChatMessage {
   id        String   @id @default(uuid())
   content   String
   type      String   @default("TEXT") // TEXT, IMAGE, AUDIO
-  
+
   senderId  String
   sender    User     @relation("Sender", fields: [senderId], references: [id])
-  
+
   receiverId String?
   receiver   User?    @relation("Receiver", fields: [receiverId], references: [id])
-  
+
   teamId    String?
   team      Team?    @relation(fields: [teamId], references: [id])
 
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
-  
+
   isRead    Boolean  @default(false)
-  
+
   createdAt DateTime @default(now())
-  
+
   reports   Feedback[]
 }
 
@@ -212,25 +212,25 @@ model Feedback {
   id        String   @id @default(uuid())
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
-  
+
   content   String
   type      String   // SUGGESTION, REPORT
   status    String   @default("PENDING") // PENDING, PROCESSED, RESOLVED, IGNORED
-  
+
   reportType String? // USER, POST, MESSAGE
-  
+
   reportedUserId String?
   reportedUser   User?   @relation("ReportedUser", fields: [reportedUserId], references: [id])
-  
+
   reportedPostId String?
   reportedPost   Post?   @relation(fields: [reportedPostId], references: [id])
-  
+
   reportedMessageId String?
   reportedMessage   ChatMessage? @relation(fields: [reportedMessageId], references: [id])
-  
+
   contact   String?
   images    String[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -238,13 +238,13 @@ model Feedback {
 model PostComment {
   id        String   @id @default(uuid())
   content   String
-  
+
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  
+
   postId    String
   post      Post     @relation(fields: [postId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -256,13 +256,13 @@ model Category {
   parent    Category? @relation("CategoryToCategory", fields: [parentId], references: [id])
   children  Category[] @relation("CategoryToCategory")
   description String?
-  
+
   posts     Post[]
   teams     Team[]
   messages  ChatMessage[]
 
   usageCount Int      @default(0)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

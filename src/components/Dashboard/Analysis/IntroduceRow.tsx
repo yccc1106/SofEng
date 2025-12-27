@@ -19,11 +19,38 @@ const topColResponsiveProps = {
   },
 };
 const IntroduceRow = ({
-  loading,
-  visitData,
+    loading,
+    visitData,
+    userCount,
+    dailyActiveUsers,
+    weeklyActiveUsers,
+    newPosts,
+    pendingReports,
+    processedReports,
+    newUsers,
+    interactionRate,
+    weeklyGrowth,
+    dailyGrowth,
+    todayUsers,
+    postweeklyGrowth,
+    overallProcessingRate,
+
 }: {
   loading: boolean;
   visitData: DataItem[];
+  userCount?: number;
+  dailyActiveUsers?: number;
+  weeklyActiveUsers?: number;
+  newPosts?: number;
+  pendingReports?: number;
+  processedReports?: number;
+  newUsers?: number;
+  interactionRate?: number;
+  weeklyGrowth?: number;
+  dailyGrowth?: number;
+  todayUsers?: number;
+  postweeklyGrowth?: DataItem[];
+    overallProcessingRate: number;
 }) => {
   const { styles } = useStyles();
   return (
@@ -38,11 +65,11 @@ const IntroduceRow = ({
             </Tooltip>
           }
           loading={loading}
-          total={() => <span>126,560</span>}
+          total={() => <span>{userCount}</span>}
           footer={
             <Field
               label="日新增用户"
-              value={numeral(123).format('0,0')}
+              value={numeral({todayUsers}).format('0,0')}
             />
           }
           contentHeight={46}
@@ -54,11 +81,11 @@ const IntroduceRow = ({
             }}
           >
             周同比
-            <span className={styles.trendText}>12%</span>
+            <span className={styles.trendText}>{weeklyGrowth}%</span>
           </Trend>
           <Trend flag="up">
             日同比
-            <span className={styles.trendText}>11%</span>
+            <span className={styles.trendText}>{dailyGrowth}%</span>
           </Trend>
         </ChartCard>
       </Col>
@@ -73,9 +100,9 @@ const IntroduceRow = ({
               <InfoCircleOutlined />
             </Tooltip>
           }
-          total={numeral(8846).format('0,0')}
+          total={numeral({dailyActiveUsers}).format('0,0')}
           footer={
-            <Field label="周均活跃" value={numeral(8134).format('0,0')} />
+            <Field label="周均活跃" value={numeral({weeklyActiveUsers}).format('0,0')} />
           }
           contentHeight={46}
         >
@@ -105,8 +132,8 @@ const IntroduceRow = ({
               <InfoCircleOutlined />
             </Tooltip>
           }
-          total={numeral(6560).format('0,0')}
-          footer={<Field label="用户互动率" value="60%" />}
+          total={numeral({newPosts}).format('0,0')}
+          footer={<Field label="用户互动率" value={`${interactionRate}%`} />}
           contentHeight={46}
         >
           <Column
@@ -115,7 +142,7 @@ const IntroduceRow = ({
             padding={-20}
             axis={false}
             height={46}
-            data={visitData}
+            data={postweeklyGrowth}
             scale={{ x: { paddingInner: 0.4 } }}
           />
         </ChartCard>
@@ -130,7 +157,7 @@ const IntroduceRow = ({
               <InfoCircleOutlined />
             </Tooltip>
           }
-          total="12"
+          total={pendingReports}
           footer={
             <div
               style={{
@@ -138,13 +165,13 @@ const IntroduceRow = ({
                 overflow: 'hidden',
               }}
             >
-              <Field label="今日已处理" value="45" />
+              <Field label="今日已处理" value={processedReports} />
             </div>
           }
           contentHeight={46}
         >
           <Progress
-            percent={78}
+            percent={overallProcessingRate}
             strokeColor={{ from: '#108ee9', to: '#87d068' }}
             status="active"
           />

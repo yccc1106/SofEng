@@ -32,14 +32,29 @@ export type RadarData = {
 };
 
 export interface AnalysisData {
-  visitData: DataItem[];
-  visitData2: DataItem[];
-  salesData: DataItem[];
-  searchData: DataItem[];
-  offlineData: OfflineDataType[];
-  offlineChartData: DataItem[];
-  salesTypeData: DataItem[];
-  salesTypeDataOnline: DataItem[];
-  salesTypeDataOffline: DataItem[];
-  radarData: RadarData[];
+    visitData: DataItem[];
+    salesData: DataItem[];
+    salesTypeData: DataItem[];
+    visitData2: DataItem[];
+    searchData: DataItem[];
+    offlineData: OfflineDataType[];
+    offlineChartData: DataItem[];
+    salesTypeDataOnline: DataItem[];
+    salesTypeDataOffline: DataItem[];
+    // 添加数据库统计字段
+    userCount?: number;
+    dailyActiveUsers?: number;
+    weeklyActiveUsers?: number;
+    newPosts?: number;
+    pendingReports?: number;
+    processedReports?: number;
+    newUsers?: number;
+    interactionRate?: number;
+    weeklyGrowth?: number;
+    dailyGrowth?: number;
+    todayUsers?: number;
+    postweeklyGrowth?: DataItem[];
+    overallProcessingRate?: number;
+    categoryData?: { name: string; usageCount: number }[];
+
 }

@@ -1,7 +1,7 @@
 'use client';
 import Analysis from "@/components/Dashboard/Analysis/Analysis";
 
-export default function DashboardPage() {
+export default  function DashboardPage() {
     return (
         <div className="p-6">
             <div className="flex items-center gap-6 mb-8">

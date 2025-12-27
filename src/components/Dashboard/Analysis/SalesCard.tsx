@@ -13,13 +13,7 @@ const rankingListData: {
   total: number;
 }[] = [];
 
-const interestGroups = ['篮球俱乐部', '前端开发交流', '摄影爱好者', '原神交流群', '考研互助', '桌游社', '街舞团'];
-for (let i = 0; i < 7; i += 1) {
-  rankingListData.push({
-    title: interestGroups[i],
-    total: 323234 - i * 10000,
-  });
-}
+
 
 const SalesCard = ({
   rangePickerValue,
@@ -28,6 +22,7 @@ const SalesCard = ({
   handleRangePickerChange,
   loading,
   selectDate,
+  categoryData,  // 新增分类数据属性
 }: {
   rangePickerValue: RangePickerProps['value'];
   isActive: (key: TimeType) => string;
@@ -35,6 +30,7 @@ const SalesCard = ({
   loading: boolean;
   handleRangePickerChange: RangePickerProps['onChange'];
   selectDate: (key: TimeType) => void;
+  categoryData: { name: string; usageCount: number }[];  // 新增
 }) => {
   const { styles } = useStyles();
   return (
@@ -134,23 +130,22 @@ const SalesCard = ({
                   <div className={styles.salesRank}>
                     <h4 className={styles.rankingTitle}>热门兴趣小组排名</h4>
                     <ul className={styles.rankingList}>
-                      {rankingListData.map((item, i) => (
-                        <li key={item.title}>
-                          <span
-                            className={`${styles.rankingItemNumber} ${i < 3 ? styles.rankingItemNumberActive : ''
-                              }`}
-                          >
-                            {i + 1}
-                          </span>
-                          <span
-                            className={styles.rankingItemTitle}
-                            title={item.title}
-                          >
-                            {item.title}
-                          </span>
-                          <span>{numeral(item.total).format('0,0')}</span>
-                        </li>
-                      ))}
+                        {categoryData?.slice(0, 7).map((item, i) => (
+                            <li key={item.name}>
+                              <span
+                                  className={`${styles.rankingItemNumber} ${i < 3 ? styles.rankingItemNumberActive : ''}`}
+                              >
+                                {i + 1}
+                              </span>
+                                <span
+                                    className={styles.rankingItemTitle}
+                                    title={item.name}
+                                >
+                                {item.name}
+                              </span>
+                                <span>{numeral(item.usageCount).format('0,0')}</span>
+                            </li>
+                        ))}
                     </ul>
                   </div>
                 </Col>
@@ -191,27 +186,27 @@ const SalesCard = ({
                 <Col xl={8} lg={12} md={12} sm={24} xs={24}>
                   <div className={styles.salesRank}>
                     <h4 className={styles.rankingTitle}>热门话题排名</h4>
-                    <ul className={styles.rankingList}>
-                      {rankingListData.map((item, i) => (
-                        <li key={item.title}>
-                          <span
-                            className={`${i < 3
-                              ? styles.rankingItemNumberActive
-                              : styles.rankingItemNumber
-                              }`}
-                          >
-                            {i + 1}
-                          </span>
-                          <span
-                            className={styles.rankingItemTitle}
-                            title={item.title}
-                          >
-                            {item.title}
-                          </span>
-                          <span>{numeral(item.total).format('0,0')}</span>
-                        </li>
-                      ))}
-                    </ul>
+                      <ul className={styles.rankingList}>
+                          {categoryData?.slice(0, 7).map((item, i) => (
+                              <li key={item.name}>
+                                  <span
+                                      className={`${i < 3
+                                          ? styles.rankingItemNumberActive
+                                          : styles.rankingItemNumber
+                                      }`}
+                                  >
+                                    {i + 1}
+                                  </span>
+                                  <span
+                                      className={styles.rankingItemTitle}
+                                      title={item.name}
+                                  >
+                                    {item.name}
+                                  </span>
+                                  <span>{numeral(item.usageCount).format('0,0')}</span>
+                              </li>
+                          ))}
+                      </ul>
                   </div>
                 </Col>
               </Row>

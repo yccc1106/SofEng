@@ -14,6 +14,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 2. **建表，生成数据**
    ```bash
    npx prisma generate
+   npx prisma migrate dev
    npx prisma db seed
    ```
 
