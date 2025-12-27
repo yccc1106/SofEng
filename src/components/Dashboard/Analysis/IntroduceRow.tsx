@@ -19,21 +19,21 @@ const topColResponsiveProps = {
   },
 };
 const IntroduceRow = ({
-    loading,
-    visitData,
-    userCount,
-    dailyActiveUsers,
-    weeklyActiveUsers,
-    newPosts,
-    pendingReports,
-    processedReports,
-    newUsers,
-    interactionRate,
-    weeklyGrowth,
-    dailyGrowth,
-    todayUsers,
-    postweeklyGrowth,
-    overallProcessingRate,
+  loading,
+  visitData,
+  userCount,
+  dailyActiveUsers,
+  weeklyActiveUsers,
+  newPosts,
+  pendingReports,
+  processedReports,
+  newUsers,
+  interactionRate,
+  weeklyGrowth,
+  dailyGrowth,
+  todayUsers,
+  postweeklyGrowth,
+  overallProcessingRate,
 
 }: {
   loading: boolean;
@@ -50,7 +50,7 @@ const IntroduceRow = ({
   dailyGrowth?: number;
   todayUsers?: number;
   postweeklyGrowth?: DataItem[];
-    overallProcessingRate: number;
+  overallProcessingRate: number;
 }) => {
   const { styles } = useStyles();
   return (
@@ -69,7 +69,7 @@ const IntroduceRow = ({
           footer={
             <Field
               label="日新增用户"
-              value={numeral({todayUsers}).format('0,0')}
+              value={numeral(todayUsers).format('0,0')}
             />
           }
           contentHeight={46}
@@ -100,9 +100,9 @@ const IntroduceRow = ({
               <InfoCircleOutlined />
             </Tooltip>
           }
-          total={numeral({dailyActiveUsers}).format('0,0')}
+          total={numeral(dailyActiveUsers).format('0,0')}
           footer={
-            <Field label="周均活跃" value={numeral({weeklyActiveUsers}).format('0,0')} />
+            <Field label="周均活跃" value={numeral(weeklyActiveUsers).format('0,0')} />
           }
           contentHeight={46}
         >
@@ -132,7 +132,7 @@ const IntroduceRow = ({
               <InfoCircleOutlined />
             </Tooltip>
           }
-          total={numeral({newPosts}).format('0,0')}
+          total={numeral(newPosts).format('0,0')}
           footer={<Field label="用户互动率" value={`${interactionRate}%`} />}
           contentHeight={46}
         >
