@@ -83,6 +83,21 @@ export default function BasicLayout({
                         icon: <DashboardOutlined />,
                     },
                     {
+                        path: '/user-management',
+                        name: '用户管理',
+                        icon: <UserOutlined />,
+                        routes: [
+                            {
+                                path: '/user-management/list',
+                                name: '用户列表',
+                            },
+                            {
+                                path: '/user-management/verification',
+                                name: '学信认证',
+                            },
+                        ],
+                    },
+                    {
                         path: '/feedback',
                         name: 'Feedback',
                         icon: <MessageOutlined />,

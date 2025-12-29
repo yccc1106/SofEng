@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { ConfigProvider } from "antd";
@@ -8,16 +7,6 @@ import zhCN from "antd/locale/zh_CN";
 import BasicLayout from "@/components/Layout/BasicLayout";
 import { App } from 'antd';
 import { SessionProvider } from "next-auth/react";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -32,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
       >
         <AntdRegistry>
           <ConfigProvider
@@ -42,7 +31,7 @@ export default function RootLayout({
                 // Global Token Overrides
                 colorPrimary: '#1877F2', // Match CSS --primary
                 borderRadius: 8,
-                fontFamily: 'var(--font-geist-sans)',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                 colorBgLayout: '#F9FAFB', // Match CSS --surface-50
                 colorTextBase: '#111827',
               },
@@ -73,6 +62,6 @@ export default function RootLayout({
           </ConfigProvider>
         </AntdRegistry>
       </body>
-    </html>
+    </html >
   );
 }
