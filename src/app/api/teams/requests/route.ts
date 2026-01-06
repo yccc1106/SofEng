@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 // List pending requests for teams created by current user
 export async function GET() {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.id) return unauthorizedResponse("Unauthorized");
 
     try {
         const requests = await prisma.teamMember.findMany({
@@ -37,23 +35,27 @@ export async function GET() {
             orderBy: { joinedAt: "desc" }
         });
 
-        return NextResponse.json(formatResponse(true, "Requests retrieved", requests));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Internal server error", error.message), { status: 500 });
+        return successResponse(requests, "Requests retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
 
 // Approve or Reject a request
 export async function PATCH(req: Request) {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.id) return unauthorizedResponse("Unauthorized");
 
     try {
         const body = await req.json();
-        const { memberId, status } = body; // status: "JOINED" or "REJECTED" (or status can delete if rejected)
+        const { memberId, status } = body;
 
         if (!memberId || !["JOINED", "REJECTED"].includes(status)) {
-            return NextResponse.json(formatResponse(false, "Invalid data"), { status: 400 });
+            return errorResponse("Invalid data", 400);
         }
 
         const member = await prisma.teamMember.findUnique({
@@ -61,25 +63,22 @@ export async function PATCH(req: Request) {
             include: { team: true }
         });
 
-        if (!member) return NextResponse.json(formatResponse(false, "Request not found"), { status: 404 });
+        if (!member) return errorResponse("Request not found", 404);
 
-        // Check if current user is the leader
         if (member.team.creatorId !== session.user.id) {
-            return NextResponse.json(formatResponse(false, "Forbidden"), { status: 403 });
+            return errorResponse("Forbidden", 403);
         }
 
         if (status === "REJECTED") {
             await prisma.teamMember.delete({ where: { id: memberId } });
-            return NextResponse.json(formatResponse(true, "Request rejected"));
+            return successResponse(null, "Request rejected");
         }
 
-        // Approve
         const updatedMember = await prisma.teamMember.update({
             where: { id: memberId },
             data: { status: "JOINED" }
         });
 
-        // Check if team is now full
         const memberCount = await prisma.teamMember.count({
             where: { teamId: member.teamId, status: "JOINED" }
         });
@@ -91,8 +90,12 @@ export async function PATCH(req: Request) {
             });
         }
 
-        return NextResponse.json(formatResponse(true, "Request approved", updatedMember));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Internal server error", error.message), { status: 500 });
+        return successResponse(updatedMember, "Request approved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }

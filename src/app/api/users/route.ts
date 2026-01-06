@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { hashPassword, formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { hashPassword } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse } from "@/lib/response";
 
 export async function POST(req: Request) {
     try {
@@ -10,10 +9,7 @@ export async function POST(req: Request) {
         const { name, email, password, studentId, school } = body;
 
         if (!email || !password || !name) {
-            return NextResponse.json(
-                formatResponse(false, "Missing required fields"),
-                { status: 400 }
-            );
+            return errorResponse("Missing required fields", 400);
         }
 
         // Check if user exists
@@ -22,10 +18,7 @@ export async function POST(req: Request) {
         });
 
         if (existingUser) {
-            return NextResponse.json(
-                formatResponse(false, "User already exists"),
-                { status: 409 }
-            );
+            return errorResponse("User already exists", 409);
         }
 
         // Hash password
@@ -46,15 +39,14 @@ export async function POST(req: Request) {
         // Remove password from response
         const { password: _, ...userWithoutPassword } = user;
 
-        return NextResponse.json(
-            formatResponse(true, "User created successfully", userWithoutPassword),
-            { status: 201 }
-        );
-    } catch (error: any) {
+        return successResponse(userWithoutPassword, "User created successfully");
+
+    } catch (error) {
         console.error("Registration error:", error);
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 // GET comments for a post
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -24,9 +22,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             },
             orderBy: { createdAt: 'asc' }
         });
-        return NextResponse.json(formatResponse(true, "Comments retrieved", comments));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Error fetching comments", error.message), { status: 500 });
+        return successResponse(comments, "Comments retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Error fetching comments",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
 
@@ -35,15 +37,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     try {
         const { id } = await params;
         const session = await auth();
-        if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+        if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         const body = await req.json();
         const { content } = body;
 
-        if (!content) return NextResponse.json(formatResponse(false, "Content is required"), { status: 400 });
+        if (!content) return errorResponse("Content is required", 400);
 
         const comment = await prisma.postComment.create({
             data: {
@@ -63,8 +65,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             }
         });
 
-        return NextResponse.json(formatResponse(true, "Comment created", comment));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Error creating comment", error.message), { status: 500 });
+        return successResponse(comment, "Comment created");
+    } catch (error) {
+        return errorResponse(
+            "Error creating comment",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }

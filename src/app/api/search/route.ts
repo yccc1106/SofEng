@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 export async function GET(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
 
     if (!q || q.trim().length === 0) {
-        return NextResponse.json(formatResponse(true, "No query provided", { users: [], posts: [], teams: [] }));
+        return successResponse({ users: [], posts: [], teams: [] }, "No query provided");
     }
 
     try {
@@ -54,8 +52,12 @@ export async function GET(req: Request) {
             })
         ]);
 
-        return NextResponse.json(formatResponse(true, "Search results", { users, posts, teams }));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Search failed", error.message), { status: 500 });
+        return successResponse({ users, posts, teams }, "Search results");
+    } catch (error) {
+        return errorResponse(
+            "Search failed",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }

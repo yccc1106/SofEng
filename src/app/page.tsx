@@ -1,10 +1,8 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import InterestSelector from '@/components/Home/InterestSelector';
 import NavBar from '@/components/User/NavBar'; // Include NavBar for consistency
-
-const prisma = new PrismaClient();
 
 export default async function Home() {
   const session = await auth();

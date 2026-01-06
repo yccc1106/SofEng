@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, paginatedResponse } from "@/lib/response";
+import type { Prisma } from "@prisma/client";
 
-const prisma = new PrismaClient();
-
-// GET - 获取用户列表 (P1.10 查看用户个人信息)
+// GET - 获取用户列表
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
         const verificationStatus = searchParams.get('verificationStatus');
         const keyword = searchParams.get('keyword');
 
-        const where: any = {};
+        const where: Prisma.UserWhereInput = {};
 
         if (status) {
             where.status = status;
@@ -68,40 +68,32 @@ export async function GET(request: NextRequest) {
             prisma.user.count({ where })
         ]);
 
-        return NextResponse.json({
-            success: true,
-            data: users,
-            total,
-            page,
-            pageSize,
-        });
-    } catch (error: any) {
+        return paginatedResponse(users, page, pageSize, total);
+
+    } catch (error) {
         console.error("Get users error:", error);
-        return NextResponse.json(
-            { success: false, message: "获取用户列表失败", error: error.message },
-            { status: 500 }
+        return errorResponse(
+            "获取用户列表失败",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
 
-// PUT - 修改用户信息/状态 (P1.11 修改/冻结/删除用户信息)
+// PUT - 修改用户信息/状态
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
         const { id, action, ...updateData } = body;
 
         if (!id) {
-            return NextResponse.json(
-                { success: false, message: "用户ID不能为空" },
-                { status: 400 }
-            );
+            return errorResponse("用户ID不能为空", 400);
         }
 
         let updatedUser;
 
         switch (action) {
             case 'freeze':
-                // 冻结用户
                 updatedUser = await prisma.user.update({
                     where: { id },
                     data: { status: 'FROZEN' }
@@ -109,7 +101,6 @@ export async function PUT(request: NextRequest) {
                 break;
 
             case 'unfreeze':
-                // 解冻用户
                 updatedUser = await prisma.user.update({
                     where: { id },
                     data: { status: 'ACTIVE' }
@@ -117,7 +108,6 @@ export async function PUT(request: NextRequest) {
                 break;
 
             case 'ban':
-                // 封禁用户
                 updatedUser = await prisma.user.update({
                     where: { id },
                     data: { status: 'BANNED' }
@@ -125,7 +115,6 @@ export async function PUT(request: NextRequest) {
                 break;
 
             case 'activate':
-                // 激活用户
                 updatedUser = await prisma.user.update({
                     where: { id },
                     data: { status: 'ACTIVE' }
@@ -133,9 +122,8 @@ export async function PUT(request: NextRequest) {
                 break;
 
             case 'update':
-                // 更新用户资料
                 const allowedFields = ['name', 'email', 'school', 'major', 'grade', 'bio', 'role'];
-                const filteredData: any = {};
+                const filteredData: Record<string, unknown> = {};
                 for (const key of allowedFields) {
                     if (updateData[key] !== undefined) {
                         filteredData[key] = updateData[key];
@@ -148,54 +136,44 @@ export async function PUT(request: NextRequest) {
                 break;
 
             default:
-                return NextResponse.json(
-                    { success: false, message: "无效的操作类型" },
-                    { status: 400 }
-                );
+                return errorResponse("无效的操作类型", 400);
         }
 
-        return NextResponse.json({
-            success: true,
-            message: "操作成功",
-            data: updatedUser
-        });
-    } catch (error: any) {
+        return successResponse(updatedUser, "操作成功");
+
+    } catch (error) {
         console.error("Update user error:", error);
-        return NextResponse.json(
-            { success: false, message: "操作失败", error: error.message },
-            { status: 500 }
+        return errorResponse(
+            "操作失败",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
 
-// DELETE - 删除用户 (P1.11 删除用户)
+// DELETE - 删除用户
 export async function DELETE(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
         if (!id) {
-            return NextResponse.json(
-                { success: false, message: "用户ID不能为空" },
-                { status: 400 }
-            );
+            return errorResponse("用户ID不能为空", 400);
         }
 
-        // 软删除：将用户状态设为 DELETED，而不是真正删除
         await prisma.user.update({
             where: { id },
             data: { status: 'DELETED' }
         });
 
-        return NextResponse.json({
-            success: true,
-            message: "用户已删除"
-        });
-    } catch (error: any) {
+        return successResponse(null, "用户已删除");
+
+    } catch (error) {
         console.error("Delete user error:", error);
-        return NextResponse.json(
-            { success: false, message: "删除用户失败", error: error.message },
-            { status: 500 }
+        return errorResponse(
+            "删除用户失败",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

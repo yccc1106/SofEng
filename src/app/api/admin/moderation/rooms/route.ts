@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 export async function GET(req: Request) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
 
     try {
         const teams = await prisma.team.findMany({
@@ -24,25 +22,25 @@ export async function GET(req: Request) {
             status: t.status.toLowerCase()
         }));
 
-        return NextResponse.json({
-            data: formattedTeams,
-            success: true,
-            total: formattedTeams.length
-        });
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Internal server error", error.message), { status: 500 });
+        return successResponse(formattedTeams, "Teams retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
 
 export async function PUT(req: Request) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
 
     try {
         const body = await req.json();
-        const { id, action } = body; // action: 'close' | 'restore'
+        const { id, action } = body;
 
-        if (!id || !action) return NextResponse.json(formatResponse(false, "Missing fields"), { status: 400 });
+        if (!id || !action) return errorResponse("Missing fields", 400);
 
         if (action === 'close') {
             await prisma.team.update({
@@ -51,10 +49,12 @@ export async function PUT(req: Request) {
             });
         }
 
-        // Maybe handle restore if needed, or other actions
-
-        return NextResponse.json(formatResponse(true, "Team updated"));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Update failed", error.message), { status: 500 });
+        return successResponse(null, "Team updated");
+    } catch (error) {
+        return errorResponse(
+            "Update failed",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
