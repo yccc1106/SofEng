@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import type { Prisma } from "@prisma/client";
 
 // LIST posts
 export async function GET(req: Request) {
@@ -12,7 +11,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
-        const categoryId = searchParams.get("categoryId"); // Extract categoryId
+        const categoryId = searchParams.get("categoryId");
         const skip = (page - 1) * limit;
 
         let userId: string | null = null;
@@ -24,13 +23,13 @@ export async function GET(req: Request) {
             userId = user?.id || null;
         }
 
-        const where: any = { status: "PUBLISHED" };
+        const where: Prisma.PostWhereInput = { status: "PUBLISHED" };
         if (categoryId) {
             where.categoryId = categoryId;
         }
 
         const posts = await prisma.post.findMany({
-            where: where,
+            where,
             include: {
                 author: {
                     select: {
@@ -70,13 +69,12 @@ export async function GET(req: Request) {
             collections: undefined,
         }));
 
-        return NextResponse.json(
-            formatResponse(true, "Posts retrieved", formattedPosts)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(formattedPosts, "Posts retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
@@ -86,10 +84,7 @@ export async function POST(req: Request) {
     const session = await auth();
 
     if (!session?.user?.email) {
-        return NextResponse.json(
-            formatResponse(false, "Unauthorized"),
-            { status: 401 }
-        );
+        return unauthorizedResponse("Unauthorized");
     }
 
     try {
@@ -97,7 +92,7 @@ export async function POST(req: Request) {
         const { title, content, images, tags, categoryId } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         const post = await prisma.post.create({
             data: {
@@ -110,14 +105,12 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Post created", post),
-            { status: 201 }
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(post, "Post created");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

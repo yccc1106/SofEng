@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(grep -l 'new PrismaClient\\(\\)' src/app/api/**/*.ts src/app/**/*.ts)",
+      "Bash(grep:*)"
+    ]
+  }
+}

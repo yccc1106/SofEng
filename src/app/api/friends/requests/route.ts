@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 // LIST Friend Requests (Received)
 export async function GET(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     try {
         const { searchParams } = new URL(req.url);
-        const type = searchParams.get("type") || "received"; // received or sent
+        const type = searchParams.get("type") || "received";
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         let requests;
         if (type === "sent") {
@@ -30,13 +28,12 @@ export async function GET(req: Request) {
             });
         }
 
-        return NextResponse.json(
-            formatResponse(true, "Friend requests retrieved", requests)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(requests, "Friend requests retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
@@ -44,16 +41,15 @@ export async function GET(req: Request) {
 // SEND Friend Request
 export async function POST(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     try {
         const body = await req.json();
         const { receiverId, message } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
-        // Check existing request or friendship
         const existing = await prisma.friendRequest.findFirst({
             where: {
                 OR: [
@@ -65,7 +61,7 @@ export async function POST(req: Request) {
         });
 
         if (existing) {
-            return NextResponse.json(formatResponse(false, "Request already pending"), { status: 409 });
+            return errorResponse("Request already pending", 409);
         }
 
         const request = await prisma.friendRequest.create({
@@ -77,14 +73,12 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Friend request sent", request),
-            { status: 201 }
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(request, "Friend request sent");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

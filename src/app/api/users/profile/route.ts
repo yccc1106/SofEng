@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 export async function GET(req: Request) {
     const session = await auth();
 
     if (!session?.user?.email) {
-        return NextResponse.json(
-            formatResponse(false, "Unauthorized"),
-            { status: 401 }
-        );
+        return unauthorizedResponse("Unauthorized");
     }
 
     try {
@@ -36,19 +31,15 @@ export async function GET(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json(
-                formatResponse(false, "User not found"),
-                { status: 404 }
-            );
+            return errorResponse("User not found", 404);
         }
 
-        return NextResponse.json(
-            formatResponse(true, "User profile retrieved", user)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(user, "User profile retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
@@ -57,10 +48,7 @@ export async function PUT(req: Request) {
     const session = await auth();
 
     if (!session?.user?.email) {
-        return NextResponse.json(
-            formatResponse(false, "Unauthorized"),
-            { status: 401 }
-        );
+        return unauthorizedResponse("Unauthorized");
     }
 
     try {
@@ -81,13 +69,12 @@ export async function PUT(req: Request) {
             },
         });
 
-        return NextResponse.json(
-            formatResponse(true, "User profile updated", user)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(user, "User profile updated");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

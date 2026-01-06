@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import type { Prisma } from "@prisma/client";
 
 // GET Messages (params: targetId (userId), teamId, limit)
 export async function GET(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     try {
         const { searchParams } = new URL(req.url);
@@ -17,22 +16,20 @@ export async function GET(req: Request) {
         const categoryId = searchParams.get("categoryId");
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
-        let where: any = {};
+        const where: Prisma.ChatMessageWhereInput = {};
         if (categoryId) {
-            where = { categoryId };
+            where.categoryId = categoryId;
         } else if (teamId) {
-            where = { teamId };
+            where.teamId = teamId;
         } else if (targetUserId) {
-            where = {
-                OR: [
-                    { senderId: user.id, receiverId: targetUserId },
-                    { senderId: targetUserId, receiverId: user.id }
-                ]
-            };
+            where.OR = [
+                { senderId: user.id, receiverId: targetUserId },
+                { senderId: targetUserId, receiverId: user.id }
+            ];
         } else {
-            return NextResponse.json(formatResponse(false, "Missing userId or teamId or categoryId"), { status: 400 });
+            return errorResponse("Missing userId or teamId or categoryId", 400);
         }
 
         const messages = await prisma.chatMessage.findMany({
@@ -41,16 +38,15 @@ export async function GET(req: Request) {
             include: {
                 sender: { select: { id: true, name: true, image: true } }
             },
-            take: 100 // Limit for now
+            take: 100
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Messages retrieved", messages)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(messages, "Messages retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
@@ -58,22 +54,22 @@ export async function GET(req: Request) {
 // SEND Message
 export async function POST(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     try {
         const body = await req.json();
         const { content, receiverId, teamId, categoryId, type } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         const message = await prisma.chatMessage.create({
             data: {
                 content,
                 type: type || "TEXT",
                 senderId: user.id,
-                receiverId, // Optional
-                teamId,      // Optional
+                receiverId,
+                teamId,
                 categoryId
             },
             include: {
@@ -81,14 +77,12 @@ export async function POST(req: Request) {
             }
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Message sent", message),
-            { status: 201 }
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(message, "Message sent");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import type { Prisma } from "@prisma/client";
 
 // LIST Teams
 export async function GET(req: Request) {
@@ -11,10 +10,10 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get("type");
         const mine = searchParams.get("mine") === "true";
-        const categoryId = searchParams.get("categoryId"); // Extract categoryId
+        const categoryId = searchParams.get("categoryId");
         const session = await auth();
 
-        const where: any = {};
+        const where: Prisma.TeamWhereInput = {};
 
         if (mine && session?.user?.id) {
             where.members = {
@@ -26,7 +25,7 @@ export async function GET(req: Request) {
         } else {
             where.status = "RECRUITING";
             if (type) where.type = type;
-            if (categoryId) where.categoryId = categoryId; // Add categoryId filter
+            if (categoryId) where.categoryId = categoryId;
         }
 
         const teams = await prisma.team.findMany({
@@ -58,13 +57,12 @@ export async function GET(req: Request) {
             orderBy: { createdAt: "desc" },
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Teams retrieved", teams)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(teams, "Teams retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
@@ -74,10 +72,7 @@ export async function POST(req: Request) {
     const session = await auth();
 
     if (!session?.user?.email) {
-        return NextResponse.json(
-            formatResponse(false, "Unauthorized"),
-            { status: 401 }
-        );
+        return unauthorizedResponse("Unauthorized");
     }
 
     try {
@@ -85,7 +80,7 @@ export async function POST(req: Request) {
         const { name, description, type, maxMembers, categoryId } = body;
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         const team = await prisma.team.create({
             data: {
@@ -105,14 +100,12 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Team created", team),
-            { status: 201 }
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(team, "Team created");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

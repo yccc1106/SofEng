@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse } from "@/lib/response";
 
-const prisma = new PrismaClient();
-
-// GET - 获取单个用户详细信息 (P1.10 查看用户个人信息)
+// GET - 获取单个用户详细信息
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -80,21 +79,16 @@ export async function GET(
         });
 
         if (!user) {
-            return NextResponse.json(
-                { success: false, message: "用户不存在" },
-                { status: 404 }
-            );
+            return errorResponse("用户不存在", 404);
         }
 
-        return NextResponse.json({
-            success: true,
-            data: user
-        });
-    } catch (error: any) {
+        return successResponse(user, "User detail retrieved");
+    } catch (error) {
         console.error("Get user detail error:", error);
-        return NextResponse.json(
-            { success: false, message: "获取用户详情失败", error: error.message },
-            { status: 500 }
+        return errorResponse(
+            "获取用户详情失败",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }
