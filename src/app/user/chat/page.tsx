@@ -1,10 +1,11 @@
 'use client';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
 import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import { useChatSocket, generateRoomName } from '@/hooks/useChatSocket';
 
 const { Content, Sider } = Layout;
 const { Text, Title } = Typography;
@@ -93,12 +94,32 @@ const ChatContent = () => {
     useEffect(() => {
         if (targetUserId || teamId) {
             fetchMessages(true);
-            const interval = setInterval(() => fetchMessages(false), 3000);
-            return () => clearInterval(interval);
         } else {
             setMessages([]);
         }
     }, [targetUserId, teamId]);
+
+    // WebSocket 实时消息
+    const handleNewMessage = useCallback((newMessage: Message) => {
+        setMessages(prev => {
+            // 避免重复消息
+            if (prev.some(m => m.id === newMessage.id)) {
+                return prev;
+            }
+            return [...prev, newMessage];
+        });
+        scrollToBottom();
+    }, []);
+
+    const room = targetUserId || teamId || '';
+    const roomType: 'dm' | 'team' = teamId ? 'team' : 'dm';
+    const { isConnected } = useChatSocket({
+        room,
+        roomType,
+        token: session?.user?.id || '',
+        onNewMessage: handleNewMessage,
+        enabled: !!room && !!session?.user?.id,
+    });
 
     useEffect(() => {
         scrollToBottom();
@@ -241,8 +262,8 @@ const ChatContent = () => {
                                 <div className="flex flex-col">
                                     <Text strong className="text-lg leading-tight text-slate-800">{activeContact?.name}</Text>
                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                                        <Text type="secondary" className="text-xs font-medium">Online</Text>
+                                        <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)] ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                        <Text type="secondary" className="text-xs font-medium">{isConnected ? 'Online' : 'Connecting...'}</Text>
                                     </div>
                                 </div>
                             </Space>

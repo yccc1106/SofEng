@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:ws": "cd server && go run .",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:ws\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -27,6 +29,7 @@
     "numeral": "^2.0.6",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "redis": "^4.6.12",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0"
   },

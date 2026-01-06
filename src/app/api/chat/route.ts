@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import { publishMessage } from "@/lib/redis";
 import type { Prisma } from "@prisma/client";
 
 // GET Messages (params: targetId (userId), teamId, limit)
@@ -76,6 +77,21 @@ export async function POST(req: Request) {
                 sender: { select: { id: true, name: true, image: true } }
             }
         });
+
+        // 计算房间名称并发布到 Redis
+        let room = '';
+        if (categoryId) {
+            room = `interest:${categoryId}`;
+        } else if (teamId) {
+            room = `team:${teamId}`;
+        } else if (receiverId) {
+            // 私聊房间：按字母顺序排序确保唯一
+            const sorted = [user.id, receiverId].sort();
+            room = `dm:${sorted[0]}_${sorted[1]}`;
+        }
+
+        // 发布消息到 Redis 频道
+        await publishMessage('chat:message', { room, message });
 
         return successResponse(message, "Message sent");
     } catch (error) {
