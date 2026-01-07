@@ -38,8 +38,6 @@ export const authConfig = {
             if (session.user && token.id) {
                 session.user.id = token.id as string;
                 session.user.role = token.role as any;
-                // 添加 JWT token 到 session（用于 WebSocket 认证）
-                (session as any).token = token;
             }
             return session;
         },

@@ -1,10 +1,9 @@
 'use client';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, App, Typography } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
-import { useChatSocket } from '@/hooks/useChatSocket';
 
 const { Content } = Layout;
 
@@ -51,30 +50,13 @@ const InterestChatPage = () => {
 
     useEffect(() => {
         fetchMessages();
+        const interval = setInterval(fetchMessages, 3000);
+        return () => clearInterval(interval);
     }, [interestId]);
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
-
-    // WebSocket 实时消息
-    const handleNewMessage = useCallback((newMessage: Message) => {
-        setMessages(prev => {
-            if (prev.some(m => m.id === newMessage.id)) {
-                return prev;
-            }
-            return [...prev, newMessage];
-        });
-        scrollToBottom();
-    }, []);
-
-    const { isConnected } = useChatSocket({
-        room: `interest:${interestId}`,
-        roomType: 'interest',
-        userId: session?.user?.id || '',
-        onNewMessage: handleNewMessage,
-        enabled: !!interestId && !!session?.user?.id,
-    });
 
     const handleSend = async () => {
         if (!inputValue.trim()) return;
@@ -91,7 +73,7 @@ const InterestChatPage = () => {
             const data = await res.json();
             if (data.success) {
                 setInputValue('');
-                // 消息会通过 WebSocket 实时推送，不需要再次 fetch
+                fetchMessages();
             } else {
                 antMessage.error('Failed to send');
             }
@@ -104,11 +86,8 @@ const InterestChatPage = () => {
         <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-100 bg-white z-10">
                 <h2 className="text-xl font-bold text-gray-800">Lobby Chat</h2>
-                <p className="text-xs flex items-center mt-1">
-                    <span className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                    <span className={isConnected ? 'text-green-500' : 'text-gray-400'}>
-                        {isConnected ? 'Live' : 'Connecting...'}
-                    </span>
+                <p className="text-xs text-green-500 flex items-center mt-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse" /> Live
                 </p>
             </div>
 
