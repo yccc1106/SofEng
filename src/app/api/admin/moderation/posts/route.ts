@@ -1,26 +1,19 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
     const session = await auth();
-    // In real app: if (session?.user?.role !== 'ADMIN') return 401
-    if (!session?.user) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
     try {
-        const where: any = {};
+        const where: Prisma.PostWhereInput = {};
         if (status) {
-            // Map frontend status to DB status
-            // Frontend: pending, approved, rejected
-            // DB: AUDITING (default?), REJECTED, PUBLISHED (approved)
-            // But schema says default PUBLISHED. Let's assume we want to audit newly created pointers if system was strict.
-            // For this demo, let's fetch all or filter by mapped status.
             if (status === 'pending') where.status = 'AUDITING';
             else if (status === 'approved') where.status = 'PUBLISHED';
             else if (status === 'rejected') where.status = 'REJECTED';
@@ -37,30 +30,29 @@ export async function GET(req: Request) {
             author: p.author.name,
             title: p.title,
             content: p.content,
-            // imageUrl: p.images[0], // Schema has String[], logic needs check
             status: p.status === 'PUBLISHED' ? 'approved' : (p.status === 'AUDITING' ? 'pending' : 'rejected'),
             date: p.createdAt.toISOString().split('T')[0]
         }));
 
-        return NextResponse.json({
-            data: formattedPosts,
-            success: true,
-            total: formattedPosts.length
-        });
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Internal server error", error.message), { status: 500 });
+        return successResponse(formattedPosts, "Posts retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
 
 export async function PUT(req: Request) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
 
     try {
         const body = await req.json();
-        const { id, action } = body; // action: 'pass' | 'reject'
+        const { id, action } = body;
 
-        if (!id || !action) return NextResponse.json(formatResponse(false, "Missing fields"), { status: 400 });
+        if (!id || !action) return errorResponse("Missing fields", 400);
 
         const status = action === 'pass' ? 'PUBLISHED' : 'REJECTED';
 
@@ -69,8 +61,12 @@ export async function PUT(req: Request) {
             data: { status }
         });
 
-        return NextResponse.json(formatResponse(true, "Post updated"));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Update failed", error.message), { status: 500 });
+        return successResponse(null, "Post updated");
+    } catch (error) {
+        return errorResponse(
+            "Update failed",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }

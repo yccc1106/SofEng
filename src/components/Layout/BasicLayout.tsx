@@ -1,11 +1,12 @@
 'use client';
-// import { ProLayout } from '@ant-design/pro-components'; // Removed
+
 import { Dropdown, Spin } from 'antd';
 import { LogoutOutlined, UserOutlined, DashboardOutlined, MessageOutlined, SafetyOutlined, TagsOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import BottomNavBar from './BottomNavBar';
 
 const ProLayout = dynamic(
     () => import('@ant-design/pro-components').then((mod) => mod.ProLayout),
@@ -19,13 +20,32 @@ const ProLayout = dynamic(
     }
 );
 
+// 需要显示底部导航的页面
+const bottomNavRoutes = [
+    '/user/teams',
+    '/user/chat',
+    '/user/friends',
+    '/user/search',
+];
+
 export default function BasicLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const pathname = usePathname();
+    const pathname = usePathname() || '';
+    const [isMobile, setIsMobile] = useState(false);
+
+    // 检测屏幕尺寸
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // If user route (except login potentially, but generally all user routes), bypass Admin Layout
     const isUserRoute =
@@ -33,8 +53,18 @@ export default function BasicLayout({
         pathname?.startsWith('/user') ||
         (pathname?.startsWith('/interest') && !pathname?.startsWith('/interest/manage'));
 
+    // 检查是否应该显示底部导航（只在移动端）
+    const showBottomNav = isMobile && isUserRoute && bottomNavRoutes.some(route =>
+        pathname === route || pathname.startsWith(route + '/')
+    );
+
     if (isUserRoute) {
-        return <div className="min-h-screen bg-gray-50">{children}</div>;
+        return (
+            <div className="min-h-screen bg-gray-50" style={{ paddingBottom: showBottomNav ? '60px' : 0 }}>
+                {children}
+                {showBottomNav && <BottomNavBar />}
+            </div>
+        );
     }
 
     return (

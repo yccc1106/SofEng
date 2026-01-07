@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 // LIST Friends
 export async function GET(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     try {
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         const friendships = await prisma.friendship.findMany({
             where: {
@@ -32,13 +30,12 @@ export async function GET(req: Request) {
             return f.userA;
         });
 
-        return NextResponse.json(
-            formatResponse(true, "Friends retrieved", friends)
-        );
-    } catch (error: any) {
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return successResponse(friends, "Friends retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

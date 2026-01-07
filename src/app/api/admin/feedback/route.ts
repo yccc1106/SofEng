@@ -1,19 +1,18 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // SUGGESTION, REPORT
 
     try {
-        const where: any = {};
+        const where: Prisma.FeedbackWhereInput = {};
         if (type) {
             where.type = type;
         }
@@ -42,25 +41,25 @@ export async function GET(req: Request) {
                     f.reportType === 'MESSAGE' ? f.reportedMessage : null
         }));
 
-        return NextResponse.json({
-            data: formattedFeedbacks,
-            success: true,
-            total: formattedFeedbacks.length
-        });
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Internal server error", error.message), { status: 500 });
+        return successResponse(formattedFeedbacks, "Feedbacks retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
 
 export async function PUT(req: Request) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
 
     try {
         const body = await req.json();
         const { id, status, action } = body;
 
-        if (!id || !status) return NextResponse.json(formatResponse(false, "Missing fields"), { status: 400 });
+        if (!id || !status) return errorResponse("Missing fields", 400);
 
         // Handle specific actions
         if (action) {
@@ -85,8 +84,12 @@ export async function PUT(req: Request) {
             data: { status }
         });
 
-        return NextResponse.json(formatResponse(true, "Feedback updated"));
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Update failed", error.message), { status: 500 });
+        return successResponse(null, "Feedback updated");
+    } catch (error) {
+        return errorResponse(
+            "Update failed",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }

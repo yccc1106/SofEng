@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 export async function POST(req: Request) {
     const session = await auth();
 
     if (!session?.user?.id) {
-        return NextResponse.json(
-            formatResponse(false, "Unauthorized"),
-            { status: 401 }
-        );
+        return unauthorizedResponse("Unauthorized");
     }
 
     try {
@@ -20,10 +15,7 @@ export async function POST(req: Request) {
         const { teamId, message: joinMessage } = body;
 
         if (!teamId) {
-            return NextResponse.json(
-                formatResponse(false, "Team ID is required"),
-                { status: 400 }
-            );
+            return errorResponse("Team ID is required", 400);
         }
 
         // Check if team exists
@@ -37,24 +29,15 @@ export async function POST(req: Request) {
         });
 
         if (!team) {
-            return NextResponse.json(
-                formatResponse(false, "Team not found"),
-                { status: 404 }
-            );
+            return errorResponse("Team not found", 404);
         }
 
         if (team.status !== "RECRUITING") {
-            return NextResponse.json(
-                formatResponse(false, "Team is not recruiting"),
-                { status: 400 }
-            );
+            return errorResponse("Team is not recruiting", 400);
         }
 
         if (team._count.members >= team.maxMembers) {
-            return NextResponse.json(
-                formatResponse(false, "Team is full"),
-                { status: 400 }
-            );
+            return errorResponse("Team is full", 400);
         }
 
         // Check if already a member or pending
@@ -69,24 +52,17 @@ export async function POST(req: Request) {
 
         if (existingMember) {
             if (existingMember.status === "JOINED") {
-                return NextResponse.json(
-                    formatResponse(false, "Already a member of this team"),
-                    { status: 400 }
-                );
+                return errorResponse("Already a member of this team", 400);
             } else if (existingMember.status === "PENDING") {
-                return NextResponse.json(
-                    formatResponse(false, "Application already pending"),
-                    { status: 400 }
-                );
+                return errorResponse("Application already pending", 400);
             }
         }
 
         // Determine status based on team settings
-        const status = (team as any).requiresApproval ? "PENDING" : "JOINED";
+        const status = team.requiresApproval ? "PENDING" : "JOINED";
 
         // Join team or create request
-        // Adding a comment to force dev server reload
-        const teamMember = await (prisma.teamMember as any).create({
+        const teamMember = await prisma.teamMember.create({
             data: {
                 teamId,
                 userId: session.user.id,
@@ -108,14 +84,13 @@ export async function POST(req: Request) {
             ? "Application sent successfully"
             : "Joined team successfully";
 
-        return NextResponse.json(
-            formatResponse(true, responseMsg, teamMember)
-        );
-    } catch (error: any) {
+        return successResponse(teamMember, responseMsg);
+    } catch (error) {
         console.error("Join team error:", error);
-        return NextResponse.json(
-            formatResponse(false, "Internal server error", error.message),
-            { status: 500 }
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
         );
     }
 }

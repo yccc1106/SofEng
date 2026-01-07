@@ -1,18 +1,16 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Button, FloatButton, Spin, Modal, Form, Input, App } from 'antd';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, FloatButton, Spin, Modal, App } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import PostCard from '@/components/User/PostCard';
-import { useSession } from 'next-auth/react';
+import PostForm, { PostFormProps } from '@/components/Post/PostForm';
+import type { PostResponse } from '@/types/api';
 
 const PostsPage = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
-    const [posts, setPosts] = useState<any[]>([]);
+    const [posts, setPosts] = useState<PostResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    const [form] = Form.useForm();
 
     const fetchPosts = async () => {
         setLoading(true);
@@ -33,28 +31,9 @@ const PostsPage = () => {
         fetchPosts();
     }, []);
 
-    const handleCreatePost = async (values: any) => {
-        setSubmitting(true);
-        try {
-            const res = await fetch('/api/posts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(values),
-            });
-            const data = await res.json();
-            if (data.success) {
-                message.success('Post created');
-                setIsModalOpen(false);
-                form.resetFields();
-                fetchPosts(); // Refresh
-            } else {
-                message.error(data.message || 'Failed to create post');
-            }
-        } catch (error) {
-            message.error('Error creating post');
-        } finally {
-            setSubmitting(false);
-        }
+    const handleSuccess: PostFormProps['onSuccess'] = () => {
+        setIsModalOpen(false);
+        fetchPosts();
     };
 
     return (
@@ -77,27 +56,17 @@ const PostsPage = () => {
                 </div>
             )}
 
-
-
             <Modal
                 title="Create Post"
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
+                destroyOnClose
             >
-                <Form form={form} layout="vertical" onFinish={handleCreatePost}>
-                    <Form.Item name="title" label="Title">
-                        <Input placeholder="Optional title" />
-                    </Form.Item>
-                    <Form.Item name="content" label="Content" rules={[{ required: true }]}>
-                        <Input.TextArea rows={4} placeholder="What's on your mind?" />
-                    </Form.Item>
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" block loading={submitting}>
-                            Post
-                        </Button>
-                    </Form.Item>
-                </Form>
+                <PostForm
+                    onSuccess={handleSuccess}
+                    onCancel={() => setIsModalOpen(false)}
+                />
             </Modal>
         </div>
     );

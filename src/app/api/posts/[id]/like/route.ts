@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -11,11 +9,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const session = await auth();
 
         if (!session?.user?.email) {
-            return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+            return unauthorizedResponse("Unauthorized");
         }
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!user) return errorResponse("User not found", 404);
 
         const existing = await prisma.postLike.findUnique({
             where: {
@@ -35,7 +33,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                     }
                 }
             });
-            return NextResponse.json(formatResponse(true, "Unliked"));
+            return successResponse(null, "Unliked");
         } else {
             await prisma.postLike.create({
                 data: {
@@ -43,9 +41,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                     postId: id
                 }
             });
-            return NextResponse.json(formatResponse(true, "Liked"));
+            return successResponse(null, "Liked");
         }
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Error processing like", error.message), { status: 500 });
+    } catch (error) {
+        return errorResponse(
+            "Error processing like",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }

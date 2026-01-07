@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { formatResponse } from "@/lib/utils";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
 export async function GET() {
     const session = await auth();
-    // Check for email instead of id purely
-    if (!session?.user?.email) return NextResponse.json(formatResponse(false, "Unauthorized"), { status: 401 });
+    if (!session?.user?.email) return unauthorizedResponse("Unauthorized");
 
     try {
-        // Fetch user to get ID reliably
         const currentUser = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!currentUser) return NextResponse.json(formatResponse(false, "User not found"), { status: 404 });
+        if (!currentUser) return errorResponse("User not found", 404);
 
         const userId = currentUser.id;
 
-        // Fetch Friends
         const friendships = await prisma.friendship.findMany({
             where: {
                 OR: [{ userAId: userId }, { userBId: userId }]
@@ -38,7 +33,6 @@ export async function GET() {
             };
         });
 
-        // Fetch Joined Teams
         const teamMemberships = await prisma.teamMember.findMany({
             where: {
                 userId: userId,
@@ -58,14 +52,17 @@ export async function GET() {
         const teams = teamMemberships.map(tm => ({
             id: tm.team.id,
             name: tm.team.name,
-            image: null, // Teams usually don't have images in this schema, can use default icon
+            image: null,
             type: "TEAM",
             subType: tm.team.type
         }));
 
-        return NextResponse.json(formatResponse(true, "Contacts retrieved", [...friends, ...teams]));
-
-    } catch (error: any) {
-        return NextResponse.json(formatResponse(false, "Internal server error", error.message), { status: 500 });
+        return successResponse([...friends, ...teams], "Contacts retrieved");
+    } catch (error) {
+        return errorResponse(
+            "Internal server error",
+            500,
+            error instanceof Error ? error.message : 'Unknown error'
+        );
     }
 }
