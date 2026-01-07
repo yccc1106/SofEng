@@ -69,9 +69,9 @@ const InterestChatPage = () => {
     }, []);
 
     const { isConnected } = useChatSocket({
-        room: interestId,
+        room: `interest:${interestId}`,
         roomType: 'interest',
-        token: session?.user?.id || '',
+        userId: session?.user?.id || '',
         onNewMessage: handleNewMessage,
         enabled: !!interestId && !!session?.user?.id,
     });

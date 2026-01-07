@@ -6,7 +6,7 @@ import { WebSocketClient, ChatMessage } from '@/lib/websocket';
 interface UseChatSocketOptions {
   room: string;
   roomType: 'dm' | 'team' | 'interest';
-  token: string;
+  userId: string;
   onNewMessage?: (message: ChatMessage) => void;
   enabled?: boolean;
 }
@@ -14,50 +14,91 @@ interface UseChatSocketOptions {
 export function useChatSocket({
   room,
   roomType,
-  token,
+  userId,
   onNewMessage,
   enabled = true,
 }: UseChatSocketOptions) {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<WebSocketClient | null>(null);
+  const wsTokenRef = useRef<string | null>(null);
+  const onMessageRef = useRef(onNewMessage);
+
+  // 保持 onMessageRef 最新
+  useEffect(() => {
+    onMessageRef.current = onNewMessage;
+  }, [onNewMessage]);
+
+  // 获取 JWT token
+  const getWSToken = useCallback(async () => {
+    try {
+      const res = await fetch('/api/ws-token');
+      const data = await res.json();
+      if (data.token) {
+        wsTokenRef.current = data.token;
+        return data.token;
+      }
+    } catch (err) {
+      console.error('Failed to get WS token:', err);
+    }
+    return null;
+  }, []);
 
   // 初始化 WebSocket 客户端
   useEffect(() => {
-    if (!enabled || !token || !room) {
+    if (!enabled || !userId || !room) {
       return;
     }
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8081';
+    let mounted = true;
 
-    const client = new WebSocketClient({
-      url: wsUrl,
-      token,
-      onConnect: () => {
-        setIsConnected(true);
-        setError(null);
-      },
-      onDisconnect: () => {
-        setIsConnected(false);
-      },
-      onError: () => {
-        setError('WebSocket connection error');
-      },
-      onMessage: (data) => {
-        if (data.type === 'new:message' && data.message) {
-          onNewMessage?.(data.message);
-        }
-      },
-    });
+    const initWebSocket = async () => {
+      const token = await getWSToken();
+      if (!mounted || !token) return;
 
-    clientRef.current = client;
-    client.connect();
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8081';
+
+      const client = new WebSocketClient({
+        url: wsUrl,
+        token,
+        onConnect: () => {
+          if (mounted) {
+            setIsConnected(true);
+            setError(null);
+          }
+        },
+        onDisconnect: () => {
+          if (mounted) {
+            setIsConnected(false);
+          }
+        },
+        onError: () => {
+          if (mounted) {
+            setError('WebSocket connection error');
+          }
+        },
+        onMessage: (data) => {
+          if (mounted && data.type === 'new:message' && data.message) {
+            console.log('[WS] Received new message:', data.message);
+            onMessageRef.current?.(data.message);
+          }
+        },
+      });
+
+      clientRef.current = client;
+      client.connect();
+    };
+
+    initWebSocket();
 
     return () => {
-      client.disconnect();
-      clientRef.current = null;
+      mounted = false;
+      if (clientRef.current) {
+        clientRef.current.disconnect();
+        clientRef.current = null;
+      }
     };
-  }, [enabled, token, room, onNewMessage]);
+  }, [enabled, userId, room, getWSToken]);
 
   // 加入/离开房间
   useEffect(() => {
@@ -65,21 +106,26 @@ export function useChatSocket({
       return;
     }
 
+    console.log('[WS] Joining room:', room, roomType);
     clientRef.current.joinRoom(room, roomType);
 
     return () => {
-      if (clientRef.current) {
+      if (clientRef.current && clientRef.current.isConnected) {
+        console.log('[WS] Leaving room:', room);
         clientRef.current.leaveRoom(room);
       }
     };
   }, [isConnected, room, roomType]);
 
-  const reconnect = useCallback(() => {
+  const reconnect = useCallback(async () => {
     if (clientRef.current) {
       clientRef.current.disconnect();
-      clientRef.current.connect();
+      await getWSToken();
+      if (wsTokenRef.current) {
+        clientRef.current.connect();
+      }
     }
-  }, []);
+  }, [getWSToken]);
 
   return {
     isConnected,
@@ -96,7 +142,6 @@ export function generateRoomName(
 ): string {
   switch (roomType) {
     case 'dm':
-      // 私聊房间：按字母顺序排序确保唯一
       const sorted = [id1, id2!].sort();
       return `dm:${sorted[0]}_${sorted[1]}`;
     case 'team':

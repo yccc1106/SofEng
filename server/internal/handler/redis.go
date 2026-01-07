@@ -18,9 +18,12 @@ type RedisHandler struct {
 
 // NewRedisHandler 创建新的 Redis 处理器
 func NewRedisHandler(redisURL string) (*RedisHandler, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr: redisURL,
-	})
+	// 解析 Redis URL 获取地址
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		return nil, err
+	}
+	client := redis.NewClient(opt)
 
 	// 测试连接
 	ctx := context.Background()

@@ -1,11 +1,11 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
-import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip, Dropdown } from 'antd';
+import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, DeleteOutlined, GlobalOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
-import { useChatSocket, generateRoomName } from '@/hooks/useChatSocket';
+import { useChatSocket } from '@/hooks/useChatSocket';
 
 const { Content, Sider } = Layout;
 const { Text, Title } = Typography;
@@ -15,10 +15,11 @@ interface Contact {
     id: string;
     name: string;
     image: string | null;
-    type: 'USER' | 'TEAM';
+    type: 'USER' | 'TEAM' | 'INTEREST';
     subType?: string;
-    lastMessage?: string; // Optional: if API supports it later
+    lastMessage?: string;
     lastActive?: string;
+    unreadCount?: number;
 }
 
 interface Message {
@@ -30,15 +31,17 @@ interface Message {
         image: string;
     };
     createdAt: string;
+    isRead?: boolean;
 }
 
 const ChatContent = () => {
-    const { message } = App.useApp();
+    const { message, modal } = App.useApp();
     const { data: session } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
     const targetUserId = searchParams.get('targetId');
     const teamId = searchParams.get('teamId');
+    const categoryId = searchParams.get('categoryId');
 
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -68,12 +71,13 @@ const ChatContent = () => {
     };
 
     const fetchMessages = async (showLoading = false) => {
-        if (!targetUserId && !teamId) return;
+        if (!targetUserId && !teamId && !categoryId) return;
         if (showLoading) setLoadingMessages(true);
         try {
             let url = '/api/chat?';
             if (targetUserId) url += `userId=${targetUserId}`;
             if (teamId) url += `teamId=${teamId}`;
+            if (categoryId) url += `categoryId=${categoryId}`;
 
             const res = await fetch(url);
             const data = await res.json();
@@ -87,38 +91,72 @@ const ChatContent = () => {
         }
     };
 
+    // 标记消息已读
+    const markAsRead = async () => {
+        try {
+            await fetch('/api/chat/read', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: targetUserId,
+                    teamId,
+                    categoryId
+                })
+            });
+        } catch (error) {
+            console.error("Failed to mark messages as read");
+        }
+    };
+
     useEffect(() => {
         fetchContacts();
     }, []);
 
     useEffect(() => {
-        if (targetUserId || teamId) {
+        if (targetUserId || teamId || categoryId) {
             fetchMessages(true);
+            markAsRead();
         } else {
             setMessages([]);
         }
-    }, [targetUserId, teamId]);
+    }, [targetUserId, teamId, categoryId]);
 
     // WebSocket 实时消息
     const handleNewMessage = useCallback((newMessage: Message) => {
+        console.log('[Chat] Received new message:', newMessage);
         setMessages(prev => {
             // 避免重复消息
             if (prev.some(m => m.id === newMessage.id)) {
+                console.log('[Chat] Duplicate message, skipping:', newMessage.id);
                 return prev;
             }
+            console.log('[Chat] Adding new message to list:', newMessage.id);
             return [...prev, newMessage];
         });
         scrollToBottom();
     }, []);
 
-    const room = targetUserId || teamId || '';
-    const roomType: 'dm' | 'team' = teamId ? 'team' : 'dm';
+    const roomType: 'dm' | 'team' | 'interest' = categoryId ? 'interest' : (teamId ? 'team' : 'dm');
+
+    // 计算房间名称 - 私聊需要包含双方用户ID
+    const roomName = React.useMemo(() => {
+        if (roomType === 'dm' && targetUserId && session?.user?.id) {
+            const sorted = [session.user.id, targetUserId].sort();
+            return `dm:${sorted[0]}_${sorted[1]}`;
+        } else if (roomType === 'team' && teamId) {
+            return `team:${teamId}`;
+        } else if (roomType === 'interest' && categoryId) {
+            return `interest:${categoryId}`;
+        }
+        return '';
+    }, [roomType, targetUserId, teamId, categoryId, session?.user?.id]);
+
     const { isConnected } = useChatSocket({
-        room,
+        room: roomName,
         roomType,
-        token: session?.user?.id || '',
+        userId: session?.user?.id || '',
         onNewMessage: handleNewMessage,
-        enabled: !!room && !!session?.user?.id,
+        enabled: !!roomName && !!session?.user?.id,
     });
 
     useEffect(() => {
@@ -136,7 +174,8 @@ const ChatContent = () => {
                 body: JSON.stringify({
                     content: inputValue,
                     receiverId: targetUserId,
-                    teamId: teamId
+                    teamId,
+                    categoryId
                 }),
             });
             const data = await res.json();
@@ -144,13 +183,38 @@ const ChatContent = () => {
                 setInputValue('');
                 fetchMessages();
             } else {
-                message.error('Failed to send');
+                message.error(data.message || 'Failed to send');
             }
         } catch (error) {
             message.error('Error sending message');
         } finally {
             setSending(false);
         }
+    };
+
+    const handleDeleteMessage = async (msgId: string) => {
+        modal.confirm({
+            title: 'Delete Message',
+            content: 'Are you sure you want to delete this message?',
+            okText: 'Delete',
+            okType: 'danger',
+            onOk: async () => {
+                try {
+                    const res = await fetch(`/api/chat/messages/${msgId}`, {
+                        method: 'DELETE',
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        message.success('Message deleted');
+                        fetchMessages();
+                    } else {
+                        message.error(data.message || 'Failed to delete');
+                    }
+                } catch (error) {
+                    message.error('Failed to delete message');
+                }
+            }
+        });
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -164,8 +228,9 @@ const ChatContent = () => {
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const activeId = targetUserId || teamId;
+    const activeId = targetUserId || teamId || categoryId;
     const activeContact = contacts.find(c => c.id === activeId);
+    const chatType = categoryId ? 'INTEREST' : (teamId ? 'TEAM' : 'USER');
 
     return (
         <Layout className="h-[calc(100vh-100px)] bg-transparent p-4 md:p-6 gap-6">
