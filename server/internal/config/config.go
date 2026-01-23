@@ -19,6 +19,9 @@ func Load() *Config {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
+		jwtSecret = os.Getenv("NEXTAUTH_SECRET")
+	}
+	if jwtSecret == "" {
 		jwtSecret = "default-secret-change-in-production"
 	}
 

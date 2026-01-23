@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -26,6 +27,7 @@ type WebSocketHandler struct {
 // Client WebSocket 客户端
 type Client struct {
 	ID     string
+	UserID string
 	User   *middleware.AuthenticatedUser
 	Conn   *websocket.Conn
 	Send   chan []byte
@@ -56,6 +58,9 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
 	if token == "" {
 		token = middleware.ExtractToken(r)
 	}
+	if token == "" {
+		log.Printf("Missing token from %s", r.RemoteAddr)
+	}
 
 	user, err := middleware.ValidateToken(token, h.jwtSecret)
 	if err != nil {
@@ -73,11 +78,13 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
 
 	// 创建客户端
 	client := &Client{
-		ID:   user.ID,
+		ID:   fmt.Sprintf("%s-%d", user.ID, time.Now().UnixNano()),
+		UserID: user.ID,
 		User: user,
 		Conn: conn,
 		Send: make(chan []byte, 256),
 	}
+	log.Printf("WebSocket connected: user=%s client=%s addr=%s", user.ID, client.ID, r.RemoteAddr)
 
 	h.mu.Lock()
 	h.clients[client.ID] = client

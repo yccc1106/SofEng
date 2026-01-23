@@ -28,6 +28,19 @@ export interface WebSocketConfig {
 
 type RoomType = 'dm' | 'team' | 'interest';
 
+function normalizeWsUrl(rawUrl: string): string {
+  if (rawUrl.startsWith('ws://') || rawUrl.startsWith('wss://')) {
+    return rawUrl;
+  }
+  if (rawUrl.startsWith('https://')) {
+    return rawUrl.replace('https://', 'wss://');
+  }
+  if (rawUrl.startsWith('http://')) {
+    return rawUrl.replace('http://', 'ws://');
+  }
+  return rawUrl;
+}
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private config: WebSocketConfig;
@@ -47,7 +60,8 @@ export class WebSocketClient {
       return;
     }
 
-    const url = `${this.config.url}/ws?token=${this.config.token}`;
+    const baseUrl = normalizeWsUrl(this.config.url);
+    const url = `${baseUrl}/ws?token=${this.config.token}`;
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {

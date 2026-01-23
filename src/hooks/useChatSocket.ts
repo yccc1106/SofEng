@@ -56,7 +56,7 @@ export function useChatSocket({
       const token = await getWSToken();
       if (!mounted || !token) return;
 
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8081';
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8081';
 
       const client = new WebSocketClient({
         url: wsUrl,
