@@ -1,4 +1,4 @@
-package com.meetu.backend.user;
+package com.meetu.backend.user.controller;
 
 import com.meetu.backend.common.api.ApiResponse;
 import com.meetu.backend.user.dto.UserDtos.Profile;
