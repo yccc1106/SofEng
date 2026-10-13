@@ -46,10 +46,10 @@ export const PostForm: React.FC<PostFormProps> = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch('/api/category');
+        const res = await fetch('/java/category');
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setCategories(data);
+        if (res.ok && data.success && Array.isArray(data.data)) {
+          setCategories(data.data);
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error);

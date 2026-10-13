@@ -8,11 +8,12 @@ export async function fakeChartData(): Promise<AnalysisData> {
     }
     const statsResult = await response.json();
 
-    const categoryResponse = await fetch('/api/category');
+    const categoryResponse = await fetch('/java/category');
     if (!categoryResponse.ok) {
       throw new Error('Failed to fetch categories');
     }
-    const categoryData: CategoryItem[] = await categoryResponse.json();
+    const categoryResult = await categoryResponse.json();
+    const categoryData: CategoryItem[] = categoryResult.data;
 
     // API 返回的格式是 { success, message, data }，需要提取 data 字段
     const statsData = statsResult.data || statsResult;

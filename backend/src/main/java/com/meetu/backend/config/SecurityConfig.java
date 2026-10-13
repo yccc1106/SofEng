@@ -89,6 +89,7 @@ public class SecurityConfig {
                 }, AnonymousAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(PUBLIC).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/category", "/api/category/*").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users", "/api/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/profile").authenticated()

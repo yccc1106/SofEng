@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
+import { getCategories } from '@/lib/java-category';
 import InterestSelector from '@/components/Home/InterestSelector';
 import NavBar from '@/components/User/NavBar'; // Include NavBar for consistency
 
@@ -11,13 +11,7 @@ export default async function Home() {
   }
 
   // Fetch top-level categories (those without parents)
-  const categories = await prisma.category.findMany({
-    where: { parentId: null },
-    include: {
-      children: true
-    },
-    orderBy: { usageCount: 'desc' }
-  });
+  const categories = (await getCategories()).filter((category) => category.parentId === null);
 
   return (
     <div className="min-h-screen bg-[#f9fafb]">
