@@ -111,7 +111,8 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
                         });
                         if (item.senderId !== viewerId) void recordRead();
                     } else if (data.event === 'read') {
-                        setMessages(current => current.map(item => item.senderId === viewerId ? { ...item, isRead: true } : item));
+                        if (data.readerId !== viewerId)
+                            setMessages(current => current.map(item => item.senderId === viewerId ? { ...item, isRead: true } : item));
                     } else if (data.event === 'error') {
                         setError(data.message || 'Unable to join chat');
                         retries = 5;
