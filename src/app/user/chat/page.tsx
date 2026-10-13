@@ -168,7 +168,7 @@ const ChatContent = () => {
                                         description={
                                             <div className="flex justify-between items-center mt-1">
                                                 <Text type="secondary" className="text-sm truncate pr-2">
-                                                    {item.type === 'TEAM' ? `Team · ${item.subType}` : 'Click to chat'}
+                                                    {item.type === 'TEAM' ? `Team · ${item.subType || 'General'}` : 'Click to chat'}
                                                 </Text>
                                                 <Badge count={item.unreadCount} size="small" />
                                             </div>
