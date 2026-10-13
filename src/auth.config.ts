@@ -7,14 +7,16 @@ export const authConfig = {
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isOnDashboard = nextUrl.pathname.startsWith("/dashboard") ||
+            const isOnAdminPage = nextUrl.pathname.startsWith("/dashboard") ||
                 nextUrl.pathname.startsWith("/moderation") ||
-                nextUrl.pathname.startsWith("/interest") ||
-                nextUrl.pathname.startsWith("/feedback");
-            const isOnUserPage = nextUrl.pathname.startsWith("/user");
+                nextUrl.pathname.startsWith("/interest/manage") ||
+                nextUrl.pathname.startsWith("/feedback") ||
+                nextUrl.pathname.startsWith("/user-management");
+            const isOnUserPage = nextUrl.pathname.startsWith("/user") ||
+                nextUrl.pathname.startsWith("/interest/");
             const isLoginPage = nextUrl.pathname.startsWith("/user/login");
 
-            if (isOnDashboard) {
+            if (isOnAdminPage) {
                 // Admin only
                 if (isLoggedIn && auth.user.role === "ADMIN") return true;
                 return false; // Redirect unauthenticated users to login page

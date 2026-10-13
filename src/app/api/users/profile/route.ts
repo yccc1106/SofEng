@@ -67,6 +67,21 @@ export async function PUT(req: Request) {
                 personalityType,
                 personalityTags,
             },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                role: true,
+                studentId: true,
+                school: true,
+                major: true,
+                grade: true,
+                bio: true,
+                gender: true,
+                personalityType: true,
+                personalityTags: true,
+            },
         });
 
         return successResponse(user, "User profile updated");
