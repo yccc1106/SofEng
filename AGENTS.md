@@ -21,12 +21,13 @@
 
 ## 后端分层与持久层规范
 
-- 使用 Spring MVC 提供 REST API，React 负责页面展示；每个业务模块按 `Controller → Service → Mapper` 分层。
+- 使用 Spring MVC 提供 REST API，React 负责页面展示；每个业务模块按 `Controller → Service（接口）→ ServiceImpl（实现）→ Mapper` 分层。Controller 依赖 Service 接口，由 Spring 注入 ServiceImpl 实现。
 - Controller 负责请求接收、参数校验和响应转换；不得直接执行 SQL、调用 Mapper 或承担核心业务逻辑。
-- Service 负责业务规则、业务权限校验、流程编排及事务边界；写操作涉及多步数据修改时，在 Service 层管理事务。
+- Service 只定义业务接口；ServiceImpl 负责核心业务逻辑、业务规则、业务权限校验和流程编排，并调用 Mapper 完成数据访问。
+- 事务边界放在 ServiceImpl 的业务方法上，通过 `@Transactional` 管理需要原子执行的数据修改；Controller、Service 接口和 Mapper 不承担业务事务编排。
 - 持久层使用 MyBatis，Mapper 负责数据库查询和更新；SQL 与数据库映射放在 Mapper 注解或对应 XML 文件中。
 - DTO 分别承载请求和响应，Entity / 数据模型表示持久化数据；避免直接返回含密码等敏感字段的数据库对象。
-- 优先按业务模块组织代码，在模块内划分 controller、service、mapper、dto、entity 等职责；保持单体部署。
+- 优先按业务模块组织代码，在模块内划分 controller、service、service/impl、mapper、dto、entity 等职责；保持单体部署。
 - 已有 Controller 直连 Repository / JdbcTemplate 的实现，在后续重构中逐模块迁移到上述分层，迁移时保持接口契约并完成回归验证。
 
 ## 重构工作约定
