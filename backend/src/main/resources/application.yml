@@ -7,14 +7,6 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5433/meetu}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -29,6 +21,10 @@ spring:
       timeout: 12h
   jackson:
     time-zone: UTC
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
 
 meetu:
   frontend-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
