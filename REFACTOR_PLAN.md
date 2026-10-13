@@ -6,8 +6,9 @@
 - 前端继续使用 React / TypeScript，现有 Next.js 可继续作为前端框架。
 - 后端使用 Java / Spring Boot，采用按业务模块划分的单体应用，实现前后端分离。
 - 数据库暂时保留 PostgreSQL。
+- 后端按 `Controller → Service → Mapper` 分层，持久层使用 MyBatis，事务与核心业务逻辑放在 Service 层。
 - 按模块逐步迁移，每个阶段以“Java 接口完成、前端接入、关键流程验证通过”为完成条件。
-- Java 版本、持久层框架和认证方案等具体选型在实施阶段确定。
+- Java 版本、认证方案等其他选型按实施阶段的已确认方案执行。
 
 ## 重构顺序
 
