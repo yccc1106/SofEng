@@ -6,7 +6,8 @@ import java.util.Map;
 
 @Mapper
 public interface ChatMapper {
-    String MESSAGE_SELECT = "SELECT m.id,m.content,m.type,m.\"senderId\",m.\"receiverId\",m.\"teamId\",m.\"categoryId\",m.\"isRead\",m.\"createdAt\", " +
+    String MESSAGE_SELECT = "SELECT m.id,m.content,m.type,m.\"senderId\",m.\"receiverId\",m.\"teamId\",m.\"categoryId\",m.\"isRead\", " +
+            "m.\"createdAt\" AT TIME ZONE 'UTC' AS \"createdAt\", " +
             "u.id AS \"senderUserId\",u.name AS \"senderName\",u.image AS \"senderImage\" FROM \"ChatMessage\" m " +
             "JOIN \"User\" u ON u.id=m.\"senderId\" ";
     String BEFORE = "<if test='beforeTime != null'> AND (m.\"createdAt\",m.id) &lt; (#{beforeTime},#{beforeId})</if> ";
@@ -33,7 +34,7 @@ public interface ChatMapper {
     @Select("SELECT id FROM \"Category\" WHERE id=#{id}") String categoryExists(String id);
 
     @Insert("INSERT INTO \"ChatMessage\" (id,content,type,\"senderId\",\"receiverId\",\"teamId\",\"categoryId\",\"isRead\",\"createdAt\") " +
-            "VALUES (#{id},#{content},'TEXT',#{sender},#{receiver},#{team},#{category},false,CURRENT_TIMESTAMP)")
+            "VALUES (#{id},#{content},'TEXT',#{sender},#{receiver},#{team},#{category},false,CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
     int insert(@Param("id") String id,@Param("content") String content,@Param("sender") String sender,
                @Param("receiver") String receiver,@Param("team") String team,@Param("category") String category);
     @Select(MESSAGE_SELECT + "WHERE m.id=#{id}") Map<String,Object> message(String id);
@@ -51,7 +52,7 @@ public interface ChatMapper {
             "<otherwise>AND m.\"categoryId\"=#{id}</otherwise></choose></script>")
     long unread(@Param("viewer") String viewer,@Param("scope") String scope,@Param("id") String id);
     @Insert("INSERT INTO \"ChatReadCursor\" (\"userId\",\"scopeType\",\"scopeId\",\"lastReadAt\") " +
-            "VALUES (#{viewer},#{scope},#{id},CURRENT_TIMESTAMP) ON CONFLICT (\"userId\",\"scopeType\",\"scopeId\") " +
+            "VALUES (#{viewer},#{scope},#{id},CURRENT_TIMESTAMP AT TIME ZONE 'UTC') ON CONFLICT (\"userId\",\"scopeType\",\"scopeId\") " +
             "DO UPDATE SET \"lastReadAt\"=GREATEST(\"ChatReadCursor\".\"lastReadAt\",EXCLUDED.\"lastReadAt\")")
     int upsertRead(@Param("viewer") String viewer,@Param("scope") String scope,@Param("id") String id);
     @Update("UPDATE \"ChatMessage\" SET \"isRead\"=true WHERE \"senderId\"=#{other} AND \"receiverId\"=#{viewer} AND \"isRead\"=false")
