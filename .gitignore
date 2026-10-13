@@ -10,19 +10,24 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# test reports
 /coverage
 
 # next.js
 /.next/
 /out/
 
-# production
+# build outputs
 /build
-/backend/target/
+**/target/
+
+# Java runtime artifacts
+*.class
+hs_err_pid*
 
 # misc
 .DS_Store
+._*
 *.pem
 
 # debug
@@ -30,9 +35,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
+# local environment and secret files
 .env*
+!.env.example
+/backend/src/main/resources/application-local.yml
+/backend/src/main/resources/application-*.local.yml
 
 # vercel
 .vercel
@@ -40,4 +49,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.idea/
+
+# IDE and local agent settings
+/.idea/
+/.vscode/
+*.iml
+/.claude/settings.local.json
