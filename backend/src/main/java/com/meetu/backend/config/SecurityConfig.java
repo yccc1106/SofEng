@@ -2,7 +2,7 @@ package com.meetu.backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetu.backend.common.api.ApiResponse;
-import com.meetu.backend.user.UserRepository;
+import com.meetu.backend.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +37,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository users, ObjectMapper mapper,
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UserService users, ObjectMapper mapper,
                                             @Value("${meetu.frontend-origin:http://localhost:3000}") String frontendOrigin) throws Exception {
         var contextRepository = new HttpSessionSecurityContextRepository();
         return http
@@ -73,8 +73,8 @@ public class SecurityConfig {
                         if (authentication != null && authentication.isAuthenticated()
                                 && !(authentication.getPrincipal() instanceof String principal && "anonymousUser".equals(principal))) {
                             String id = authentication.getName();
-                            var user = users.findById(id);
-                            if (user.isEmpty() || !"ACTIVE".equals(user.get().status())) {
+                            var user = users.findActiveSessionUser(id);
+                            if (user.isEmpty()) {
                                 SecurityContextHolder.clearContext();
                                 var session = request.getSession(false);
                                 if (session != null) session.invalidate();

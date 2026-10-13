@@ -1,7 +1,9 @@
 package com.meetu.backend.common.exception;
 
 import com.meetu.backend.common.api.ApiResponse;
-import com.meetu.backend.user.UserController.DuplicateEmailException;
+import com.meetu.backend.user.service.impl.UserServiceImpl.DuplicateEmailException;
+import com.meetu.backend.user.service.impl.UserServiceImpl.InvalidCredentialsException;
+import com.meetu.backend.user.service.impl.UserServiceImpl.RestrictedAccountException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicateEmail() {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("User already exists"));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Invalid credentials"));
+    }
+
+    @ExceptionHandler(RestrictedAccountException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRestrictedAccount() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Account is restricted"));
     }
 
     @ExceptionHandler(Exception.class)
