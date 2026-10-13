@@ -139,9 +139,10 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
 
     const send = async (content: string) => {
         if (!target) throw new Error('Select a conversation');
+        const recipient = 'userId' in target ? { receiverId: target.userId } : target;
         const sent = await api<ChatMessage>('/java/chat', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...target, content })
+            body: JSON.stringify({ ...recipient, content })
         });
         setMessages(current => {
             const next = merged(current, [sent]);
