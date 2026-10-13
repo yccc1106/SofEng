@@ -9,6 +9,9 @@ import com.meetu.backend.post.service.impl.PostServiceImpl.PostNotFoundException
 import com.meetu.backend.friend.service.impl.FriendServiceImpl.*;
 import com.meetu.backend.team.service.impl.TeamServiceImpl.*;
 import com.meetu.backend.search.service.impl.SearchServiceImpl.InvalidSearchRequest;
+import com.meetu.backend.chat.service.impl.ChatServiceImpl.InvalidChatRequest;
+import com.meetu.backend.chat.service.impl.ChatServiceImpl.ChatForbidden;
+import com.meetu.backend.chat.service.impl.ChatServiceImpl.ChatNotFound;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +110,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidSearchRequest.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidSearch() {
         return ResponseEntity.badRequest().body(ApiResponse.error("Search query is too long"));
+    }
+
+    @ExceptionHandler(InvalidChatRequest.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidChat(InvalidChatRequest exception) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(exception.getMessage()));
+    }
+
+    @ExceptionHandler(ChatForbidden.class)
+    public ResponseEntity<ApiResponse<Void>> handleChatForbidden() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Forbidden"));
+    }
+
+    @ExceptionHandler(ChatNotFound.class)
+    public ResponseEntity<ApiResponse<Void>> handleChatNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Conversation not found"));
     }
 
     @ExceptionHandler(Exception.class)
