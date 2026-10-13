@@ -15,15 +15,27 @@ const InterestChatPage = () => {
 
     const [inputValue, setInputValue] = useState('');
     const [sending, setSending] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesPanelRef = useRef<HTMLDivElement>(null);
+    const olderAnchor = useRef<{ height: number; top: number } | null>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const panel = messagesPanelRef.current;
+        if (!panel) return;
+        if (olderAnchor.current) {
+            panel.scrollTop = panel.scrollHeight - olderAnchor.current.height + olderAnchor.current.top;
+            olderAnchor.current = null;
+        } else panel.scrollTop = panel.scrollHeight;
     };
 
     useEffect(() => {
         scrollToBottom();
     }, [chat.messages]);
+
+    const handleLoadOlder = async () => {
+        const panel = messagesPanelRef.current;
+        if (panel) olderAnchor.current = { height: panel.scrollHeight, top: panel.scrollTop };
+        if (!await chat.loadOlder()) olderAnchor.current = null;
+    };
 
     const handleSend = async () => {
         if (!inputValue.trim() || sending) return;
@@ -48,10 +60,10 @@ const InterestChatPage = () => {
                 </p>
             </div>
 
-            <div className="flex-1 overflow-auto p-6 bg-[#f9fafb]">
+            <div ref={messagesPanelRef} className="flex-1 overflow-auto p-6 bg-[#f9fafb]">
                 {chat.loading && <div className="flex justify-center p-10"><Spin /></div>}
                 {chat.error && <div className="text-center text-red-500 text-sm">{chat.error}</div>}
-                {chat.hasOlder && <div className="text-center mb-4"><Button loading={chat.loadingOlder} onClick={chat.loadOlder}>Load earlier messages</Button></div>}
+                {chat.hasOlder && <div className="text-center mb-4"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>Load earlier messages</Button></div>}
                 <List
                     dataSource={chat.messages}
                     split={false}
@@ -72,7 +84,6 @@ const InterestChatPage = () => {
                         );
                     }}
                 />
-                <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 bg-white border-t border-gray-100">

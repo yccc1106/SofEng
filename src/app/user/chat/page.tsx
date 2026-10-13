@@ -34,10 +34,16 @@ const ChatContent = () => {
     const [loadingContacts, setLoadingContacts] = useState(true);
     const [sending, setSending] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesPanelRef = useRef<HTMLDivElement>(null);
+    const olderAnchor = useRef<{ height: number; top: number } | null>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const panel = messagesPanelRef.current;
+        if (!panel) return;
+        if (olderAnchor.current) {
+            panel.scrollTop = panel.scrollHeight - olderAnchor.current.height + olderAnchor.current.top;
+            olderAnchor.current = null;
+        } else panel.scrollTop = panel.scrollHeight;
     };
 
     const fetchContacts = async () => {
@@ -63,6 +69,12 @@ const ChatContent = () => {
     useEffect(() => {
         scrollToBottom();
     }, [chat.messages]);
+
+    const handleLoadOlder = async () => {
+        const panel = messagesPanelRef.current;
+        if (panel) olderAnchor.current = { height: panel.scrollHeight, top: panel.scrollTop };
+        if (!await chat.loadOlder()) olderAnchor.current = null;
+    };
 
     const handleSend = async () => {
         if (!inputValue.trim() || sending) return;
@@ -204,10 +216,10 @@ const ChatContent = () => {
                         </div>
 
                         {/* Messages List */}
-                        <div className="flex-1 overflow-auto p-6 space-y-6 scroll-smooth customize-scrollbar bg-[#f8f9fa]/50">
+                        <div ref={messagesPanelRef} className="flex-1 overflow-auto p-6 space-y-6 scroll-smooth customize-scrollbar bg-[#f8f9fa]/50">
                             {chat.loading && <div className="text-center py-4"><Spin /></div>}
                             {chat.error && <div className="text-center text-red-500 text-sm">{chat.error}</div>}
-                            {chat.hasOlder && <div className="text-center"><Button loading={chat.loadingOlder} onClick={chat.loadOlder}>Load earlier messages</Button></div>}
+                            {chat.hasOlder && <div className="text-center"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>Load earlier messages</Button></div>}
 
                             {chat.messages.map((msg, index) => {
                                 const isMe = msg.senderId === session?.user?.id;
@@ -244,7 +256,6 @@ const ChatContent = () => {
                                     </div>
                                 );
                             })}
-                            <div ref={messagesEndRef} />
                         </div>
 
                         {/* Input Area */}

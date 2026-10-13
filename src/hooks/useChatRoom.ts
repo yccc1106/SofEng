@@ -151,13 +151,15 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
         return sent;
     };
     const loadOlder = async () => {
-        if (!target || loadingOlder || !hasOlder || !messages.length) return;
+        if (!target || loadingOlder || !hasOlder || !messages.length) return 0;
         setLoadingOlder(true);
         try {
             const older = await api<ChatMessage[]>(`/java/chat?${key}&before=${encodeURIComponent(messages[0].id)}`);
             setMessages(current => merged(current, older)); setHasOlder(older.length === 100);
+            return older.length;
         } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to load history'); }
         finally { setLoadingOlder(false); }
+        return 0;
     };
     return { messages, loading, loadingOlder, hasOlder, status, error, send, loadOlder };
 }
