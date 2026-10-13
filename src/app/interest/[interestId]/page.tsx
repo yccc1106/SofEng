@@ -1,60 +1,58 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Button, Spin, Modal, Form, Input, App } from 'antd';
+import { Button, Spin, Modal, Form, Input, App, Pagination } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import PostCard from '@/components/User/PostCard';
 import { useParams } from 'next/navigation';
+import { javaPage, javaRequest } from '@/lib/java-client';
+import type { PostResponse } from '@/types/api';
 
 const InterestPostsPage = () => {
     const { message } = App.useApp();
     const params = useParams();
     const interestId = params?.interestId as string;
 
-    const [posts, setPosts] = useState<any[]>([]);
+    const [posts, setPosts] = useState<PostResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
 
-    const fetchPosts = async () => {
+    const fetchPosts = React.useCallback(async (requestedPage: number) => {
         if (!interestId) return;
         setLoading(true);
         try {
-            const res = await fetch(`/api/posts?categoryId=${interestId}`);
-            const data = await res.json();
-            if (data.success) {
-                setPosts(data.data);
-            }
-        } catch (error) {
+            const result = await javaPage<PostResponse>(`/posts?categoryId=${encodeURIComponent(interestId)}&page=${requestedPage}`);
+            setPosts(result.data);
+            setTotal(result.total);
+        } catch {
             message.error('Failed to load posts');
         } finally {
             setLoading(false);
         }
-    };
+    }, [interestId, message]);
 
     useEffect(() => {
-        fetchPosts();
-    }, [interestId]);
+        void fetchPosts(page);
+    }, [fetchPosts, page]);
 
-    const handleCreatePost = async (values: any) => {
+    const handleCreatePost = async (values: { title?: string; content: string }) => {
         setSubmitting(true);
         try {
-            const res = await fetch('/api/posts', {
+            await javaRequest('/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...values, categoryId: interestId }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success('Post created');
-                setIsModalOpen(false);
-                form.resetFields();
-                fetchPosts(); // Refresh
-            } else {
-                message.error(data.message || 'Failed to create post');
-            }
+            message.success('Post submitted for review');
+            setIsModalOpen(false);
+            form.resetFields();
+            if (page === 1) void fetchPosts(1);
+            else setPage(1);
         } catch (error) {
-            message.error('Error creating post');
+            message.error(error instanceof Error ? error.message : 'Error creating post');
         } finally {
             setSubmitting(false);
         }
@@ -77,6 +75,7 @@ const InterestPostsPage = () => {
                         <PostCard key={post.id} post={post} />
                     ))}
                     {posts.length === 0 && <div className="text-center text-gray-400 py-10">No posts yet in this community. Be the first!</div>}
+                    {total > 10 && <Pagination current={page} pageSize={10} total={total} onChange={setPage} />}
                 </div>
             )}
 

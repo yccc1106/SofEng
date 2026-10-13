@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from "@/lib/response";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
     const session = await auth();
     if (!session?.user) return unauthorizedResponse("Unauthorized");
+    if (session.user.role !== 'ADMIN') return forbiddenResponse();
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // SUGGESTION, REPORT
@@ -42,18 +42,15 @@ export async function GET(req: Request) {
         }));
 
         return successResponse(formattedFeedbacks, "Feedbacks retrieved");
-    } catch (error) {
-        return errorResponse(
-            "Internal server error",
-            500,
-            error instanceof Error ? error.message : 'Unknown error'
-        );
+    } catch {
+        return errorResponse("Internal server error", 500);
     }
 }
 
 export async function PUT(req: Request) {
     const session = await auth();
     if (!session?.user) return unauthorizedResponse("Unauthorized");
+    if (session.user.role !== 'ADMIN') return forbiddenResponse();
 
     try {
         const body = await req.json();
@@ -85,11 +82,7 @@ export async function PUT(req: Request) {
         });
 
         return successResponse(null, "Feedback updated");
-    } catch (error) {
-        return errorResponse(
-            "Update failed",
-            500,
-            error instanceof Error ? error.message : 'Unknown error'
-        );
+    } catch {
+        return errorResponse("Update failed", 500);
     }
 }

@@ -89,12 +89,15 @@ public class SecurityConfig {
                 }, AnonymousAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(PUBLIC).permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/category", "/api/category/*").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/category", "/api/category/*",
+                                "/api/posts", "/api/posts/*/comments").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users", "/api/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/profile").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/users/profile").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/auth/logout").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts", "/api/posts/*/comments",
+                                "/api/posts/*/like", "/api/posts/*/collect").authenticated()
                         .anyRequest().denyAll())
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, exception) -> writeError(response, mapper, 401, "Unauthorized"))

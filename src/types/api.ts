@@ -112,8 +112,8 @@ export interface PostResponse {
   categoryId: string | null;
   viewCount: number;
   status: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   author?: {
     id: string;
     name: string | null;
@@ -123,8 +123,18 @@ export interface PostResponse {
   };
   isLiked?: boolean;
   isCollected?: boolean;
+  _count?: { likes: number; collections: number; comments: number };
   likeCount?: number;
   commentCount?: number;
+}
+
+export interface PostCommentResponse {
+  id: string;
+  content: string;
+  postId: string;
+  userId: string;
+  createdAt: string;
+  user: { id: string; name: string | null; image: string | null };
 }
 
 // ============ Category 相关类型 ============

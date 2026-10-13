@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
@@ -31,6 +30,7 @@ export async function GET(req: Request) {
             // Search Posts
             prisma.post.findMany({
                 where: {
+                    status: 'PUBLISHED',
                     OR: [
                         { title: { contains: q, mode: 'insensitive' } },
                         { content: { contains: q, mode: 'insensitive' } }

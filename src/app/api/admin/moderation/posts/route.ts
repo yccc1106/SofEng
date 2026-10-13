@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
+import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from "@/lib/response";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
     const session = await auth();
     if (!session?.user) return unauthorizedResponse("Unauthorized");
+    if (session.user.role !== 'ADMIN') return forbiddenResponse();
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -35,38 +35,32 @@ export async function GET(req: Request) {
         }));
 
         return successResponse(formattedPosts, "Posts retrieved");
-    } catch (error) {
-        return errorResponse(
-            "Internal server error",
-            500,
-            error instanceof Error ? error.message : 'Unknown error'
-        );
+    } catch {
+        return errorResponse("Internal server error", 500);
     }
 }
 
 export async function PUT(req: Request) {
     const session = await auth();
     if (!session?.user) return unauthorizedResponse("Unauthorized");
+    if (session.user.role !== 'ADMIN') return forbiddenResponse();
 
     try {
         const body = await req.json();
         const { id, action } = body;
 
-        if (!id || !action) return errorResponse("Missing fields", 400);
+        if (typeof id !== 'string' || !['pass', 'reject'].includes(action)) return errorResponse("Invalid action", 400);
 
         const status = action === 'pass' ? 'PUBLISHED' : 'REJECTED';
 
-        await prisma.post.update({
-            where: { id },
+        const updated = await prisma.post.updateMany({
+            where: { id, status: 'AUDITING' },
             data: { status }
         });
+        if (updated.count === 0) return errorResponse("Post is not pending review", 409);
 
         return successResponse(null, "Post updated");
-    } catch (error) {
-        return errorResponse(
-            "Update failed",
-            500,
-            error instanceof Error ? error.message : 'Unknown error'
-        );
+    } catch {
+        return errorResponse("Update failed", 500);
     }
 }

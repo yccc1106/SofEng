@@ -65,6 +65,16 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。迁�
 
 迁移期旧 Next.js API Routes 仍存在，尚未迁移的管理接口安全问题见 `MIGRATION_BASELINE.md` 第 12 节；上线到不可信网络前需完成后续迁移。登录与注册限流、全量旧接口清理及部署安全验收仍在后续阶段。
 
+## 第四阶段接口
+
+- `GET /api/category`、`GET /api/category/{id}`：公开分类查询，统一响应包装。
+- `GET /api/posts`：公开浏览已发布帖子；登录作者也能看到自己的待审或被拒帖子。支持 `categoryId`、`page`、`pageSize`，兼容旧 `limit`，每页最多 100 条，返回 `pagination`。
+- `POST /api/posts`：登录用户发布帖子，新帖状态为 `AUDITING`，审核通过后才对其他用户可见。
+- `GET/POST /api/posts/{id}/comments`：已发布帖子的评论查询与发表。
+- `POST /api/posts/{id}/like`、`POST /api/posts/{id}/collect`：已发布帖子点赞、收藏，再次调用取消。
+
+前端分类、帖子和互动页面已切换到 `/java/*`；原 Next.js 分类与帖子接口已移除。现有 Next.js 审核页面可处理待审帖子，完整的 Java 审核接口和操作记录留在第 7 阶段。旧搜索接口仅返回已发布帖子。
+
 ## 后端验证
 
 ```bash

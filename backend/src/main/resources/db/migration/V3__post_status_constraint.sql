@@ -1,0 +1,2 @@
+ALTER TABLE "Post" ADD CONSTRAINT "Post_status_check"
+    CHECK (status IN ('AUDITING', 'PUBLISHED', 'REJECTED', 'DELETED'));
