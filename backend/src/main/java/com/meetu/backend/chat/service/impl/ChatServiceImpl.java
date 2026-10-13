@@ -5,6 +5,7 @@ import com.meetu.backend.chat.mapper.ChatMapper;
 import com.meetu.backend.chat.service.ChatService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,7 +16,8 @@ import java.util.UUID;
 @Service
 public class ChatServiceImpl implements ChatService {
     private final ChatMapper mapper;
-    public ChatServiceImpl(ChatMapper mapper) { this.mapper=mapper; }
+    private final ApplicationEventPublisher events;
+    public ChatServiceImpl(ChatMapper mapper,ApplicationEventPublisher events) { this.mapper=mapper; this.events=events; }
 
     @Override public String authorize(String viewer,ChatDtos.Target target) {
         if (viewer==null || mapper.activeUser(viewer)==null) throw new ChatForbidden();
@@ -70,7 +72,9 @@ public class ChatServiceImpl implements ChatService {
         if (input.type()!=null && !"TEXT".equals(input.type())) throw new InvalidChatRequest("Only text messages are supported");
         String id=UUID.randomUUID().toString();
         mapper.insert(id,content,userId,target.userId(),target.teamId(),target.categoryId());
-        return message(mapper.message(id));
+        var saved=message(mapper.message(id));
+        events.publishEvent(new MessageSaved(target,saved));
+        return saved;
     }
 
     @Override @Transactional public void markRead(String userId,ChatDtos.Target target) {
@@ -78,6 +82,7 @@ public class ChatServiceImpl implements ChatService {
         String[] parts=key.split(":",2);
         mapper.upsertRead(userId,parts[0],parts[1]);
         if (present(target.userId())) mapper.markDirectRead(userId,target.userId());
+        events.publishEvent(new ConversationRead(userId,target));
     }
 
     private static boolean belongs(Map<String,Object> row,String viewer,ChatDtos.Target target) {
@@ -98,4 +103,6 @@ public class ChatServiceImpl implements ChatService {
     public static class InvalidChatRequest extends RuntimeException { public InvalidChatRequest(String message) { super(message); } }
     public static class ChatForbidden extends RuntimeException {}
     public static class ChatNotFound extends RuntimeException {}
+    public record MessageSaved(ChatDtos.Target target,ChatDtos.Message message) {}
+    public record ConversationRead(String readerId,ChatDtos.Target target) {}
 }

@@ -4,6 +4,7 @@ import com.meetu.backend.chat.dto.ChatDtos;
 import com.meetu.backend.chat.mapper.ChatMapper;
 import com.meetu.backend.chat.service.impl.ChatServiceImpl;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Map;
@@ -13,7 +14,7 @@ import static org.mockito.Mockito.*;
 
 class ChatRulesTests {
     private final ChatMapper mapper=mock(ChatMapper.class);
-    private final ChatServiceImpl chat=new ChatServiceImpl(mapper);
+    private final ChatServiceImpl chat=new ChatServiceImpl(mapper,mock(ApplicationEventPublisher.class));
     private void active() { when(mapper.activeUser("viewer")).thenReturn("viewer"); }
 
     @Test void onlyFriendsCanReadAndSendDirectMessages() {
