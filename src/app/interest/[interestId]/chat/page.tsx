@@ -1,84 +1,40 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
-import { Layout, List, Input, Button, Avatar, Spin, App, Typography } from 'antd';
+import { List, Input, Button, Avatar, Spin, App } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
-
-const { Content } = Layout;
-
-interface Message {
-    id: string;
-    content: string;
-    senderId: string;
-    sender: {
-        name: string;
-        image: string;
-    };
-    createdAt: string;
-}
+import { useChatRoom } from '@/hooks/useChatRoom';
 
 const InterestChatPage = () => {
     const { message: antMessage } = App.useApp();
     const { data: session } = useSession();
     const params = useParams();
     const interestId = params?.interestId as string;
+    const chat = useChatRoom(interestId ? { categoryId: interestId } : null, session?.user?.id);
 
-    const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [sending, setSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const fetchMessages = async () => {
-        if (!interestId) return;
-        try {
-            const res = await fetch(`/api/chat?categoryId=${interestId}`);
-            const data = await res.json();
-            if (data.success) {
-                setMessages(data.data);
-            }
-        } catch (error) {
-            console.error("Fetch message error", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchMessages();
-        const interval = setInterval(fetchMessages, 3000);
-        return () => clearInterval(interval);
-    }, [interestId]);
-
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [chat.messages]);
 
     const handleSend = async () => {
-        if (!inputValue.trim()) return;
-
+        if (!inputValue.trim() || sending) return;
+        setSending(true);
         try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: inputValue,
-                    categoryId: interestId
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                setInputValue('');
-                fetchMessages();
-            } else {
-                antMessage.error('Failed to send');
-            }
+            await chat.send(inputValue);
+            setInputValue('');
         } catch (error) {
             antMessage.error('Error sending message');
+        } finally {
+            setSending(false);
         }
     };
 
@@ -87,14 +43,17 @@ const InterestChatPage = () => {
             <div className="p-4 border-b border-gray-100 bg-white z-10">
                 <h2 className="text-xl font-bold text-gray-800">Lobby Chat</h2>
                 <p className="text-xs text-green-500 flex items-center mt-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse" /> Live
+                    <span className={`w-2 h-2 rounded-full mr-1 ${chat.status === 'live' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                    {chat.status === 'live' ? 'Live' : chat.status === 'offline' ? 'Disconnected' : 'Connecting'}
                 </p>
             </div>
 
             <div className="flex-1 overflow-auto p-6 bg-[#f9fafb]">
-                {loading && <div className="flex justify-center p-10"><Spin /></div>}
+                {chat.loading && <div className="flex justify-center p-10"><Spin /></div>}
+                {chat.error && <div className="text-center text-red-500 text-sm">{chat.error}</div>}
+                {chat.hasOlder && <div className="text-center mb-4"><Button loading={chat.loadingOlder} onClick={chat.loadOlder}>Load earlier messages</Button></div>}
                 <List
-                    dataSource={messages}
+                    dataSource={chat.messages}
                     split={false}
                     renderItem={(msg) => {
                         const isMe = msg.senderId === session?.user?.id;
@@ -132,6 +91,7 @@ const InterestChatPage = () => {
                         size="large"
                         icon={<SendOutlined />}
                         onClick={handleSend}
+                        disabled={!inputValue.trim() || sending}
                         className="h-12 w-12 flex items-center justify-center shadow-lg bg-indigo-600 hover:bg-indigo-700 border-none"
                     />
                 </div>
