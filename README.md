@@ -49,12 +49,17 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
    # Java 服务地址不同于默认的 localhost:8080 时：
    # JAVA_BACKEND_URL=http://localhost:18080 pnpm dev
 
+   # 如 Java WebSocket 端口也改为 18080，同时设置浏览器使用的地址：
+   # JAVA_BACKEND_URL=http://localhost:18080 NEXT_PUBLIC_JAVA_WS_URL=ws://localhost:18080/api/chat/ws pnpm dev
+
    # 或
 
    pnpm build && pnpm start
    ```
 
 前端默认访问 <http://localhost:3000>。注册、登录及个人资料页面通过 `/java/*` 代理调用 Spring Boot 的 `/api/*`；前端与 Java 后端必须同时运行。迁移期登录还会建立 NextAuth 会话，供尚未迁移的页面和接口使用。退出时会注销两套会话。账号被冻结、封禁或删除后，Java 会话和旧 NextAuth 服务端会话均会失效。
+
+聊天页面通过 `/java/chat*` 调用 Java REST，浏览器默认连接 `ws://localhost:8080/api/chat/ws`。部署时设置 `NEXT_PUBLIC_JAVA_WS_URL` 为可从浏览器访问的 WebSocket 地址；HTTPS 页面使用 `wss://`。WebSocket 需要收到与 Java REST 登录相同的 `JSESSIONID` Cookie，前后端跨主机部署时应通过同一站点的反向代理转发 WebSocket Upgrade，并将 `FRONTEND_ORIGIN` 设置为实际前端来源。WebSocket 只在当前 Java 单体实例内推送；当前部署方案为单实例。
 
 ## 第三阶段接口
 
@@ -74,6 +79,16 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
 - `POST /api/posts/{id}/like`、`POST /api/posts/{id}/collect`：已发布帖子点赞、收藏，再次调用取消。
 
 前端分类、帖子和互动页面已切换到 `/java/*`；原 Next.js 分类与帖子接口已移除。现有 Next.js 审核页面可处理待审帖子，完整的 Java 审核接口和操作记录留在第 7 阶段。旧搜索接口仅返回已发布帖子。
+
+## 第六阶段聊天接口
+
+- `GET /api/chat/contacts`：返回好友与已加入队伍联系人及未读数。
+- `GET /api/chat?userId=...|teamId=...|categoryId=...`：返回最近 100 条消息，按时间升序展示；传 `before=<最早消息ID>` 获取更早一页。
+- `POST /api/chat`：发送文本消息。私聊使用 `receiverId`，队聊使用 `teamId`，兴趣房间使用 `categoryId`，三个目标只能填写一个。
+- `POST /api/chat/read`：标记当前会话已读；私聊消息另保存 `isRead` 状态。
+- `/api/chat/ws`：Java WebSocket。客户端发送 `{"event":"join", "userId"|"teamId"|"categoryId":"..."}` 订阅会话，可发送 `leave` 退订、`ping` 保活；服务端发送 `joined`、`new:message`、`read`、`pong` 或 `error`。历史读取、消息发送及订阅均校验好友或队伍成员权限；兴趣房间要求登录。
+
+页面断线后最多重连 5 次，重新连接时补取期间消息；聊天历史和时间戳按 UTC 处理。现有 WebSocket 推送限定在单个 Java 应用实例内。
 
 ## 后端验证
 
