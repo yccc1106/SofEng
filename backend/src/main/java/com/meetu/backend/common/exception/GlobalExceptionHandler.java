@@ -1,6 +1,7 @@
 package com.meetu.backend.common.exception;
 
 import com.meetu.backend.common.api.ApiResponse;
+import com.meetu.backend.user.UserController.DuplicateEmailException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnreadableMessage() {
         return ResponseEntity.badRequest().body(ApiResponse.error("Malformed request body"));
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateEmail() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("User already exists"));
     }
 
     @ExceptionHandler(Exception.class)

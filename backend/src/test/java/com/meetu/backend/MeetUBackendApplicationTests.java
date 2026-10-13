@@ -33,6 +33,6 @@ class MeetUBackendApplicationTests {
     @Test
     void unknownBusinessEndpointIsClosedByDefault() throws Exception {
         mockMvc.perform(get("/api/private"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }
