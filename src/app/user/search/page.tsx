@@ -4,6 +4,7 @@ import { Input, List, Card, Tabs, Avatar, Tag, Button, Spin, Empty, App } from '
 import { SearchOutlined, UserOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PostCard from '@/components/User/PostCard';
+import { javaRequest } from '@/lib/java-client';
 
 const { Search } = Input;
 
@@ -17,6 +18,19 @@ const SearchContent = () => {
     const [loading, setLoading] = useState(false);
     const { message } = App.useApp();
 
+    const addFriend = async (receiverId: string) => {
+        try {
+            await javaRequest('/friends/requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ receiverId }),
+            });
+            message.success('Friend request sent');
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : 'Failed to send request');
+        }
+    };
+
     const handleSearch = async (value: string) => {
         if (!value.trim()) return;
         setLoading(true);
@@ -24,11 +38,7 @@ const SearchContent = () => {
         router.push(`/user/search?q=${encodeURIComponent(value)}`);
 
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(value)}`);
-            const data = await res.json();
-            if (data.success) {
-                setResults(data.data);
-            }
+            setResults(await javaRequest<{ users: any[], posts: any[], teams: any[] }>(`/search?q=${encodeURIComponent(value)}`));
         } catch (error) {
             message.error('Search failed');
         } finally {
@@ -72,7 +82,7 @@ const SearchContent = () => {
                                         <div>
                                             <div className="text-xs text-blue-500 mb-1">{user.personalityType}</div>
                                             <div className="truncate text-gray-400" title={user.bio}>{user.bio || 'No bio'}</div>
-                                            <Button type="link" size="small" className="p-0 mt-2" href={`/user/chat?targetId=${user.id}`}>Message</Button>
+                                            <Button type="link" size="small" className="p-0 mt-2" onClick={() => addFriend(user.id)}>Add Friend</Button>
                                         </div>
                                     }
                                 />

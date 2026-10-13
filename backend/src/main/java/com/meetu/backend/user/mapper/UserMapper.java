@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Update;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -24,6 +25,12 @@ public interface UserMapper {
 
     @Select("SELECT " + FIELDS + " FROM \"User\" WHERE id=#{id}")
     Map<String, Object> selectById(String id);
+
+    @Select("SELECT id,name,image,bio,\"personalityType\" FROM \"User\" WHERE status='ACTIVE' AND CAST(role AS varchar)='USER' " +
+            "AND id!=#{viewer} AND (POSITION(LOWER(#{q}) IN LOWER(COALESCE(name,'')))>0 OR " +
+            "POSITION(LOWER(#{q}) IN LOWER(COALESCE(bio,'')))>0) ORDER BY \"createdAt\" DESC LIMIT 5")
+    List<Map<String,Object>> search(@org.apache.ibatis.annotations.Param("viewer") String viewer,
+                                    @org.apache.ibatis.annotations.Param("q") String q);
 
     @Insert("INSERT INTO \"User\" (id,name,email,password,\"studentId\",school,\"createdAt\",\"updatedAt\",\"personalityTags\") " +
             "VALUES (#{id},#{name},#{email},#{password},#{studentId},#{school},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,ARRAY[]::text[])")

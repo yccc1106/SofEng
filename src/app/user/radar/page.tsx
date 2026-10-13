@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Avatar, Button, Spin, Typography, App, Tag } from 'antd';
 import { RadarChartOutlined, UserAddOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
+import { javaRequest } from '@/lib/java-client';
 import './radar.css'; // Will create this css file for animation
 
 const { Title, Paragraph } = Typography;
@@ -41,17 +42,12 @@ const RadarPage = () => {
 
     const handleAddFriend = async (userId: string) => {
         try {
-            const res = await fetch('/api/friends/requests', {
+            await javaRequest('/friends/requests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ receiverId: userId, message: 'Found you via AI Radar!' }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success('Friend request sent!');
-            } else {
-                message.error(data.message);
-            }
+            message.success('Friend request sent!');
         } catch (error) {
             message.error('Error sending request');
         }

@@ -44,6 +44,11 @@ public interface PostMapper {
     @Select(POST_SELECT + "WHERE p.id=#{id}")
     Map<String, Object> selectById(@Param("id") String id, @Param("viewerId") String viewerId);
 
+    @Select(POST_SELECT + "WHERE p.status='PUBLISHED' AND u.status='ACTIVE' AND " +
+            "(POSITION(LOWER(#{q}) IN LOWER(COALESCE(p.title,'')))>0 OR POSITION(LOWER(#{q}) IN LOWER(p.content))>0) " +
+            "ORDER BY p.\"createdAt\" DESC LIMIT 5")
+    List<Map<String,Object>> selectSearch(@Param("viewerId") String viewerId,@Param("q") String q);
+
     @Select("SELECT EXISTS(SELECT 1 FROM \"Category\" WHERE id=#{id})")
     boolean categoryExists(String id);
 
@@ -82,6 +87,7 @@ public interface PostMapper {
     default List<PostRow> page(String viewerId, String categoryId, int page, int size) {
         return selectPage(viewerId, categoryId, size, (page - 1) * size).stream().map(PostMapper::post).toList();
     }
+    default List<PostRow> search(String viewerId,String q) { return selectSearch(viewerId,q).stream().map(PostMapper::post).toList(); }
     default Optional<PostRow> find(String id, String viewerId) {
         return Optional.ofNullable(selectById(id, viewerId)).map(PostMapper::post);
     }

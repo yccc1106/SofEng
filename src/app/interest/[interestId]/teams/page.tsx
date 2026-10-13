@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Spin, Modal, Form, Input, App, Row, Col, Card, Avatar, Tag, Select } from 'antd';
 import { PlusOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { javaRequest } from '@/lib/java-client';
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -11,7 +11,6 @@ const { Option } = Select;
 const InterestTeamsPage = () => {
     const { message } = App.useApp();
     const params = useParams();
-    const router = useRouter();
     const interestId = params?.interestId as string;
 
     const [teams, setTeams] = useState<any[]>([]);
@@ -24,11 +23,7 @@ const InterestTeamsPage = () => {
         if (!interestId) return;
         setLoading(true);
         try {
-            const res = await fetch(`/api/teams?categoryId=${interestId}`);
-            const data = await res.json();
-            if (data.success) {
-                setTeams(data.data);
-            }
+            setTeams(await javaRequest<any[]>(`/teams?categoryId=${encodeURIComponent(interestId)}`));
         } catch (error) {
             message.error('Failed to load teams');
         } finally {
@@ -43,24 +38,33 @@ const InterestTeamsPage = () => {
     const handleCreateTeam = async (values: any) => {
         setSubmitting(true);
         try {
-            const res = await fetch('/api/teams', {
+            await javaRequest('/teams', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...values, categoryId: interestId }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success('Team created');
-                setIsModalOpen(false);
-                form.resetFields();
-                fetchTeams();
-            } else {
-                message.error(data.message || 'Failed to create team');
-            }
+            message.success('Team created');
+            setIsModalOpen(false);
+            form.resetFields();
+            fetchTeams();
         } catch (error) {
             message.error('Error creating team');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleJoin = async (teamId: string) => {
+        try {
+            const result = await javaRequest<{ status: string }>('/teams/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teamId }),
+            });
+            message.success(result.status === 'PENDING' ? 'Application sent' : 'Joined team');
+            fetchTeams();
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : 'Failed to join team');
         }
     };
 
@@ -85,7 +89,7 @@ const InterestTeamsPage = () => {
                             <Card
                                 hoverable
                                 actions={[
-                                    <Button type="text" key="join" onClick={() => router.push(`/user/chat?teamId=${team.id}`)}>Chat / Join</Button>
+                                    <Button type="text" key="join" onClick={() => handleJoin(team.id)}>Apply / Join</Button>
                                 ]}
                             >
                                 <Meta

@@ -2,14 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Avatar, Tag, Spin, Modal, Form, Input, InputNumber, Select, App, Tabs, List, Space, Divider } from 'antd';
 import { PlusOutlined, UsergroupAddOutlined, CheckOutlined, CloseOutlined, TeamOutlined, GlobalOutlined, BellOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { javaRequest } from '@/lib/java-client';
 
 const { Meta } = Card;
 
 const TeamsPage = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
     const router = useRouter();
     const [teams, setTeams] = useState<any[]>([]);
     const [myTeams, setMyTeams] = useState<any[]>([]);
@@ -27,19 +26,13 @@ const TeamsPage = () => {
         setLoading(true);
         try {
             // Fetch All Recruiting Teams
-            const resAll = await fetch('/api/teams');
-            const dataAll = await resAll.json();
-            if (dataAll.success) setTeams(dataAll.data);
+            setTeams(await javaRequest<any[]>('/teams'));
 
             // Fetch My Teams
-            const resMine = await fetch('/api/teams?mine=true');
-            const dataMine = await resMine.json();
-            if (dataMine.success) setMyTeams(dataMine.data);
+            setMyTeams(await javaRequest<any[]>('/teams?mine=true'));
 
             // Fetch Requests (if leader)
-            const resReq = await fetch('/api/teams/requests');
-            const dataReq = await resReq.json();
-            if (dataReq.success) setRequests(dataReq.data);
+            setRequests(await javaRequest<any[]>('/teams/requests'));
 
         } catch (error) {
             message.error('Failed to load data');
@@ -54,20 +47,15 @@ const TeamsPage = () => {
 
     const handleCreateTeam = async (values: any) => {
         try {
-            const res = await fetch('/api/teams', {
+            await javaRequest('/teams', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success('Team created');
-                setIsCreateModalOpen(false);
-                createForm.resetFields();
-                fetchData();
-            } else {
-                message.error(data.message || 'Failed to create team');
-            }
+            message.success('Team created');
+            setIsCreateModalOpen(false);
+            createForm.resetFields();
+            fetchData();
         } catch (error) {
             message.error('Error creating team');
         }
@@ -77,20 +65,15 @@ const TeamsPage = () => {
         if (!selectedTeamId) return;
         setJoining(true);
         try {
-            const res = await fetch('/api/teams/join', {
+            const data = await javaRequest<{ status: string }>('/teams/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ teamId: selectedTeamId, message: values.message }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success(data.message || 'Joined team successfully');
-                setIsJoinModalOpen(false);
-                joinForm.resetFields();
-                fetchData();
-            } else {
-                message.error(data.message || 'Failed to join team');
-            }
+            message.success(data.status === 'PENDING' ? 'Application sent' : 'Joined team successfully');
+            setIsJoinModalOpen(false);
+            joinForm.resetFields();
+            fetchData();
         } catch (error) {
             message.error('Error joining team');
         } finally {
@@ -100,18 +83,13 @@ const TeamsPage = () => {
 
     const handleManageRequest = async (memberId: string, status: 'JOINED' | 'REJECTED') => {
         try {
-            const res = await fetch('/api/teams/requests', {
+            await javaRequest('/teams/requests', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ memberId, status }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success(status === 'JOINED' ? 'Approved' : 'Rejected');
-                fetchData();
-            } else {
-                message.error(data.message || 'Operation failed');
-            }
+            message.success(status === 'JOINED' ? 'Approved' : 'Rejected');
+            fetchData();
         } catch (error) {
             message.error('Error managing request');
         }

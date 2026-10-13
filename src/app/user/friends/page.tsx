@@ -1,8 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Tabs, List, Avatar, Button, App, Spin, Badge } from 'antd';
-import { UserAddOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
+import { javaAction, javaRequest } from '@/lib/java-client';
 
 const FriendsPage = () => {
     const { message } = App.useApp();
@@ -14,16 +15,12 @@ const FriendsPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [friendsRes, requestsRes] = await Promise.all([
-                fetch('/api/friends'),
-                fetch('/api/friends/requests?type=received')
+            const [friendsData, requestsData] = await Promise.all([
+                javaRequest<any[]>('/friends'),
+                javaRequest<any[]>('/friends/requests?type=received')
             ]);
-
-            const friendsData = await friendsRes.json();
-            const requestsData = await requestsRes.json();
-
-            if (friendsData.success) setFriends(friendsData.data);
-            if (requestsData.success) setRequests(requestsData.data);
+            setFriends(friendsData);
+            setRequests(requestsData);
 
         } catch (error) {
             message.error('Failed to load data');
@@ -38,18 +35,13 @@ const FriendsPage = () => {
 
     const handleRequestAction = async (id: string, action: 'ACCEPT' | 'REJECT') => {
         try {
-            const res = await fetch(`/api/friends/requests/${id}`, {
+            await javaAction(`/friends/requests/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success(`Request ${action.toLowerCase()}ed`);
-                fetchData();
-            } else {
-                message.error('Operation failed');
-            }
+            message.success(action === 'ACCEPT' ? 'Request accepted' : 'Request rejected');
+            fetchData();
         } catch (error) {
             message.error('Error');
         }

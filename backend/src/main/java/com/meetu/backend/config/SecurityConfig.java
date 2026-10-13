@@ -90,7 +90,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(PUBLIC).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/category", "/api/category/*",
-                                "/api/posts", "/api/posts/*/comments").permitAll()
+                                "/api/posts", "/api/posts/*/comments", "/api/teams").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users", "/api/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/profile").authenticated()
@@ -98,6 +98,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/auth/logout").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts", "/api/posts/*/comments",
                                 "/api/posts/*/like", "/api/posts/*/collect").authenticated()
+                        .requestMatchers("/api/friends", "/api/friends/**", "/api/teams/**", "/api/teams", "/api/search").authenticated()
                         .anyRequest().denyAll())
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, exception) -> writeError(response, mapper, 401, "Unauthorized"))
