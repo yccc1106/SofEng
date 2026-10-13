@@ -1,6 +1,6 @@
 # MeetU
 
-MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。迁移期间，尚未切换的业务继续由现有 Next.js API 提供。
+MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 后端按 Controller → Service 接口 → ServiceImpl → MyBatis Mapper 分层，使用 PostgreSQL。迁移期间，尚未切换的业务继续由现有 Next.js API 提供。
 
 ## 快速开始
 

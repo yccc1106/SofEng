@@ -4,6 +4,8 @@ import com.meetu.backend.common.api.ApiResponse;
 import com.meetu.backend.user.service.impl.UserServiceImpl.DuplicateEmailException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.InvalidCredentialsException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.RestrictedAccountException;
+import com.meetu.backend.post.service.impl.PostServiceImpl.InvalidPostRequestException;
+import com.meetu.backend.post.service.impl.PostServiceImpl.PostNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +64,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RestrictedAccountException.class)
     public ResponseEntity<ApiResponse<Void>> handleRestrictedAccount() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Account is restricted"));
+    }
+
+    @ExceptionHandler(InvalidPostRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidPost(InvalidPostRequestException exception) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(exception.getMessage()));
+    }
+
+    @ExceptionHandler(PostNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePostNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Post not found"));
     }
 
     @ExceptionHandler(Exception.class)
