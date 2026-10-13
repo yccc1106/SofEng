@@ -248,8 +248,9 @@ const ChatContent = () => {
                                                 >
                                                     {msg.content}
                                                 </div>
-                                                <span className={`text-[10px] text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity mx-1`}>
+                                                <span className={`text-[10px] text-gray-400 mt-1 transition-opacity mx-1 ${isMe && targetUserId && msg.isRead ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                                                     {dayjs(msg.createdAt).format('h:mm A')}
+                                                    {isMe && targetUserId && msg.isRead ? ' · Read' : ''}
                                                 </span>
                                             </div>
                                         </div>
