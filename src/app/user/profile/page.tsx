@@ -1,37 +1,60 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Card, Avatar, Button, Descriptions, Tag, Spin, Form, Input, Select, App, Modal } from 'antd';
+import { Card, Avatar, Button, Descriptions, Tag, Spin, Form, Input, App, Modal } from 'antd';
 import { UserOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+type Profile = {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
+    school?: string | null;
+    major?: string | null;
+    grade?: string | null;
+    bio?: string | null;
+    personalityType?: string | null;
+    personalityTags?: string[];
+};
 
 const ProfilePage = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
-    const [user, setUser] = useState<any>(null);
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [user, setUser] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
 
-    const fetchProfile = async () => {
+    const fetchProfile = React.useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/users/profile');
+            const res = await fetch('/java/users/profile');
             const data = await res.json();
+            if (res.status === 401) {
+                await signOut({ callbackUrl: '/user/login' });
+                return;
+            }
             if (data.success) {
                 setUser(data.data);
+            } else {
+                message.error(data.message || 'Failed to load profile');
             }
-        } catch (error) {
+        } catch {
             message.error('Failed to load profile');
         } finally {
             setLoading(false);
         }
-    };
+    }, [message]);
 
     useEffect(() => {
-        if (session) {
-            fetchProfile();
+        if (status === 'unauthenticated') {
+            router.replace('/user/login');
+        } else if (session) {
+            void fetchProfile();
         }
-    }, [session]);
+    }, [session, status, fetchProfile, router]);
 
     const handleEdit = () => {
         form.setFieldsValue(user);
@@ -41,12 +64,16 @@ const ProfilePage = () => {
     const handleSave = async () => {
         try {
             const values = await form.validateFields();
-            const res = await fetch('/api/users/profile', {
+            const res = await fetch('/java/users/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
             });
             const data = await res.json();
+            if (res.status === 401) {
+                await signOut({ callbackUrl: '/user/login' });
+                return;
+            }
             if (data.success) {
                 message.success('Profile updated');
                 setUser(data.data);
@@ -54,7 +81,7 @@ const ProfilePage = () => {
             } else {
                 message.error('Failed to update');
             }
-        } catch (error) {
+        } catch {
             message.error('Error saving profile');
         }
     };
@@ -101,7 +128,7 @@ const ProfilePage = () => {
                 </div>
             </Card>
 
-            <Button danger block icon={<LogoutOutlined />} onClick={() => signOut({ callbackUrl: '/user/login' })}>
+            <Button danger block icon={<LogoutOutlined />} onClick={async () => { try { await fetch('/java/auth/logout', { method: 'POST' }); } finally { await signOut({ callbackUrl: '/user/login' }); } }}>
                 Logout
             </Button>
 

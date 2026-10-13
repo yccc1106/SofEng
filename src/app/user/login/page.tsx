@@ -10,32 +10,44 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const onFinishLogin = async (values: any) => {
+    const onFinishLogin = async (values: { email: string; password: string }) => {
         setLoading(true);
         try {
+            const javaResponse = await fetch('/java/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(values),
+            });
+            const javaResult = await javaResponse.json();
+            if (!javaResponse.ok) {
+                message.error(javaResult.message || 'Login failed');
+                return;
+            }
+            // Unmigrated pages still use NextAuth during the transition.
             const result = await signIn('credentials', {
                 email: values.email,
                 password: values.password,
                 redirect: false,
             });
-
-            if (result?.error) {
-                message.error('Login failed: ' + result.error);
-            } else {
-                message.success('Login successful');
-                router.push('/');
+            if (!result?.ok || result.error) {
+                await fetch('/java/auth/logout', { method: 'POST' });
+                message.error('Login failed');
+                return;
             }
-        } catch (error) {
+            message.success('Login successful');
+            router.push('/');
+        } catch {
+            await fetch('/java/auth/logout', { method: 'POST' }).catch(() => {});
             message.error('Login error');
         } finally {
             setLoading(false);
         }
     };
 
-    const onFinishRegister = async (values: any) => {
+    const onFinishRegister = async (values: { name: string; email: string; password: string; studentId?: string; school?: string }) => {
         setLoading(true);
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/java/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
@@ -47,7 +59,7 @@ const LoginPage = () => {
             } else {
                 message.error(data.message || 'Registration failed');
             }
-        } catch (error) {
+        } catch {
             message.error('Registration error');
         } finally {
             setLoading(false);

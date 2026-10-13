@@ -32,7 +32,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。迁�
    mvn spring-boot:run
    ```
 
-   默认连接 `localhost:5433/meetu`。可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 和 `SERVER_PORT` 覆盖配置。
+   默认连接 `localhost:5433/meetu`。可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 和 `SERVER_PORT` 覆盖配置。开发环境默认允许 `http://localhost:3000` 发起会话写请求；部署到其他前端地址时设置 `FRONTEND_ORIGIN`，使用 HTTPS 时设置 `SESSION_COOKIE_SECURE=true`。
 
    启动后可访问：
 
@@ -46,12 +46,24 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。迁�
    ```bash
    pnpm dev
 
+   # Java 服务地址不同于默认的 localhost:8080 时：
+   # JAVA_BACKEND_URL=http://localhost:18080 pnpm dev
+
    # 或
 
    pnpm build && pnpm start
    ```
 
-前端默认访问 <http://localhost:3000>。
+前端默认访问 <http://localhost:3000>。注册、登录及个人资料页面通过 `/java/*` 代理调用 Spring Boot 的 `/api/*`；前端与 Java 后端必须同时运行。迁移期登录还会建立 NextAuth 会话，供尚未迁移的页面和接口使用。退出时会注销两套会话。账号被冻结、封禁或删除后，Java 会话和旧 NextAuth 服务端会话均会失效。
+
+## 第三阶段接口
+
+- `POST /api/users`：邮箱、昵称和密码注册，密码至少 8 位；返回不含密码的用户资料。
+- `POST /api/auth/login`、`POST /api/auth/logout`：建立或注销 Java 服务端会话。
+- `GET /api/users/profile`、`PUT /api/users/profile`：仅操作当前登录用户；可编辑字段为昵称、学校、专业、年级和简介。
+- Java 会话使用 `HttpOnly`、`SameSite=Lax` Cookie。写请求校验浏览器 `Origin`；生产环境必须使用 HTTPS 并启用安全 Cookie。单体后端重启后内存会话失效，用户需重新登录。
+
+迁移期旧 Next.js API Routes 仍存在，尚未迁移的管理接口安全问题见 `MIGRATION_BASELINE.md` 第 12 节；上线到不可信网络前需完成后续迁移。登录与注册限流、全量旧接口清理及部署安全验收仍在后续阶段。
 
 ## 后端验证
 

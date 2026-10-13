@@ -1,10 +1,11 @@
 'use client';
 import React from 'react';
-import { Layout, Menu, Button, Dropdown, Avatar, App, Input, Flex, Typography, theme, Grid } from 'antd';
+import { Layout, Menu, Button, Dropdown, Avatar, Input, Flex, Typography, theme, Grid } from 'antd';
 import { UserOutlined, LogoutOutlined, BellOutlined, CompassOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import type { MenuProps } from 'antd';
 
 const { Header } = Layout;
 
@@ -23,7 +24,7 @@ const NavBar = () => {
         ...(session?.user?.role === 'ADMIN' ? [{ key: '/dashboard', label: 'Admin Panel' }] : []),
     ];
 
-    const userMenu = {
+    const userMenu: MenuProps = {
         items: [
             {
                 key: 'profile',
@@ -34,17 +35,17 @@ const NavBar = () => {
                 key: 'dashboard',
                 icon: <CompassOutlined />,
                 label: <Link href="/dashboard">Admin Dashboard</Link>,
-            }, { type: 'divider' }] : []),
+            }, { type: 'divider' as const }] : []),
             {
-                type: 'divider',
+                type: 'divider' as const,
             },
             {
                 key: 'logout',
                 icon: <LogoutOutlined />,
                 label: 'Logout',
-                onClick: () => signOut({ callbackUrl: '/user/login' }),
+                onClick: async () => { try { await fetch('/java/auth/logout', { method: 'POST' }); } finally { await signOut({ callbackUrl: '/user/login' }); } },
             },
-        ] as any,
+        ],
     };
 
     return (
