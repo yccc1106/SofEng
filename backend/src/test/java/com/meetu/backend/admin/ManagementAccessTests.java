@@ -29,7 +29,7 @@ class ManagementAccessTests {
                 "ordinary","Ordinary","ordinary@example.test",null,null,"USER","ACTIVE",null,null,null,
                 null,null,null,null,new String[0],"UNVERIFIED")));
         for (String path : new String[] {"/api/admin/users", "/api/admin/verification", "/api/admin/interest",
-                "/api/admin/feedback", "/api/admin/moderation/posts", "/api/admin/moderation/chats",
+                "/api/admin/feedback", "/api/admin/stats", "/api/admin/moderation/posts", "/api/admin/moderation/chats",
                 "/api/admin/moderation/rooms"}) {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());
             mvc.perform(get(path).with(user("ordinary"))).andExpect(status().isForbidden());
