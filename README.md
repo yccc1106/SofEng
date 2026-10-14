@@ -57,6 +57,23 @@ WHERE email = 'your-admin@example.com' AND status = 'ACTIVE'
 RETURNING id, email, role;
 ```
 
+## 中英文界面与演示数据
+
+前端默认显示简体中文。用户页面右上角和管理后台顶部可切换“中文 / English”；选择保存在当前浏览器的 `localStorage` 中，刷新页面后继续生效。当前已覆盖用户端主要页面、导航和管理菜单；管理明细页中的既有中文文案尚待补齐英文。业务数据由数据库提供，不会因切换语言被翻译或修改。
+
+仓库中的 [演示数据脚本](scripts/demo-data.sql) 可在 **Windows PowerShell** 上直接使用。它包含 40 个普通用户、1 个管理员、8 个兴趣分类、120 篇帖子、80 条评论、120 个点赞、12 支队伍、48 条队伍成员记录、20 对好友、8 条好友申请、136 条聊天消息、12 条反馈和 8 条认证申请；时间按导入时刻生成，用于展示当日和历史统计。全部账号和内容均为虚构数据。
+
+请为演示使用**独立的空数据库**。完成上面的 Docker 数据库启动和 Java 后端启动步骤，确认 Flyway 已执行到 V6 后，在项目根目录运行：
+
+```powershell
+docker cp .\scripts\demo-data.sql meetu_postgres:/tmp/meetu-demo-data.sql
+docker compose exec postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/meetu-demo-data.sql
+```
+
+演示账号：管理员 `admin.demo@example.test`、普通用户 `demo01@example.test` 至 `demo40@example.test`，统一密码 `MeetUdemo2026!`。导入前脚本会检查用户表和分类表：如果存在非演示数据，会直接停止，不会混入真实数据。重复导入不会创建重复记录；如需让相对日期重新贴近演示当天，请重新创建独立的空演示库后导入。**不要在生产库运行该脚本或沿用演示密码。**
+
+Windows 演示机器需要 Docker Desktop、Java 17、Maven 3.9+、Node.js 和 pnpm；在两处终端分别运行 `cd backend; mvn spring-boot:run` 与 `pnpm dev`，然后打开 <http://localhost:3000>。演示时可以展示社区动态、组队和聊天，并用管理员账号查看统计及审核页面。脚本是 UTF-8 文本，已随 Git 提交；将仓库复制到 Windows 后即可导入，不依赖本机的 PostgreSQL 数据文件。
+
 聊天页面通过 `/java/chat*` 调用 Java REST，浏览器默认连接 `ws://localhost:8080/api/chat/ws`。部署时设置 `NEXT_PUBLIC_JAVA_WS_URL` 为可从浏览器访问的 WebSocket 地址；HTTPS 页面使用 `wss://`。WebSocket 需要收到与 Java REST 登录相同的 `JSESSIONID` Cookie，前后端跨主机部署时应通过同一站点的反向代理转发 WebSocket Upgrade，并将 `FRONTEND_ORIGIN` 设置为实际前端来源。WebSocket 只在当前 Java 单体实例内推送；当前部署方案为单实例。
 
 ## 第三阶段接口
