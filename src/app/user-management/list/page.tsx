@@ -1,8 +1,8 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { Button, Drawer, Tag, message, Popconfirm, Avatar, Space, Modal } from 'antd';
-import { UserOutlined, StopOutlined, SafetyCertificateOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Drawer, message, Popconfirm, Avatar, Space } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import React, { useRef, useState } from 'react';
 import { shanghaiDateTime } from '@/lib/shanghai-time';
 
@@ -56,7 +56,7 @@ const UserList: React.FC = () => {
             } else {
                 message.error(data.message || t('操作失败'));
             }
-        } catch (error) {
+        } catch {
             message.error(t('请求出错'));
         }
     };

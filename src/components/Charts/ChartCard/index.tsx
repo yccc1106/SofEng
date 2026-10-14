@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Card } from 'antd';
 import type { CardProps } from 'antd/es/card';
 import classNames from 'classnames';

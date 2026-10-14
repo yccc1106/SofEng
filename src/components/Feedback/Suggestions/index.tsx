@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, ModalForm, PageContainer, ProColumns, ProFormRadio, ProFormTextArea, ProTable } from '@ant-design/pro-components';
-import { Button, message, Tag } from 'antd';
+import { message } from 'antd';
 import React, { useRef, useState } from 'react';
 
 type SuggestionItem = {
@@ -36,7 +36,7 @@ const Suggestions: React.FC = () => {
                 message.error(t('Failed to process'));
                 return false;
             }
-        } catch (error) {
+        } catch {
             message.error(t('Error processing feedback'));
             return false;
         }
@@ -120,7 +120,7 @@ const Suggestions: React.FC = () => {
                     pageSize: 10,
                     showSizeChanger: true,
                 }}
-                request={async (params) => {
+                request={async () => {
                     const res = await fetch('/java/admin/feedback?type=SUGGESTION');
                     return await res.json();
                 }}

@@ -46,7 +46,8 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
     const latestId = useRef<string | undefined>(undefined);
 
     useEffect(() => {
-        if (!target) { setMessages([]); setLoading(false); setHasOlder(false); setStatus('offline'); return; }
+        if (!key) { setMessages([]); setLoading(false); setHasOlder(false); setStatus('offline'); return; }
+        const activeTarget = Object.fromEntries(new URLSearchParams(key)) as ChatTarget;
         let active = true;
         let socket: WebSocket | null = null;
         let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -54,7 +55,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
         let retries = 0;
         let terminalError = false;
         const recordRead = async () => {
-            try { await fetch('/java/chat/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(target) }); }
+            try { await fetch('/java/chat/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(activeTarget) }); }
             catch { /* The next visit can retry. */ }
         };
         const page = async (before?: string) => api<ChatMessage[]>(`/java/chat?${key}${before ? `&before=${encodeURIComponent(before)}` : ''}`);
@@ -94,7 +95,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
             socket = new WebSocket(socketUrl());
             socket.onopen = () => {
                 if (!active || !socket) return;
-                socket.send(JSON.stringify({ event: 'join', ...target }));
+                socket.send(JSON.stringify({ event: 'join', ...activeTarget }));
                 heartbeat = setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ event: 'ping' })); }, 30000);
             };
             socket.onmessage = event => {

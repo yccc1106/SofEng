@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Image, Space, Modal, Input, Tag } from 'antd';
+import { message, Image, Space, Modal, Input } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import React, { useRef, useState } from 'react';
 import { shanghaiDateTime } from '@/lib/shanghai-time';
@@ -53,7 +53,7 @@ const VerificationPage: React.FC = () => {
             } else {
                 message.error(data.message || t('操作失败'));
             }
-        } catch (error) {
+        } catch {
             message.error(t('请求出错'));
         }
     };
@@ -65,6 +65,7 @@ const VerificationPage: React.FC = () => {
             render: (_, record) => (
                 <Space>
                     <Image
+                        alt={t('申请用户头像')}
                         src={record.user.image || 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'}
                         width={32}
                         height={32}
@@ -104,7 +105,7 @@ const VerificationPage: React.FC = () => {
                 <Image.PreviewGroup>
                     <Space>
                         {record.documents.map((url, index) => (
-                            <Image key={index} src={url} width={50} height={50} className="object-cover rounded" />
+                            <Image key={index} src={url} alt={t('认证材料')} width={50} height={50} className="object-cover rounded" />
                         ))}
                     </Space>
                 </Image.PreviewGroup>

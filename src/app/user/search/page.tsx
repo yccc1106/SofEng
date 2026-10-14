@@ -1,11 +1,12 @@
 'use client';
 import { useLanguage } from '@/lib/language';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Input, List, Card, Tabs, Avatar, Tag, Button, Spin, Empty, App } from 'antd';
-import { SearchOutlined, UserOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons';
+import { UserOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PostCard from '@/components/User/PostCard';
 import { javaRequest } from '@/lib/java-client';
+import type { SearchResults } from '@/types/social';
 
 const { Search } = Input;
 
@@ -15,8 +16,7 @@ const SearchContent = () => {
     const searchParams = useSearchParams();
     const initialQuery = searchParams.get('q') || '';
 
-    const [query, setQuery] = useState(initialQuery);
-    const [results, setResults] = useState<{ users: any[], posts: any[], teams: any[] }>({ users: [], posts: [], teams: [] });
+    const [results, setResults] = useState<SearchResults>({ users: [], posts: [], teams: [] });
     const [loading, setLoading] = useState(false);
     const { message } = App.useApp();
 
@@ -33,26 +33,26 @@ const SearchContent = () => {
         }
     };
 
-    const handleSearch = async (value: string) => {
+    const handleSearch = useCallback(async (value: string) => {
         if (!value.trim()) return;
         setLoading(true);
         // Update URL
         router.push(`/user/search?q=${encodeURIComponent(value)}`);
 
         try {
-            setResults(await javaRequest<{ users: any[], posts: any[], teams: any[] }>(`/search?q=${encodeURIComponent(value)}`));
-        } catch (error) {
+            setResults(await javaRequest<SearchResults>(`/search?q=${encodeURIComponent(value)}`));
+        } catch {
             message.error(t('Search failed'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [message, router, t]);
 
     useEffect(() => {
         if (initialQuery) {
             handleSearch(initialQuery);
         }
-    }, [initialQuery]);
+    }, [initialQuery, handleSearch]);
 
     const items = [
         {
@@ -74,7 +74,7 @@ const SearchContent = () => {
                 <List
                     grid={{ gutter: 16, column: 2 }}
                     dataSource={results.users}
-                    renderItem={(user: any) => (
+                    renderItem={(user: SearchResults['users'][number]) => (
                         <List.Item>
                             <Card className="hover:shadow-md transition-shadow">
                                 <Card.Meta
@@ -83,7 +83,7 @@ const SearchContent = () => {
                                     description={
                                         <div>
                                             <div className="text-xs text-blue-500 mb-1">{user.personalityType}</div>
-                                            <div className="truncate text-gray-400" title={user.bio}>{user.bio || t('No bio')}</div>
+                                            <div className="truncate text-gray-400" title={user.bio ?? undefined}>{user.bio || t('No bio')}</div>
                                             <Button type="link" size="small" className="p-0 mt-2" onClick={() => addFriend(user.id)}>{t("Add Friend")}</Button>
                                         </div>
                                     }
@@ -102,7 +102,7 @@ const SearchContent = () => {
                 <List
                     grid={{ gutter: 16, column: 2 }}
                     dataSource={results.teams}
-                    renderItem={(team: any) => (
+                    renderItem={(team: SearchResults['teams'][number]) => (
                         <List.Item>
                             <Card title={team.name} extra={<Tag>{team.type || t('General')}</Tag>}>
                                 <p className="text-gray-500 truncate">{team.description}</p>

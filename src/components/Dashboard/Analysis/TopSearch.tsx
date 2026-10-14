@@ -4,6 +4,8 @@ import { Card, Col, Row, Table, Tooltip } from 'antd';
 import numeral from 'numeral';
 import React from 'react';
 import type { DataItem } from '@/types/analysis';
+import type { SearchDataType } from '@/types/analysis';
+import Link from 'next/link';
 import NumberInfo from '@/components/Shared/NumberInfo';
 import Trend from '@/components/Shared/Trend';
 
@@ -16,7 +18,7 @@ const TopSearch = ({
   loading: boolean;
   visitData2: DataItem[];
   dropdownGroup: React.ReactNode;
-  searchData: DataItem[];
+  searchData: SearchDataType[];
 }) => {
   const columns = [
     {
@@ -28,7 +30,7 @@ const TopSearch = ({
       title: '标签名称',
       dataIndex: 'keyword',
       key: 'keyword',
-      render: (text: React.ReactNode) => <a href="/">{text}</a>,
+      render: (text: React.ReactNode) => <Link href="/">{text}</Link>,
     },
     {
       title: '使用次数',
@@ -164,7 +166,7 @@ const TopSearch = ({
           />
         </Col>
       </Row>
-      <Table<any>
+      <Table<SearchDataType>
         rowKey={(record) => record.index}
         size="small"
         columns={columns}

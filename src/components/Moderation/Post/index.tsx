@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Image } from 'antd';
+import { message, Image } from 'antd';
 import React, { useRef } from 'react';
 import { shanghaiDate } from '@/lib/shanghai-time';
 
@@ -14,16 +14,6 @@ type PostItem = {
     status: string;
     date: string;
 };
-
-const mockData: PostItem[] = Array.from({ length: 15 }).map((_, i) => ({
-    id: `${i + 1}`,
-    author: `Author ${i}`,
-    title: `这是帖子标题 ${i}`,
-    content: `这是帖子内容详情，包含一些文字描述...`,
-    imageUrl: i % 2 === 0 ? 'https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png' : undefined,
-    status: 'pending',
-    date: `2024-05-21`,
-}));
 
 const PostModeration: React.FC = () => {
     const { t } = useLanguage();
@@ -43,7 +33,7 @@ const PostModeration: React.FC = () => {
             } else {
                 message.error('Failed');
             }
-        } catch (error) {
+        } catch {
             message.error('Error');
         }
     };
@@ -72,7 +62,7 @@ const PostModeration: React.FC = () => {
             dataIndex: 'imageUrl',
             width: 80,
             render: (_, record) => {
-                return record.imageUrl ? <Image src={record.imageUrl} width={50} /> : '-';
+                return record.imageUrl ? <Image src={record.imageUrl} alt={record.title} width={50} /> : '-';
             },
         },
         {
@@ -135,10 +125,7 @@ const PostModeration: React.FC = () => {
                     pageSize: 10,
                     showSizeChanger: true,
                 }}
-                request={async (params) => {
-                    // params contains pageSize, current, and filters
-                    // For simplicity, we just fetch all or filter by mapped status if we implemented server side filtering strictly
-                    // Here we fetch all from our simple API
+                request={async () => {
                     const res = await fetch('/java/admin/moderation/posts');
                     return await res.json();
                 }}

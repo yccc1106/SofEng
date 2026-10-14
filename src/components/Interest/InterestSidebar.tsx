@@ -44,7 +44,7 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
         },
     ];
 
-    const handleClick = (e: any) => {
+    const handleClick: MenuProps['onClick'] = (e) => {
         if (e.key === '/') {
             router.push('/');
         } else {

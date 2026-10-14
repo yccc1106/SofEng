@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, App, Tag } from 'antd';
+import { App, Tag } from 'antd';
 import React, { useRef } from 'react';
 import { shanghaiDateTime } from '@/lib/shanghai-time';
 
@@ -32,7 +32,7 @@ const ChatModeration: React.FC = () => {
                 } else {
                     message.error(t('操作失败'));
                 }
-            } catch (error) {
+            } catch {
                 message.error(t('请求错误'));
             }
     };

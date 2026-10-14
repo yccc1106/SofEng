@@ -1,8 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import React, { useState } from 'react';
-import { Form, Input, Button, Select, Upload, App, Card } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Select, App, Card } from 'antd';
 import { useRouter } from 'next/navigation';
 
 const { TextArea } = Input;
@@ -13,14 +12,15 @@ const FeedbackPage = () => {
     const { message } = App.useApp();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [fileList, setFileList] = useState<any[]>([]);
-
-    const onFinish = async (values: any) => {
+    const onFinish = async (values: {
+        type: 'SUGGESTION' | 'REPORT' | 'OTHER';
+        content: string;
+        reportType?: 'USER' | 'POST' | 'MESSAGE';
+        targetId?: string;
+        contact?: string;
+    }) => {
         setLoading(true);
         try {
-            // Mock image upload handling - in real app upload to storage first
-            // Here we just ignore files or assume URLs are handled
-
             const res = await fetch('/java/feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -30,7 +30,6 @@ const FeedbackPage = () => {
                         [values.reportType === 'USER' ? 'reportedUserId' : values.reportType === 'POST' ? 'reportedPostId' : 'reportedMessageId']: values.targetId,
                     } : {}),
                     targetId: undefined,
-                    images: []
                 }),
             });
             const data = await res.json();
@@ -40,7 +39,7 @@ const FeedbackPage = () => {
             } else {
                 message.error(data.message || t('Submission failed'));
             }
-        } catch (error) {
+        } catch {
             message.error(t('Error submitting feedback'));
         } finally {
             setLoading(false);
@@ -78,14 +77,6 @@ const FeedbackPage = () => {
                     <Form.Item name="contact" label={t("Contact (Optional)")}>
                         <Input placeholder={t("Email or Phone for follow-up")} />
                     </Form.Item>
-
-                    {/* 
-                    <Form.Item label={t("Screenshots (Optional)")}>
-                        <Upload fileList={fileList} onChange={({ fileList }) => setFileList(fileList)} beforeUpload={() => false}>
-                            <Button icon={<UploadOutlined />}>{t("Upload")}</Button>
-                        </Upload>
-                    </Form.Item>
-                    */}
 
                     <Form.Item>
                         <Button type="primary" htmlType="submit" loading={loading} block size="large">

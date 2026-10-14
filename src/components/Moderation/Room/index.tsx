@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Tag } from 'antd';
+import { message } from 'antd';
 import React, { useRef } from 'react';
 
 type RoomItem = {
@@ -31,7 +31,7 @@ const RoomModeration: React.FC = () => {
             } else {
                 message.error(t('操作失败'));
             }
-        } catch (error) {
+        } catch {
             message.error(t('操作异常'));
         }
     };

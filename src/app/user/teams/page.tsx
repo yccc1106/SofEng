@@ -1,10 +1,11 @@
 'use client';
 import { useLanguage } from '@/lib/language';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Button, Avatar, Tag, Spin, Modal, Form, Input, InputNumber, Select, App, Tabs, List, Space, Divider } from 'antd';
 import { PlusOutlined, UsergroupAddOutlined, CheckOutlined, CloseOutlined, TeamOutlined, GlobalOutlined, BellOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { javaRequest } from '@/lib/java-client';
+import type { CreateTeamValues, TeamJoinRequest, TeamSummary } from '@/types/social';
 
 const { Meta } = Card;
 
@@ -12,9 +13,9 @@ const TeamsPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();
     const router = useRouter();
-    const [teams, setTeams] = useState<any[]>([]);
-    const [myTeams, setMyTeams] = useState<any[]>([]);
-    const [requests, setRequests] = useState<any[]>([]);
+    const [teams, setTeams] = useState<TeamSummary[]>([]);
+    const [myTeams, setMyTeams] = useState<TeamSummary[]>([]);
+    const [requests, setRequests] = useState<TeamJoinRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -24,30 +25,30 @@ const TeamsPage = () => {
     const [createForm] = Form.useForm();
     const [joinForm] = Form.useForm();
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             // Fetch All Recruiting Teams
-            setTeams(await javaRequest<any[]>('/teams'));
+            setTeams(await javaRequest<TeamSummary[]>('/teams'));
 
             // Fetch My Teams
-            setMyTeams(await javaRequest<any[]>('/teams?mine=true'));
+            setMyTeams(await javaRequest<TeamSummary[]>('/teams?mine=true'));
 
             // Fetch Requests (if leader)
-            setRequests(await javaRequest<any[]>('/teams/requests'));
+            setRequests(await javaRequest<TeamJoinRequest[]>('/teams/requests'));
 
-        } catch (error) {
+        } catch {
             message.error(t('Failed to load data'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [message, t]);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
-    const handleCreateTeam = async (values: any) => {
+    const handleCreateTeam = async (values: CreateTeamValues) => {
         try {
             await javaRequest('/teams', {
                 method: 'POST',
@@ -58,12 +59,12 @@ const TeamsPage = () => {
             setIsCreateModalOpen(false);
             createForm.resetFields();
             fetchData();
-        } catch (error) {
+        } catch {
             message.error(t('Error creating team'));
         }
     };
 
-    const handleJoinRequest = async (values: any) => {
+    const handleJoinRequest = async (values: { message: string }) => {
         if (!selectedTeamId) return;
         setJoining(true);
         try {
@@ -76,7 +77,7 @@ const TeamsPage = () => {
             setIsJoinModalOpen(false);
             joinForm.resetFields();
             fetchData();
-        } catch (error) {
+        } catch {
             message.error(t('Error joining team'));
         } finally {
             setJoining(false);
@@ -92,7 +93,7 @@ const TeamsPage = () => {
             });
             message.success(status === 'JOINED' ? t('Approved') : t('Rejected'));
             fetchData();
-        } catch (error) {
+        } catch {
             message.error(t('Error managing request'));
         }
     };
@@ -178,7 +179,7 @@ const TeamsPage = () => {
                 itemLayout="horizontal"
                 dataSource={requests}
                 className="p-4"
-                renderItem={(item: any) => (
+                renderItem={(item: TeamJoinRequest) => (
                     <List.Item
                         actions={[
                             <Button key="approve" type="primary" size="small" icon={<CheckOutlined />} onClick={() => handleManageRequest(item.id, 'JOINED')}>{t("Approve")}</Button>,
@@ -190,7 +191,7 @@ const TeamsPage = () => {
                             title={<span><b>{item.user.name}</b> {t("applied for")} <b>{item.team.name}</b></span>}
                             description={
                                 <div>
-                                    <div className="text-gray-600 italic">"{item.joinMessage || t('No application message')}"</div>
+                                    <div className="text-gray-600 italic">&quot;{item.joinMessage || t('No application message')}&quot;</div>
                                     <div className="text-xs text-gray-400 mt-1">{item.user.school}</div>
                                 </div>
                             }

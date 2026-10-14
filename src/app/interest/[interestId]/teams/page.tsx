@@ -1,10 +1,11 @@
 'use client';
 import { useLanguage } from '@/lib/language';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Spin, Modal, Form, Input, App, Row, Col, Card, Avatar, Tag, Select } from 'antd';
 import { PlusOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 import { javaRequest } from '@/lib/java-client';
+import type { CreateTeamValues, TeamSummary } from '@/types/social';
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -15,29 +16,29 @@ const InterestTeamsPage = () => {
     const params = useParams();
     const interestId = params?.interestId as string;
 
-    const [teams, setTeams] = useState<any[]>([]);
+    const [teams, setTeams] = useState<TeamSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
 
-    const fetchTeams = async () => {
+    const fetchTeams = useCallback(async () => {
         if (!interestId) return;
         setLoading(true);
         try {
-            setTeams(await javaRequest<any[]>(`/teams?categoryId=${encodeURIComponent(interestId)}`));
-        } catch (error) {
+            setTeams(await javaRequest<TeamSummary[]>(`/teams?categoryId=${encodeURIComponent(interestId)}`));
+        } catch {
             message.error(t('Failed to load teams'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [interestId, message, t]);
 
     useEffect(() => {
         fetchTeams();
-    }, [interestId]);
+    }, [fetchTeams]);
 
-    const handleCreateTeam = async (values: any) => {
+    const handleCreateTeam = async (values: CreateTeamValues) => {
         setSubmitting(true);
         try {
             await javaRequest('/teams', {
@@ -49,7 +50,7 @@ const InterestTeamsPage = () => {
             setIsModalOpen(false);
             form.resetFields();
             fetchTeams();
-        } catch (error) {
+        } catch {
             message.error(t('Error creating team'));
         } finally {
             setSubmitting(false);

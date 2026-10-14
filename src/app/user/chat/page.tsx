@@ -1,6 +1,6 @@
 'use client';
 import { useLanguage } from '@/lib/language';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
 import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
@@ -48,7 +48,7 @@ const ChatContent = () => {
         } else panel.scrollTop = panel.scrollHeight;
     };
 
-    const fetchContacts = async () => {
+    const fetchContacts = useCallback(async () => {
         try {
             const res = await fetch('/java/chat/contacts');
             const data = await res.json();
@@ -60,13 +60,13 @@ const ChatContent = () => {
         } finally {
             setLoadingContacts(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchContacts();
         window.addEventListener('focus', fetchContacts);
         return () => window.removeEventListener('focus', fetchContacts);
-    }, []);
+    }, [fetchContacts]);
 
     useEffect(() => {
         scrollToBottom();

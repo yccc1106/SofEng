@@ -8,13 +8,6 @@ import useStyles from './style.style';
 export type TimeType = 'today' | 'week' | 'month' | 'year';
 const { RangePicker } = DatePicker;
 
-const rankingListData: {
-  title: string;
-  total: number;
-}[] = [];
-
-
-
 const SalesCard = ({
   rangePickerValue,
   salesData,

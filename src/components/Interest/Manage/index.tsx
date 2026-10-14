@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import { ActionType, ModalForm, PageContainer, ProColumns, ProFormSelect, ProFormText, ProFormTextArea, ProTable } from '@ant-design/pro-components';
-import { Button, message, Modal, Popconfirm } from 'antd';
+import { Button, message, Popconfirm } from 'antd';
 import React, { useRef, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
@@ -13,14 +13,6 @@ type InterestItem = {
     description: string | null;
     count: number;
 };
-
-const mockData: InterestItem[] = [
-    { id: '1', name: '篮球', parent: '运动', description: '篮球爱好者聚集地', count: 5000 },
-    { id: '2', name: '足球', parent: '运动', description: '绿茵场上的激情', count: 3200 },
-    { id: '3', name: '编程', parent: '学习', description: '代码改变世界', count: 8000 },
-    { id: '4', name: '摄影', parent: '艺术', description: '记录美好瞬间', count: 1500 },
-    { id: '5', name: '原神', parent: '游戏', description: '开放世界冒险', count: 12000 },
-];
 
 const InterestManage: React.FC = () => {
     const { t } = useLanguage();
@@ -41,7 +33,7 @@ const InterestManage: React.FC = () => {
             } else {
                 message.error(t('删除失败'));
             }
-        } catch (error) {
+        } catch {
             message.error(t('删除错误'));
         }
     };
@@ -66,7 +58,7 @@ const InterestManage: React.FC = () => {
                 message.error(t('操作失败'));
                 return false;
             }
-        } catch (error) {
+        } catch {
             message.error(t('操作异常'));
             return false;
         }
