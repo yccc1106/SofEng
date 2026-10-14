@@ -6,6 +6,7 @@ import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
+/** 登录或注册后更新前端会话状态，页面权限以 Java 返回的资料为准。 */
 const LoginPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();
@@ -50,7 +51,6 @@ const LoginPage = () => {
             const data = await res.json();
             if (data.success) {
                 message.success(t('Registration successful, please login'));
-                // Could auto login here
             } else {
                 message.error(data.message || t('Registration failed'));
             }

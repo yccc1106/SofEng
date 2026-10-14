@@ -24,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+/** 配置 Java 会话鉴权、写请求来源检查和各类接口的访问边界。 */
 @Configuration
 public class SecurityConfig {
     private static final String[] PUBLIC = {
@@ -47,6 +48,7 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 .requestCache(cache -> cache.disable())
                 .securityContext(context -> context.securityContextRepository(contextRepository))
+                // 会话 Cookie 可随请求自动发送，因此写请求还需核对浏览器来源。
                 .addFilterBefore(new OncePerRequestFilter() {
                     @Override
                     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,

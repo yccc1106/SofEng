@@ -13,12 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/** 统一处理三类会话的访问权限、消息历史及已读状态。 */
 @Service
 public class ChatServiceImpl implements ChatService {
     private final ChatMapper mapper;
     private final ApplicationEventPublisher events;
     public ChatServiceImpl(ChatMapper mapper,ApplicationEventPublisher events) { this.mapper=mapper; this.events=events; }
 
+    /** REST 与 WebSocket 共用的会话权限检查；请求只能指定一个目标。 */
     @Override public String authorize(String viewer,ChatDtos.Target target) {
         if (viewer==null || mapper.activeUser(viewer)==null) throw new ChatForbidden();
         int targets=(present(target.userId()) ? 1 : 0)+(present(target.teamId()) ? 1 : 0)
@@ -48,6 +50,7 @@ public class ChatServiceImpl implements ChatService {
         return result;
     }
 
+    /** 取最近一页消息；游标必须属于当前会话，结果按时间正序展示。 */
     @Override public List<ChatDtos.Message> history(String userId,ChatDtos.Target target,String before) {
         authorize(userId,target);
         Object beforeTime=null;
@@ -64,6 +67,7 @@ public class ChatServiceImpl implements ChatService {
         return result;
     }
 
+    /** 消息先写入数据库，再发布供 WebSocket 在事务提交后推送的事件。 */
     @Override @Transactional public ChatDtos.Message send(String userId,ChatDtos.Send input) {
         var target=new ChatDtos.Target(input.receiverId(),input.teamId(),input.categoryId());
         authorize(userId,target);

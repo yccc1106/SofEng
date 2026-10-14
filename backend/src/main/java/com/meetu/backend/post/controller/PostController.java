@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 将帖子与互动请求转换为统一 API 响应，发布和可见性规则交由 Service 处理。 */
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {

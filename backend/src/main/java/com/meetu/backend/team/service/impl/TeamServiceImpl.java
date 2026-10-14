@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/** 管理队伍创建、加入和审批；人数限制在事务内校验。 */
 @Service
 public class TeamServiceImpl implements TeamService {
     private final TeamMapper mapper;
@@ -34,6 +35,7 @@ public class TeamServiceImpl implements TeamService {
         mapper.insertMember(UUID.randomUUID().toString(),id,userId,"LEADER","JOINED",null);
         return team(mapper.team(id));
     }
+    /** 锁定队伍后检查容量和已有申请，再决定直接加入或进入待审批状态。 */
     @Override @Transactional public TeamDtos.Member join(String userId,TeamDtos.Join input) {
         var locked=mapper.lockTeam(input.teamId());
         if (locked==null) throw new TeamNotFound();
@@ -64,6 +66,7 @@ public class TeamServiceImpl implements TeamService {
                 new TeamDtos.Person(s(r,"userId"),s(r,"userName"),s(r,"userImage"),s(r,"userSchool")),
                 new TeamDtos.TeamSummary(s(r,"teamId"),s(r,"teamName")))).toList();
     }
+    /** 队长审批时再次检查容量，防止多个申请同时通过导致超员。 */
     @Override @Transactional public TeamDtos.Member decide(String userId,TeamDtos.Decision input) {
         if (!"JOINED".equals(input.status()) && !"REJECTED".equals(input.status())) throw new InvalidTeamRequest("Invalid status");
         var first=mapper.member(input.memberId());

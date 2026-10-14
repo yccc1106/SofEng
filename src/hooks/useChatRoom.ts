@@ -35,6 +35,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
     return result.data;
 }
 
+/** 管理聊天历史、已读、WebSocket 订阅和断线后的增量补取。 */
 export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
     const key = target ? params(target) : '';
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -47,6 +48,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
 
     useEffect(() => {
         if (!key) { setMessages([]); setLoading(false); setHasOlder(false); setStatus('offline'); return; }
+        // 用稳定的会话 key 还原目标，避免页面重新创建同值对象时重连。
         const activeTarget = Object.fromEntries(new URLSearchParams(key)) as ChatTarget;
         let active = true;
         let socket: WebSocket | null = null;
@@ -59,6 +61,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
             catch { /* The next visit can retry. */ }
         };
         const page = async (before?: string) => api<ChatMessage[]>(`/java/chat?${key}${before ? `&before=${encodeURIComponent(before)}` : ''}`);
+        // 首次加载最近一页；重连后补取断线期间的消息并按 ID 去重。
         const sync = async (initial: boolean) => {
             try {
                 const first = await page();
@@ -127,6 +130,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
                 if (heartbeat) clearInterval(heartbeat);
                 if (!active) return;
                 if (terminalError) { setStatus('offline'); return; }
+                // 快速重试后继续低频重连，避免暂时断网后聊天永久离线。
                 const delay = retries < 5 ? Math.min(1000 * 2 ** retries, 16000) : 30000;
                 retries += 1;
                 setStatus(retries > 5 ? 'offline' : 'reconnecting');

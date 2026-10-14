@@ -17,6 +17,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 
+/** 对登录和注册按客户端地址分别限流，避免单个来源连续尝试。 */
 @Component
 public class AuthRateLimitFilter extends OncePerRequestFilter {
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
@@ -59,6 +60,7 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
 
     private record Window(long startedAt, int count) {}
 
+    /** 仅在请求确实来自配置的可信代理时读取其转发地址。 */
     private String clientAddress(HttpServletRequest request) {
         String remote = request.getRemoteAddr();
         if (!remote.equals(trustedProxyAddress)) return remote;

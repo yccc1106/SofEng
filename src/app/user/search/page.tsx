@@ -10,6 +10,7 @@ import type { SearchResults } from '@/types/social';
 
 const { Search } = Input;
 
+/** 将一次搜索结果按帖子、用户和招募队伍分栏展示。 */
 const SearchContent = () => {
     const { t } = useLanguage();
     const router = useRouter();
@@ -36,7 +37,7 @@ const SearchContent = () => {
     const handleSearch = useCallback(async (value: string) => {
         if (!value.trim()) return;
         setLoading(true);
-        // Update URL
+        // 保留关键词在地址栏，便于刷新页面后恢复搜索。
         router.push(`/user/search?q=${encodeURIComponent(value)}`);
 
         try {

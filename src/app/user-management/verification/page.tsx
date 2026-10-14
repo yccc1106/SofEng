@@ -25,6 +25,7 @@ type VerificationRequest = {
     createdAt: string;
 };
 
+/** 展示待审认证材料，并提交通过或拒绝的审核意见。 */
 const VerificationPage: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);

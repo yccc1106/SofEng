@@ -14,6 +14,7 @@ type ReportItem = {
     target: { name?: string; title?: string; content?: string } | null;
 };
 
+/** 管理员按举报对象选择处理措施并记录备注。 */
 const Reports: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);

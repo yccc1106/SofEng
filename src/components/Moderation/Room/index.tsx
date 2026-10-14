@@ -13,6 +13,7 @@ type RoomItem = {
     status: string;
 };
 
+/** 管理员查看队伍并关闭违规房间。 */
 const RoomModeration: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);

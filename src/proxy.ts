@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const adminPaths = ['/dashboard', '/moderation', '/interest/manage', '/feedback', '/user-management'];
 
+/** 进入受保护页面前向 Java 核对会话，并对管理路由额外检查角色。 */
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   if (path === '/user/login') return NextResponse.next();

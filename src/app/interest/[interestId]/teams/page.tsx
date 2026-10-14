@@ -10,6 +10,7 @@ import type { CreateTeamValues, TeamSummary } from '@/types/social';
 const { Meta } = Card;
 const { Option } = Select;
 
+/** 只展示当前兴趣分类的招募队伍，创建时附带分类 ID。 */
 const InterestTeamsPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

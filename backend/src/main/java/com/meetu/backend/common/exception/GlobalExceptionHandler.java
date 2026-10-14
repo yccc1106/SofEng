@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** 将参数、权限和业务异常转换为统一的 API 错误响应。 */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

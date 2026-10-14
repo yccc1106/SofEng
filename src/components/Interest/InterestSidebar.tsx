@@ -52,9 +52,7 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
         }
     };
 
-    // Determine active key to highlight. Match exact or prefix if needed?
-    // Simply check exact match for sub-tabs.
-    // If pathname is /interest/[id], key is basePath.
+    // 依据当前子路由高亮帖子、聊天或队伍入口。
     let selectedKey = basePath;
     if (pathname.includes('/chat')) selectedKey = `${basePath}/chat`;
     if (pathname.includes('/teams')) selectedKey = `${basePath}/teams`;

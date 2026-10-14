@@ -9,6 +9,7 @@ import type { CreateTeamValues, TeamJoinRequest, TeamSummary } from '@/types/soc
 
 const { Meta } = Card;
 
+/** 分别展示招募队伍、已加入队伍及队长待审批申请。 */
 const TeamsPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();
@@ -28,13 +29,10 @@ const TeamsPage = () => {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            // Fetch All Recruiting Teams
             setTeams(await javaRequest<TeamSummary[]>('/teams'));
 
-            // Fetch My Teams
             setMyTeams(await javaRequest<TeamSummary[]>('/teams?mine=true'));
 
-            // Fetch Requests (if leader)
             setRequests(await javaRequest<TeamJoinRequest[]>('/teams/requests'));
 
         } catch {

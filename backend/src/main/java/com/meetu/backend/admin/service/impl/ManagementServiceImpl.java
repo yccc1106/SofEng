@@ -7,6 +7,7 @@ import com.meetu.backend.admin.service.ManagementService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
+/** 管理用户、认证和分类；修改与审计记录在同一事务内提交。 */
 @Service
 public class ManagementServiceImpl implements ManagementService {
     private final ManagementMapper mapper; private final AuditMapper audit;
@@ -34,6 +35,7 @@ public class ManagementServiceImpl implements ManagementService {
         result.put("verificationRequests",mapper.userVerifications(id));
         return result;
     }
+    /** 锁定目标用户后校验管理员保护规则，再更新资料或账号状态。 */
     @Override @Transactional public void userAction(String admin,UserAction action) {
         if ("update".equals(action.action())) {
             Map<String,Object> row=mapper.lockUser(action.id());
@@ -75,6 +77,7 @@ public class ManagementServiceImpl implements ManagementService {
         return mapper.verifications(status,size,(page-1)*size).stream().map(row -> { Map<String,Object> result=new LinkedHashMap<>(row); result.put("user",Map.of("id",row.get("userId"),"name",Objects.toString(row.get("userName"),""),"email",Objects.toString(row.get("userEmail"),""),"image",Objects.toString(row.get("userImage"),""),"verificationStatus",row.get("userVerificationStatus"))); return result; }).toList();
     }
     @Override public long verificationCount(String status) { return mapper.verificationCount(status); }
+    /** 认证审批同步更新申请和用户状态，并记录审核人及意见。 */
     @Override @Transactional public void decideVerification(String admin,VerificationDecision decision) {
         if (!Set.of("approve","reject").contains(decision.action())) throw ManagementException.invalid("Invalid verification action");
         Map<String,Object> row=mapper.lockVerification(decision.id());
@@ -89,6 +92,7 @@ public class ManagementServiceImpl implements ManagementService {
         audit.record(admin,"VERIFICATION",decision.id(),decision.action(),decision.reviewNote());
     }
     @Override public List<Map<String,Object>> categories() { return mapper.categories().stream().map(row -> { Map<String,Object> result=new LinkedHashMap<>(row); result.put("parent",Objects.toString(row.get("parent"),"-")); return result; }).toList(); }
+    /** 校验分类名称、父分类和层级循环，防止形成无效分类树。 */
     private void validateCategory(CategoryChange change) {
         if (change.name().isBlank()) throw ManagementException.invalid("Category name required");
         if (mapper.duplicateCategory(change.name().trim(),change.id()==null?"":change.id())!=null) throw ManagementException.conflict("Category name already exists");

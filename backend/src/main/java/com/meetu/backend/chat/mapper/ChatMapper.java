@@ -4,12 +4,14 @@ import org.apache.ibatis.annotations.*;
 import java.util.List;
 import java.util.Map;
 
+/** 聊天历史、联系人和已读游标的 SQL 映射。 */
 @Mapper
 public interface ChatMapper {
     String MESSAGE_SELECT = "SELECT m.id,m.content,m.type,m.\"senderId\",m.\"receiverId\",m.\"teamId\",m.\"categoryId\",m.\"isRead\", " +
             "m.\"createdAt\" AT TIME ZONE 'UTC' AS \"createdAt\", " +
             "u.id AS \"senderUserId\",u.name AS \"senderName\",u.image AS \"senderImage\" FROM \"ChatMessage\" m " +
             "JOIN \"User\" u ON u.id=m.\"senderId\" ";
+    // 时间加消息 ID 组成稳定游标，避免同一时间的消息在翻页时丢失。
     String BEFORE = "<if test='beforeTime != null'> AND (m.\"createdAt\",m.id) &lt; (#{beforeTime},#{beforeId})</if> ";
     String AFTER = "ORDER BY m.\"createdAt\" DESC,m.id DESC LIMIT 100";
 

@@ -20,6 +20,7 @@ const ProLayout = dynamic(
     }
 );
 
+/** 按路由切换用户页面与管理后台布局。 */
 export default function BasicLayout({
     children,
 }: {
@@ -28,7 +29,7 @@ export default function BasicLayout({
     const { t, language, setLanguage } = useLanguage();
     const pathname = usePathname();
 
-    // If user route (except login potentially, but generally all user routes), bypass Admin Layout
+    // 用户及兴趣社区页面由各自布局处理，不套用管理后台导航。
     const isUserRoute =
         pathname === '/' ||
         pathname?.startsWith('/user') ||
@@ -41,7 +42,7 @@ export default function BasicLayout({
     return (
         <ProLayout
             title={t("Admin Console")}
-            logo={null} // Minimalist: specific logo or just text. Let's use text title as primary.
+            logo={null}
             location={{
                 pathname,
             }}
@@ -50,14 +51,13 @@ export default function BasicLayout({
             defaultCollapsed={false}
             breakpoint="xl"
 
-            // Minimalist tokens for ProLayout
             token={{
                 header: {
                     heightLayoutHeader: 56,
-                    colorBgHeader: 'rgba(255,255,255,0.8)', // Glass effect base
+                    colorBgHeader: 'rgba(255,255,255,0.8)',
                 },
                 sider: {
-                    colorMenuBackground: '#F9FAFB', // Match surface
+                    colorMenuBackground: '#F9FAFB',
                     colorBgMenuItemSelected: 'rgba(24, 119, 242, 0.08)',
                     colorTextMenuSelected: '#1877F2',
                 },
@@ -67,7 +67,6 @@ export default function BasicLayout({
                 }
             }}
 
-            // Custom Header Render for Glass effect
             headerContentRender={() => <div className="flex items-center gap-4"><span className="text-sm text-gray-500">{t("Welcome back")}</span><Select aria-label="语言 / Language" value={language} onChange={setLanguage} options={[{ value: 'zh-CN', label: '中文' }, { value: 'en-US', label: 'English' }]} style={{ width: 100 }} /></div>}
 
             splitMenus={false}
@@ -80,7 +79,7 @@ export default function BasicLayout({
                 routes: [
                     {
                         path: '/dashboard',
-                        name: t('Overview'), // Simpler name
+                        name: t('Overview'),
                         icon: <DashboardOutlined />,
                     },
                     {

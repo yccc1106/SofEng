@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/** 提供联系人、历史消息、发送和已读接口；会话权限在 Service 中统一检查。 */
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {

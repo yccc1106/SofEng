@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 const { TextArea } = Input;
 const { Option } = Select;
 
+/** 提交建议或举报；举报需将目标类型和 ID 映射到对应接口字段。 */
 const FeedbackPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

@@ -14,6 +14,7 @@ type InterestItem = {
     count: number;
 };
 
+/** 维护兴趣分类及父子关系，保存后重新加载列表。 */
 const InterestManage: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);

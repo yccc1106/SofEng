@@ -19,6 +19,7 @@ type Profile = {
     personalityTags?: string[];
 };
 
+/** 加载当前用户资料，保存修改后同步前端会话并支持退出。 */
 const ProfilePage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

@@ -14,6 +14,7 @@ type SuggestionItem = {
 
 
 
+/** 管理员查看建议和其他反馈，并登记处理结果。 */
 const Suggestions: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);

@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+/** 管理用户、认证与分类的入口；访问权限由统一安全配置控制。 */
 @RestController
 @RequestMapping("/api/admin")
 public class ManagementController {

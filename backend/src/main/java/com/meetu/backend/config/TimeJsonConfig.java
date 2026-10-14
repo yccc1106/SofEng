@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+/** 数据库保持 UTC；对外将 Instant 序列化为带 +08:00 偏移的上海时间。 */
 @Configuration
 public class TimeJsonConfig {
     private static final ZoneId ZONE = ZoneId.of("Asia/Shanghai");

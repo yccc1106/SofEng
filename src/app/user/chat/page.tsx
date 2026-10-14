@@ -21,6 +21,7 @@ interface Contact {
     unreadCount: number;
 }
 
+/** 组合联系人列表与私聊、队聊视图，消息同步交给 useChatRoom。 */
 const ChatContent = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();
@@ -39,6 +40,7 @@ const ChatContent = () => {
     const messagesPanelRef = useRef<HTMLDivElement>(null);
     const olderAnchor = useRef<{ height: number; top: number } | null>(null);
 
+    // 加载更早消息时保持原阅读位置；新消息到来则滚动到底部。
     const scrollToBottom = () => {
         const panel = messagesPanelRef.current;
         if (!panel) return;

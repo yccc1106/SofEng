@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation';
 import { javaPage, javaRequest } from '@/lib/java-client';
 import type { PostResponse } from '@/types/api';
 
+/** 按兴趣分类筛选帖子，发布时固定使用当前分类。 */
 const InterestPostsPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

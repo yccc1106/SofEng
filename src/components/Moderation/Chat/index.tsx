@@ -15,6 +15,7 @@ type ChatItem = {
     timestamp: string;
 };
 
+/** 管理员查看消息并屏蔽违规内容。 */
 const ChatModeration: React.FC = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

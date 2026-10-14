@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** 以真实业务记录计算管理统计，并使用上海自然日作为统计窗口。 */
 @Service
 public class StatsServiceImpl implements StatsService {
     private static final ZoneId SHANGHAI=ZoneId.of("Asia/Shanghai");
@@ -18,10 +19,12 @@ public class StatsServiceImpl implements StatsService {
     @org.springframework.beans.factory.annotation.Autowired
     public StatsServiceImpl(StatsMapper mapper) { this(mapper,Clock.systemUTC()); }
     StatsServiceImpl(StatsMapper mapper,Clock clock) { this.mapper=mapper; this.clock=clock; }
+    // 数据库存 UTC，查询前把上海自然日边界换算成 UTC 时间。
     private static LocalDateTime utc(LocalDate day) { return LocalDateTime.ofInstant(day.atStartOfDay(SHANGHAI).toInstant(),ZoneOffset.UTC); }
     private static int rate(long value,long total) { return total==0 ? 0 : (int)Math.round(value*100.0/total); }
     private static int growth(long current,long previous) { return previous==0 ? 0 : (int)Math.round((current-previous)*100.0/previous); }
 
+    /** 在同一只读快照中读取指标，避免图表与汇总值来自不同数据状态。 */
     @Override @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ) public StatsDtos.Dashboard dashboard() {
         LocalDate today=LocalDate.now(clock.withZone(SHANGHAI));
         LocalDateTime start=utc(today),end=utc(today.plusDays(1));

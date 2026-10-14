@@ -17,6 +17,7 @@ interface PostProps {
     showActions?: boolean;
 }
 
+/** 展示帖子互动；点赞和收藏先更新界面，接口失败时回滚计数。 */
 const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
     const { t } = useLanguage();
     const { token } = theme.useToken();
@@ -32,7 +33,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
 
-    // Comments fetched only once or refreshed? Let's verify simply.
+    // 首次展开时加载评论，此后沿用本地列表并追加刚提交的评论。
     const [commentsFetched, setCommentsFetched] = useState(false);
 
     const handleLike = async () => {

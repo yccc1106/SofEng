@@ -4,6 +4,7 @@ const formatter = new Intl.DateTimeFormat('zh-CN', {
   hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
 });
 
+/** 将带时区信息的接口时间统一显示为上海本地时间。 */
 export function shanghaiDateTime(value: string | null | undefined): string {
   if (!value) return '-';
   const date = new Date(value);

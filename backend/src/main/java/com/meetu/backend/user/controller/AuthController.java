@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** 登录时建立 Java 服务端会话，退出时使当前会话失效。 */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -30,6 +31,7 @@ public class AuthController {
                                                                        HttpServletRequest servletRequest,
                                                                        HttpServletResponse servletResponse) {
         var user = users.login(request);
+        // 登录成功后轮换会话 ID，避免沿用登录前的会话标识。
         servletRequest.getSession();
         servletRequest.changeSessionId();
         var context = SecurityContextHolder.createEmptyContext();

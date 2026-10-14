@@ -27,6 +27,7 @@ type UserItem = {
     };
 };
 
+/** 管理员按条件查询用户，并处理账号状态与资料变更。 */
 const UserList: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
@@ -180,21 +181,13 @@ const UserList: React.FC = () => {
                     if (params.status) searchParams.append('status', params.status);
                     if (params.verificationStatus) searchParams.append('verificationStatus', params.verificationStatus);
                     if (params.keyword) searchParams.append('keyword', params.keyword);
-                    // ProTable 的 keyword 搜索通常是自定义的，这里假设搜索框把值传给了 name 或 email 等
-                    // 我们简化处理，如果 params 中有除了分页和状态以外的字段，也可以传给 API
-                    // 但标准的 ProTable 搜索栏会把每个字段传进来
-                    // 这里我们假设后端支持 keyword 参数，我们在前端可以通过一个统一的搜索框或者分别的字段来传
-                    // 鉴于时间，我们这里暂时只支持 status 和 verificationStatus 过滤，以及全局 keyword
-                    // 实际上 ProTable 默认生成的搜索表单会把字段名传过来
-
-                    // 如果需要在搜索栏增加一个通用的关键词搜索：
-                    // 我们可以在 columns 里加一个不显示在 table 但显示在 search 的字段
+                    // 将表格分页和筛选条件映射到 Java 管理接口的查询参数。
                     const result = await fetch(`/java/admin/users?${searchParams.toString()}`).then(res => res.json());
                     return { ...result, total: result.pagination?.total };
                 }}
                 columns={[
                     ...columns,
-                    // 添加一个用于搜索的隐藏字段
+                    // 关键词只用于搜索表单，不作为列表列展示。
                     {
                         title: t('关键词搜索'),
                         dataIndex: 'keyword',

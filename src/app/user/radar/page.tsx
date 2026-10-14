@@ -4,11 +4,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Avatar, Button, Typography, App, Tag } from 'antd';
 import { RadarChartOutlined, UserAddOutlined } from '@ant-design/icons';
 import { javaRequest } from '@/lib/java-client';
-import './radar.css'; // Will create this css file for animation
+import './radar.css';
 
 const { Paragraph } = Typography;
 type Match = { id: string; name: string | null; image: string | null; bio: string | null; personalityType: string; personalityTags: string[]; score: number; scoreReason: string };
 
+/** 展示后端返回的规则匹配结果，并提供发起好友申请入口。 */
 const RadarPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();
@@ -60,7 +61,7 @@ const RadarPage = () => {
                     <div className="radar-container">
                         <div className="radar-grid"></div>
                         <div className="radar-sweep"></div>
-                        {/* Simulated blips */}
+                        {/* 扫描动画只用于展示，匹配结果由接口返回。 */}
                         <div className="radar-blip" style={{ top: '30%', left: '72%', animationDelay: '0.2s' }}></div>
                         <div className="radar-blip" style={{ top: '55%', left: '25%', animationDelay: '0.9s' }}></div>
                         <div className="radar-blip" style={{ top: '75%', left: '60%', animationDelay: '1.7s' }}></div>

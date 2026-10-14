@@ -40,6 +40,7 @@ function Metric({ title, value, lines }: { title: string; value: number; lines: 
   </Card>;
 }
 
+/** 展示 Java 统计接口的真实指标及按上海自然日汇总的趋势。 */
 export default function Analysis() {
   const { t } = useLanguage();
   const { data, loading, error } = useRequest(loadDashboardStats);

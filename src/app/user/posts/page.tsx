@@ -8,6 +8,7 @@ import PostForm, { PostFormProps } from '@/components/Post/PostForm';
 import type { PostResponse } from '@/types/api';
 import { javaPage } from '@/lib/java-client';
 
+/** 分页展示社区帖子，发布成功后回到最新一页。 */
 const PostsPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

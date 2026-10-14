@@ -20,12 +20,14 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+/** 以 Java 个人资料接口作为浏览器会话和当前角色的来源。 */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AuthState['data']>(null);
   const [status, setStatus] = useState<AuthState['status']>('loading');
   const requestVersion = useRef(0);
 
   const refresh = useCallback(async () => {
+    // 较早的请求不能覆盖后来登录、退出或重新校验得到的状态。
     const version = ++requestVersion.current;
     try {
       const response = await fetch('/java/users/profile', { cache: 'no-store' });

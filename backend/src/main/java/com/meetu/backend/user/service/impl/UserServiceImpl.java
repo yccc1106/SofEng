@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
+/** 负责账号注册、密码校验和个人资料更新。 */
 @Service
 public class UserServiceImpl implements UserService {
     private final UserMapper users;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
         try {
             users.insert(id, request.name().trim(), email, encoder.encode(request.password()),
                     request.studentId(), request.school());
+        // 数据库唯一约束兜底处理并发注册，其他完整性错误继续抛出。
         } catch (DataIntegrityViolationException exception) {
             Throwable cause = exception;
             while (cause != null) {
@@ -64,6 +66,7 @@ public class UserServiceImpl implements UserService {
         return profile(id);
     }
 
+    /** 每次会话请求从数据库确认账号仍为 ACTIVE。 */
     @Override
     public Optional<UserEntity> findActiveSessionUser(String id) {
         return users.findById(id).filter(user -> "ACTIVE".equals(user.status()));

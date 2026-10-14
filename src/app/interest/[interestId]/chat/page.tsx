@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useParams } from 'next/navigation';
 import { useChatRoom } from '@/hooks/useChatRoom';
 
+/** 兴趣房间页面复用聊天 Hook，并保持历史翻页后的阅读位置。 */
 const InterestChatPage = () => {
     const { t } = useLanguage();
     const { message: antMessage } = App.useApp();

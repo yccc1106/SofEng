@@ -9,19 +9,12 @@ import { javaRequest } from '@/lib/java-client';
 const { TextArea } = Input;
 
 export interface PostFormProps {
-  /** 预设分类 ID（可选） */
   initialCategoryId?: string;
-  /** 提交成功回调 */
   onSuccess?: (post: PostResponse) => void;
-  /** 取消回调 */
   onCancel?: () => void;
-  /** 是否显示分类选择器 */
   showCategory?: boolean;
-  /** 是否显示标题输入 */
   showTitle?: boolean;
-  /** 加载状态 */
   loading?: boolean;
-  /** 提交按钮文字 */
   submitText?: string;
 }
 
@@ -30,6 +23,7 @@ interface CategoryOption {
   name: string;
 }
 
+/** 统一处理不同页面的发帖表单，提交后帖子进入审核流程。 */
 export const PostForm: React.FC<PostFormProps> = ({
   initialCategoryId,
   onSuccess,
@@ -45,7 +39,6 @@ export const PostForm: React.FC<PostFormProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
 
-  // 加载分类列表
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -61,14 +54,12 @@ export const PostForm: React.FC<PostFormProps> = ({
     fetchCategories();
   }, []);
 
-  // 设置初始分类
   useEffect(() => {
     if (initialCategoryId) {
       form.setFieldValue('categoryId', initialCategoryId);
     }
   }, [initialCategoryId, form]);
 
-  // 提交处理
   const handleSubmit = async (values: Record<string, unknown>) => {
     setSubmitting(true);
     try {

@@ -39,9 +39,9 @@ const questions = [
             { label: "Spontaneous and flexible (P)", value: "P" }
         ]
     }
-    // Simple 4-question test for demo purposes to generate 4 letters
 ];
 
+/** 收集四道问卷答案；性格类型和标签由 Java 后端计算。 */
 const PersonalityTestPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();

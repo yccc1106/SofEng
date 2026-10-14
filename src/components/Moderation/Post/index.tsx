@@ -15,6 +15,7 @@ type PostItem = {
     date: string;
 };
 
+/** 审核待发布帖子并刷新审核列表。 */
 const PostModeration: React.FC = () => {
     const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);

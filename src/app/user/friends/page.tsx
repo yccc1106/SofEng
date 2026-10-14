@@ -9,6 +9,7 @@ import { javaAction, javaRequest } from '@/lib/java-client';
 type Friend = { id: string; name: string; image: string | null; school: string | null };
 type FriendRequest = { id: string; message: string | null; sender: Friend };
 
+/** 展示已建立的好友关系及待处理申请，审批后刷新两类列表。 */
 const FriendsPage = () => {
     const { t } = useLanguage();
     const { message } = App.useApp();
