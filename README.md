@@ -78,7 +78,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
 - `GET/POST /api/posts/{id}/comments`：已发布帖子的评论查询与发表。
 - `POST /api/posts/{id}/like`、`POST /api/posts/{id}/collect`：已发布帖子点赞、收藏，再次调用取消。
 
-前端分类、帖子和互动页面已切换到 `/java/*`；原 Next.js 分类与帖子接口已移除。现有 Next.js 审核页面可处理待审帖子，完整的 Java 审核接口和操作记录留在第 7 阶段。旧搜索接口仅返回已发布帖子。
+前端分类、帖子和互动页面已切换到 `/java/*`；原 Next.js 分类与帖子接口已移除。帖子审核和操作记录已在第 7 阶段迁至 Java。
 
 ## 第六阶段聊天接口
 
@@ -88,7 +88,18 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
 - `POST /api/chat/read`：标记当前会话已读；私聊消息另保存 `isRead` 状态。
 - `/api/chat/ws`：Java WebSocket。客户端发送 `{"event":"join", "userId"|"teamId"|"categoryId":"..."}` 订阅会话，可发送 `leave` 退订、`ping` 保活；服务端发送 `joined`、`new:message`、`read`、`pong` 或 `error`。历史读取、消息发送及订阅均校验好友或队伍成员权限；兴趣房间要求登录。
 
-页面断线后先按指数退避快速重连 5 次，之后每 30 秒继续尝试；重新连接时补取期间消息。服务端明确拒绝订阅时停止重连并显示错误。聊天历史和时间戳按 UTC 处理。现有 WebSocket 推送限定在单个 Java 应用实例内。
+页面断线后先按指数退避快速重连 5 次，之后每 30 秒继续尝试；重新连接时补取期间消息。服务端明确拒绝订阅时停止重连并显示错误。数据库时间以 UTC 存储，接口和页面以 `Asia/Shanghai` 展示。现有 WebSocket 推送限定在单个 Java 应用实例内。
+
+## 第七阶段管理接口
+
+- `POST/GET /api/feedback`：登录用户提交建议或带目标的举报，并且只能读取自己的反馈历史。
+- `/api/admin/feedback`：管理员查询和处理反馈；处理人、时间、备注及措施写入数据库和管理审计记录。
+- `/api/admin/moderation/posts`、`/chats`、`/rooms`：管理员审核帖子、逻辑屏蔽聊天消息、关闭队伍；普通用户的聊天历史不再返回被屏蔽消息。
+- `/api/admin/users`、`/users/{id}`、`/verification`、`/interest`：管理员管理账号、审批认证和维护分类。管理员自身及其他管理员不可通过用户状态接口冻结或删除；有关联内容的分类不可删除。
+
+上述页面已切换到 `/java/*`，对应旧 Next.js 管理 API Routes 已移除。第 8 阶段的统计接口暂留 Next.js，但现在要求 NextAuth 管理员身份。管理操作与审计记录在同一数据库事务内写入。举报中的“记录警告”只留审核记录，不向被举报用户发送通知；当前反馈表单不上传图片。
+
+数据库无时区时间字段继续保存 UTC 值；Java JSON 响应使用带 `+08:00` 的上海时间，前端按 `Asia/Shanghai` 格式化。历史上由早期 Java 写入、未统一为 UTC 的记录可能显示偏差，需在可确认来源后单独校正，不能按日期批量改写。
 
 ## 后端验证
 

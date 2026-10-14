@@ -17,7 +17,7 @@ const RoomModeration: React.FC = () => {
 
     const handleAction = async (id: string, action: 'close') => {
         try {
-            const res = await fetch('/api/admin/moderation/rooms', {
+            const res = await fetch('/java/admin/moderation/rooms', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, action }),
@@ -119,7 +119,7 @@ const RoomModeration: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 request={async () => {
-                    const res = await fetch('/api/admin/moderation/rooms');
+                    const res = await fetch('/java/admin/moderation/rooms');
                     return await res.json();
                 }}
                 columns={columns}

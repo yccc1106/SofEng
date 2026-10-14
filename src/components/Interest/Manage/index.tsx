@@ -28,7 +28,7 @@ const InterestManage: React.FC = () => {
 
     const handleDelete = async (id: string) => {
         try {
-            const res = await fetch(`/api/admin/interest?id=${id}`, {
+            const res = await fetch(`/java/admin/interest?id=${id}`, {
                 method: 'DELETE',
             });
             const data = await res.json();
@@ -48,7 +48,7 @@ const InterestManage: React.FC = () => {
         const body = currentRow ? { ...values, id: currentRow.id } : values;
 
         try {
-            const res = await fetch('/api/admin/interest', {
+            const res = await fetch('/java/admin/interest', {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
@@ -148,7 +148,7 @@ const InterestManage: React.FC = () => {
                     </Button>,
                 ]}
                 request={async () => {
-                    const res = await fetch('/api/admin/interest');
+                    const res = await fetch('/java/admin/interest');
                     const json = await res.json();
                     if (json.success) {
                         setCategoryOptions(json.data.map((item: any) => ({ label: item.name, value: item.id })));

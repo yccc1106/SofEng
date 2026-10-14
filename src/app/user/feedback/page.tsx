@@ -19,12 +19,16 @@ const FeedbackPage = () => {
             // Mock image upload handling - in real app upload to storage first
             // Here we just ignore files or assume URLs are handled
 
-            const res = await fetch('/api/feedback', {
+            const res = await fetch('/java/feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...values,
-                    images: [] // Placeholder
+                    ...(values.type === 'REPORT' ? {
+                        [values.reportType === 'USER' ? 'reportedUserId' : values.reportType === 'POST' ? 'reportedPostId' : 'reportedMessageId']: values.targetId,
+                    } : {}),
+                    targetId: undefined,
+                    images: []
                 }),
             });
             const data = await res.json();
@@ -56,6 +60,17 @@ const FeedbackPage = () => {
 
                     <Form.Item name="content" label="Description" rules={[{ required: true, message: 'Please describe your feedback' }]}>
                         <TextArea rows={6} placeholder="Please describe your suggestion or issue..." />
+                    </Form.Item>
+
+                    <Form.Item noStyle shouldUpdate={(previous, current) => previous.type !== current.type}>
+                        {({ getFieldValue }) => getFieldValue('type') === 'REPORT' && <>
+                            <Form.Item name="reportType" label="举报对象类型" rules={[{ required: true, message: '请选择举报对象类型' }]}>
+                                <Select options={[{ label: '用户', value: 'USER' }, { label: '帖子', value: 'POST' }, { label: '消息', value: 'MESSAGE' }]} />
+                            </Form.Item>
+                            <Form.Item name="targetId" label="举报对象 ID" rules={[{ required: true, message: '请输入举报对象 ID' }]}>
+                                <Input placeholder="输入用户、帖子或消息 ID" />
+                            </Form.Item>
+                        </>}
                     </Form.Item>
 
                     <Form.Item name="contact" label="Contact (Optional)">

@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { successResponse, errorResponse } from "@/lib/response";
+import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from "@/lib/response";
 import type { ChartDataPoint, AdminStats } from "@/types/api";
 import dayjs from "dayjs";
 
 const DATE_RANGE = 7;
 
 export async function GET(req: Request) {
+    const session = await auth();
+    if (!session?.user) return unauthorizedResponse("Unauthorized");
+    if (session.user.role !== 'ADMIN') return forbiddenResponse();
     try {
         // 1. Visit Data
         const userCount = await prisma.user.count();

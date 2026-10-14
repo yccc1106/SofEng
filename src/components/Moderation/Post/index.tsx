@@ -2,6 +2,7 @@
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, message, Image } from 'antd';
 import React, { useRef } from 'react';
+import { shanghaiDate } from '@/lib/shanghai-time';
 
 type PostItem = {
     id: string;
@@ -28,7 +29,7 @@ const PostModeration: React.FC = () => {
 
     const handleAction = async (id: string, action: 'pass' | 'reject') => {
         try {
-            const res = await fetch('/api/admin/moderation/posts', {
+            const res = await fetch('/java/admin/moderation/posts', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, action }),
@@ -85,7 +86,7 @@ const PostModeration: React.FC = () => {
         {
             title: '发布时间',
             dataIndex: 'date',
-            valueType: 'date',
+            render: (_, record) => shanghaiDate(record.date),
             width: 120,
         },
         {
@@ -96,10 +97,10 @@ const PostModeration: React.FC = () => {
                 <a key="view" onClick={() => message.info('查看详情: ' + record.content)}>
                     查看
                 </a>,
-                <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
+                record.status === 'pending' && <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
                     通过
                 </a>,
-                <a key="reject" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'reject')}>
+                record.status === 'pending' && <a key="reject" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'reject')}>
                     拒绝
                 </a>,
             ],
@@ -136,7 +137,7 @@ const PostModeration: React.FC = () => {
                     // params contains pageSize, current, and filters
                     // For simplicity, we just fetch all or filter by mapped status if we implemented server side filtering strictly
                     // Here we fetch all from our simple API
-                    const res = await fetch('/api/admin/moderation/posts');
+                    const res = await fetch('/java/admin/moderation/posts');
                     return await res.json();
                 }}
                 columns={columns}
