@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Tabs, App } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
-import { signIn } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
     const { message } = App.useApp();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { refresh } = useAuth();
 
     const onFinishLogin = async (values: { email: string; password: string }) => {
         setLoading(true);
@@ -23,21 +24,13 @@ const LoginPage = () => {
                 message.error(javaResult.message || 'Login failed');
                 return;
             }
-            // Unmigrated pages still use NextAuth during the transition.
-            const result = await signIn('credentials', {
-                email: values.email,
-                password: values.password,
-                redirect: false,
-            });
-            if (!result?.ok || result.error) {
-                await fetch('/java/auth/logout', { method: 'POST' });
-                message.error('Login failed');
-                return;
+            if (!await refresh()) {
+                await fetch('/java/auth/logout', { method: 'POST' }).catch(() => {});
+                throw new Error('Profile unavailable after login');
             }
             message.success('Login successful');
             router.push('/');
         } catch {
-            await fetch('/java/auth/logout', { method: 'POST' }).catch(() => {});
             message.error('Login error');
         } finally {
             setLoading(false);

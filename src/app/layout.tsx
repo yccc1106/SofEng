@@ -6,7 +6,7 @@ import zhCN from "antd/locale/zh_CN";
 
 import BasicLayout from "@/components/Layout/BasicLayout";
 import { App } from 'antd';
-import { SessionProvider } from "next-auth/react";
+import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -53,11 +53,11 @@ export default function RootLayout({
             }}
           >
             <App>
-              <SessionProvider>
+              <AuthProvider>
                 <BasicLayout>
                   {children}
                 </BasicLayout>
-              </SessionProvider>
+              </AuthProvider>
             </App>
           </ConfigProvider>
         </AntdRegistry>

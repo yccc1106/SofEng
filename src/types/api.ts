@@ -1,37 +1,3 @@
-import type {
-  User,
-  Post,
-  Category,
-  Team,
-  Feedback,
-  PostComment,
-  PostLike,
-  PostCollection,
-  FriendRequest,
-  Friendship,
-  ChatMessage,
-  VerificationRequest,
-  TeamMember,
-} from '@prisma/client';
-
-// ============ Re-export Prisma types ============
-
-export type {
-  User,
-  Post,
-  Category,
-  Team,
-  Feedback,
-  PostComment,
-  PostLike,
-  PostCollection,
-  FriendRequest,
-  Friendship,
-  ChatMessage,
-  VerificationRequest,
-  TeamMember,
-};
-
 // ============ API 响应类型 ============
 
 export interface ApiResponse<T = unknown> {

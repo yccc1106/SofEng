@@ -1,37 +1,40 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Tabs, List, Avatar, Button, App, Spin, Badge } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import { javaAction, javaRequest } from '@/lib/java-client';
+
+type Friend = { id: string; name: string; image: string | null; school: string | null };
+type FriendRequest = { id: string; message: string | null; sender: Friend };
 
 const FriendsPage = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
-    const [friends, setFriends] = useState<any[]>([]);
-    const [requests, setRequests] = useState<any[]>([]);
+    const { data: session } = useAuth();
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const [friendsData, requestsData] = await Promise.all([
-                javaRequest<any[]>('/friends'),
-                javaRequest<any[]>('/friends/requests?type=received')
+                javaRequest<Friend[]>('/friends'),
+                javaRequest<FriendRequest[]>('/friends/requests?type=received')
             ]);
             setFriends(friendsData);
             setRequests(requestsData);
 
-        } catch (error) {
+        } catch {
             message.error('Failed to load data');
         } finally {
             setLoading(false);
         }
-    };
+    }, [message]);
 
     useEffect(() => {
-        if (session) fetchData();
-    }, [session]);
+        if (session) void fetchData();
+    }, [session, fetchData]);
 
     const handleRequestAction = async (id: string, action: 'ACCEPT' | 'REJECT') => {
         try {
@@ -41,8 +44,8 @@ const FriendsPage = () => {
                 body: JSON.stringify({ action }),
             });
             message.success(action === 'ACCEPT' ? 'Request accepted' : 'Request rejected');
-            fetchData();
-        } catch (error) {
+            void fetchData();
+        } catch {
             message.error('Error');
         }
     };
@@ -59,7 +62,7 @@ const FriendsPage = () => {
                         children: (
                             <List
                                 dataSource={friends}
-                                renderItem={(item: any) => (
+                                renderItem={(item: Friend) => (
                                     <List.Item className="bg-white p-4 mb-2 rounded-lg shadow-sm">
                                         <List.Item.Meta
                                             avatar={<Avatar src={item.image} />}
@@ -78,7 +81,7 @@ const FriendsPage = () => {
                         children: (
                             <List
                                 dataSource={requests}
-                                renderItem={(item: any) => (
+                                renderItem={(item: FriendRequest) => (
                                     <List.Item className="bg-white p-4 mb-2 rounded-lg shadow-sm"
                                         actions={[
                                             <Button key="accept" type="primary" shape="circle" icon={<CheckOutlined />} onClick={() => handleRequestAction(item.id, 'ACCEPT')} />,

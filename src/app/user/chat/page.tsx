@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
 import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { shanghaiDateTime } from '@/lib/shanghai-time';
 import { useChatRoom } from '@/hooks/useChatRoom';
@@ -22,7 +22,7 @@ interface Contact {
 
 const ChatContent = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
+    const { data: session } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const targetUserId = searchParams.get('targetId');
@@ -83,7 +83,7 @@ const ChatContent = () => {
         try {
             await chat.send(inputValue);
             setInputValue('');
-        } catch (error) {
+        } catch {
             message.error('Error sending message');
         } finally {
             setSending(false);

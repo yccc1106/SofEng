@@ -3,7 +3,7 @@ import React from 'react';
 import { Layout, Menu, Button, Dropdown, Avatar, Input, Flex, Typography, theme, Grid } from 'antd';
 import { UserOutlined, LogoutOutlined, BellOutlined, CompassOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import type { MenuProps } from 'antd';
 
@@ -12,7 +12,7 @@ const { Header } = Layout;
 const NavBar = () => {
     const router = useRouter();
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const { data: session, logout } = useAuth();
     const { token } = theme.useToken();
     const screens = Grid.useBreakpoint();
 
@@ -43,7 +43,7 @@ const NavBar = () => {
                 key: 'logout',
                 icon: <LogoutOutlined />,
                 label: 'Logout',
-                onClick: async () => { try { await fetch('/java/auth/logout', { method: 'POST' }); } finally { await signOut({ callbackUrl: '/user/login' }); } },
+                onClick: async () => { await logout(); router.replace('/user/login'); },
             },
         ],
     };

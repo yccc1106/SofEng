@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Avatar, Button, Descriptions, Tag, Spin, Form, Input, App, Modal } from 'antd';
 import { UserOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
 type Profile = {
@@ -20,7 +20,7 @@ type Profile = {
 
 const ProfilePage = () => {
     const { message } = App.useApp();
-    const { data: session, status } = useSession();
+    const { data: session, status, logout, refresh } = useAuth();
     const router = useRouter();
     const [user, setUser] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ const ProfilePage = () => {
             const res = await fetch('/java/users/profile');
             const data = await res.json();
             if (res.status === 401) {
-                await signOut({ callbackUrl: '/user/login' });
+                router.replace('/user/login');
                 return;
             }
             if (data.success) {
@@ -46,7 +46,7 @@ const ProfilePage = () => {
         } finally {
             setLoading(false);
         }
-    }, [message]);
+    }, [message, router]);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -71,12 +71,13 @@ const ProfilePage = () => {
             });
             const data = await res.json();
             if (res.status === 401) {
-                await signOut({ callbackUrl: '/user/login' });
+                router.replace('/user/login');
                 return;
             }
             if (data.success) {
                 message.success('Profile updated');
                 setUser(data.data);
+                await refresh();
                 setIsModalOpen(false);
             } else {
                 message.error('Failed to update');
@@ -128,7 +129,7 @@ const ProfilePage = () => {
                 </div>
             </Card>
 
-            <Button danger block icon={<LogoutOutlined />} onClick={async () => { try { await fetch('/java/auth/logout', { method: 'POST' }); } finally { await signOut({ callbackUrl: '/user/login' }); } }}>
+            <Button danger block icon={<LogoutOutlined />} onClick={async () => { await logout(); router.replace('/user/login'); }}>
                 Logout
             </Button>
 

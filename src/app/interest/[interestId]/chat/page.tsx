@@ -2,13 +2,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { List, Input, Button, Avatar, Spin, App } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import { useParams } from 'next/navigation';
 import { useChatRoom } from '@/hooks/useChatRoom';
 
 const InterestChatPage = () => {
     const { message: antMessage } = App.useApp();
-    const { data: session } = useSession();
+    const { data: session } = useAuth();
     const params = useParams();
     const interestId = params?.interestId as string;
     const chat = useChatRoom(interestId ? { categoryId: interestId } : null, session?.user?.id);
@@ -43,7 +43,7 @@ const InterestChatPage = () => {
         try {
             await chat.send(inputValue);
             setInputValue('');
-        } catch (error) {
+        } catch {
             antMessage.error('Error sending message');
         } finally {
             setSending(false);

@@ -1,15 +1,8 @@
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import { getCategories } from '@/lib/java-category';
 import InterestSelector from '@/components/Home/InterestSelector';
 import NavBar from '@/components/User/NavBar'; // Include NavBar for consistency
 
 export default async function Home() {
-  const session = await auth();
-  if (!session?.user) {
-    redirect('/user/login'); // Redirect to login page
-  }
-
   // Fetch top-level categories (those without parents)
   const categories = (await getCategories()).filter((category) => category.parentId === null);
 
