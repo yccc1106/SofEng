@@ -2,6 +2,7 @@ package com.meetu.backend.common.exception;
 
 import com.meetu.backend.common.api.ApiResponse;
 import com.meetu.backend.admin.service.ManagementException;
+import com.meetu.backend.user.service.impl.PersonalityServiceImpl.InvalidPersonalityAnswers;
 import com.meetu.backend.user.service.impl.UserServiceImpl.DuplicateEmailException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.InvalidCredentialsException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.RestrictedAccountException;
@@ -57,6 +58,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnreadableMessage() {
         return ResponseEntity.badRequest().body(ApiResponse.error("Malformed request body"));
+    }
+
+    @ExceptionHandler(InvalidPersonalityAnswers.class)
+    public ResponseEntity<ApiResponse<Void>> handlePersonalityAnswers() {
+        return ResponseEntity.badRequest().body(ApiResponse.error("Invalid personality answers"));
     }
 
     @ExceptionHandler(DuplicateEmailException.class)

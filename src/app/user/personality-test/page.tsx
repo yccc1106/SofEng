@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
-import { Card, Button, Radio, Progress, App, Space, Typography } from 'antd';
+import { Card, Button, Radio, Progress, App, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
 const questions = [
     {
@@ -60,44 +60,22 @@ const PersonalityTestPage = () => {
         }
     };
 
-    const calculateResult = () => {
-        // Very basic logic: Join the values. In real app, complex scoring.
-        // Assuming Q1=E/I, Q2=S/N, Q3=T/F, Q4=J/P for simplicity
-        const type =
-            (answers[1] || 'I') +
-            (answers[2] || 'N') +
-            (answers[3] || 'F') +
-            (answers[4] || 'P');
-
-        let tags: string[] = [];
-        if (type.includes('E')) tags.push('Outgoing');
-        if (type.includes('I')) tags.push('Reflective');
-        if (type.includes('S')) tags.push('Realistic');
-        if (type.includes('N')) tags.push('Dreamer');
-        if (type.includes('T')) tags.push('Analytical');
-        if (type.includes('F')) tags.push('Empathetic');
-
-        return { type, tags };
-    };
-
     const handleSubmit = async () => {
         setLoading(true);
-        const { type, tags } = calculateResult();
-
         try {
-            const res = await fetch('/api/personality-test', {
+            const res = await fetch('/java/personality-test', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers, type, tags }),
+                body: JSON.stringify({ answers }),
             });
             const data = await res.json();
             if (data.success) {
-                message.success('Test complete! Result: ' + type);
+                message.success('Test complete! Result: ' + data.data.type);
                 router.push('/user/profile');
             } else {
                 message.error('Failed to save results');
             }
-        } catch (error) {
+        } catch {
             message.error('Error submitting test');
         } finally {
             setLoading(false);

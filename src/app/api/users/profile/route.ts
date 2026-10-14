@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/response";
 
-export async function GET(req: Request) {
+export async function GET() {
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -53,7 +52,7 @@ export async function PUT(req: Request) {
 
     try {
         const body = await req.json();
-        const { name, school, major, grade, bio, gender, personalityType, personalityTags } = body;
+        const { name, school, major, grade, bio, gender } = body;
 
         const user = await prisma.user.update({
             where: { email: session.user.email },
@@ -64,8 +63,6 @@ export async function PUT(req: Request) {
                 grade,
                 bio,
                 gender,
-                personalityType,
-                personalityTags,
             },
             select: {
                 id: true,

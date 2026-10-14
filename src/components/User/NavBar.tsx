@@ -19,7 +19,7 @@ const NavBar = () => {
     const menuItems = [
         { key: '/user/posts', label: 'Community' },
         { key: '/user/teams', label: 'Teams' },
-        { key: '/user/radar', label: 'AI Radar' },
+        { key: '/user/radar', label: '匹配雷达' },
         { key: '/user/chat', label: 'Chat' },
         ...(session?.user?.role === 'ADMIN' ? [{ key: '/dashboard', label: 'Admin Panel' }] : []),
     ];

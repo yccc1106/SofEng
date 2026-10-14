@@ -31,6 +31,9 @@ class UserAuthenticationTests {
     @Test
     void guestCannotReadProfileAndCrossSiteWriteIsRejected() throws Exception {
         mvc.perform(get("/api/users/profile")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/radar")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/personality-test").contentType(MediaType.APPLICATION_JSON).content("{\"answers\":{}}"))
+                .andExpect(status().isUnauthorized());
         mvc.perform(post("/api/users").header("Origin", "https://evil.example")
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
