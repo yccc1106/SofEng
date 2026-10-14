@@ -91,11 +91,15 @@
 
 ### 9. 联调、部署和清理
 
+状态：本地验收已完成（2026-10-14）。旧 Next.js API Routes、NextAuth 和 Prisma 运行依赖已移除，前后端可按 README 从空 PostgreSQL 库启动；尚未在外部生产环境部署，实际域名、TLS 证书和可信代理配置需在目标环境核验。
+
 - 验证普通用户与管理员的完整业务流程。
 - 补齐关键测试、配置说明、启动部署与数据库迁移文档。
 - 处理并回归 [`MIGRATION_BASELINE.md`](./MIGRATION_BASELINE.md) 第 12 节暂缓的第一阶段审查问题。
 - 前端全部切换并验证成功后，移除旧 Next.js API Routes、NextAuth、Prisma 等后端实现。
 - 完成条件：前后端能够按文档运行，核心流程和权限验证通过，旧后端依赖清理完成。
+
+验证记录：`mvn verify`、`pnpm build` 与本次改动的前端 ESLint 通过。独立 PostgreSQL 15 空库执行 Flyway V1–V6 并启动 Java；经 Next.js `/java` 代理完成管理员建分类与审核帖子、普通用户发帖/评论/点赞、好友申请与审批、组队申请与审批、私聊/队聊、性格测试、雷达、反馈处理和统计烟测。匿名/普通用户管理员访问分别被重定向或拒绝；管理员登录、降权后失去管理员权限、冻结后会话失效、退出与旧 `/api/users/profile` 返回 404 均已验证。浏览器核对普通用户登录、资料修改、退出和管理员统计页。第 12 节暂缓问题的处理结论见 `MIGRATION_BASELINE.md`；当前 WebSocket 单实例限制和生产 TLS/可信代理配置仍按 README 约束。
 
 ## 首个可运行里程碑
 

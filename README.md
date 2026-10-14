@@ -1,6 +1,6 @@
 # MeetU
 
-MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 后端按 Controller → Service 接口 → ServiceImpl → MyBatis Mapper 分层，使用 PostgreSQL。迁移期间，尚未切换的业务继续由现有 Next.js API 提供。
+MeetU 使用 React / Next.js 前端与 Spring Boot 单体后端。业务接口、登录会话、权限及数据访问由 Java 提供；后端按 Controller → Service 接口 → ServiceImpl → MyBatis Mapper 分层，使用 PostgreSQL 和 Flyway。
 
 ## 快速开始
 
@@ -15,15 +15,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
    # docker compose down
    ```
 
-2. **初始化现有前端所需数据**
-
-   ```bash
-   pnpm prisma generate
-   pnpm prisma db push
-   pnpm prisma db seed
-   ```
-
-3. **启动 Java 后端**
+2. **启动 Java 后端**
 
    本机需要 Java 17 与 Maven 3.9+：
 
@@ -32,7 +24,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
    mvn spring-boot:run
    ```
 
-   默认连接 `localhost:5433/meetu`。可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 和 `SERVER_PORT` 覆盖配置。开发环境默认允许 `http://localhost:3000` 发起会话写请求；部署到其他前端地址时设置 `FRONTEND_ORIGIN`，使用 HTTPS 时设置 `SESSION_COOKIE_SECURE=true`。
+   默认连接 `localhost:5433/meetu`。Flyway 在空数据库自动执行 V1–V6 建表和升级；已有数据库先备份，并在启动日志中确认迁移成功。可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 和 `SERVER_PORT` 覆盖配置。开发环境默认允许 `http://localhost:3000` 发起写请求；部署到其他前端地址时设置 `FRONTEND_ORIGIN`，使用 HTTPS 时设置 `SESSION_COOKIE_SECURE=true`。
 
    启动后可访问：
 
@@ -41,7 +33,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
    - OpenAPI：<http://localhost:8080/v3/api-docs>
    - Swagger UI：<http://localhost:8080/swagger-ui.html>
 
-4. **启动前端开发服务器**
+3. **启动前端开发服务器**
 
    ```bash
    pnpm dev
@@ -57,7 +49,13 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
    pnpm build && pnpm start
    ```
 
-前端默认访问 <http://localhost:3000>。注册、登录及个人资料页面通过 `/java/*` 代理调用 Spring Boot 的 `/api/*`；前端与 Java 后端必须同时运行。迁移期登录还会建立 NextAuth 会话，供尚未迁移的页面和接口使用。退出时会注销两套会话。账号被冻结、封禁或删除后，Java 会话和旧 NextAuth 服务端会话均会失效。
+前端默认访问 <http://localhost:3000>。所有业务请求通过 `/java/*` 代理到 Spring Boot 的 `/api/*`；前端与 Java 后端必须同时运行。页面会话取自 Java 个人资料接口，退出登录后服务端会话失效。账号被冻结、封禁或删除、角色变化时，Java 在每次请求重新核对数据库。首次启动的空库没有管理员账号；先通过页面注册，再由可信数据库管理员执行以下语句，并核对返回的邮箱和角色：
+
+```sql
+UPDATE "User" SET role = 'ADMIN'
+WHERE email = 'your-admin@example.com' AND status = 'ACTIVE'
+RETURNING id, email, role;
+```
 
 聊天页面通过 `/java/chat*` 调用 Java REST，浏览器默认连接 `ws://localhost:8080/api/chat/ws`。部署时设置 `NEXT_PUBLIC_JAVA_WS_URL` 为可从浏览器访问的 WebSocket 地址；HTTPS 页面使用 `wss://`。WebSocket 需要收到与 Java REST 登录相同的 `JSESSIONID` Cookie，前后端跨主机部署时应通过同一站点的反向代理转发 WebSocket Upgrade，并将 `FRONTEND_ORIGIN` 设置为实际前端来源。WebSocket 只在当前 Java 单体实例内推送；当前部署方案为单实例。
 
@@ -68,7 +66,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
 - `GET /api/users/profile`、`PUT /api/users/profile`：仅操作当前登录用户；可编辑字段为昵称、学校、专业、年级和简介。
 - Java 会话使用 `HttpOnly`、`SameSite=Lax` Cookie。写请求校验浏览器 `Origin`；生产环境必须使用 HTTPS 并启用安全 Cookie。单体后端重启后内存会话失效，用户需重新登录。
 
-迁移期旧 Next.js API Routes 仍存在，尚未迁移的管理接口安全问题见 `MIGRATION_BASELINE.md` 第 12 节；上线到不可信网络前需完成后续迁移。登录与注册限流、全量旧接口清理及部署安全验收仍在后续阶段。
+登录和注册按连接来源地址分别限制为每 5 分钟 10 次、每小时 5 次；超过限制返回 429 和 `Retry-After`。写请求必须携带匹配 `FRONTEND_ORIGIN` 的 `Origin`，或由同源浏览器提供 `Sec-Fetch-Site: same-origin`。生产环境将 Java 后端部署在可信网络内，前端通过 HTTPS 反向代理访问 `/java/*`；前端和 WebSocket 应使用同站点地址，并启用安全 Cookie。若 Java 只接受可信前端代理的连接，可把 `TRUSTED_PROXY_ADDRESS` 设为 Java 看到的前端代理地址，此时限流使用其 `X-Forwarded-For` 中的首个客户端 IP。入口代理必须覆盖客户端传入的同名头，且 Java 端口不得直接暴露给不可信网络；否则保持该变量为空并在入口代理另行配置按客户端 IP 的限流。
 
 ## 第四阶段接口
 
@@ -109,4 +107,6 @@ mvn test
 mvn verify
 ```
 
-Flyway 在已有 Prisma 数据库上使用版本 `1` 建立迁移基线；业务表结构仍由 Prisma 暂时维护，后续 Java 业务迁移从 `V2` 开始编写数据库迁移。前端全部切换并完成验证前，不删除现有 Next.js API、NextAuth 或 Prisma 实现。
+Flyway V1 为新数据库建立业务表；V2–V6 补充约束、聊天和审核结构。旧 Prisma 数据库的 Flyway 版本 1 为 `BASELINE`，继续执行后续版本；不要在已存在业务表的库上手工运行 V1。启动前应备份已有数据库，并以 `flyway_schema_history` 和健康检查核对结果。数据库无时区时间字段存储 UTC，接口与页面使用 `Asia/Shanghai`，响应时间带 `+08:00`。
+
+部署时先设置生产数据库凭证、`FRONTEND_ORIGIN`、`JAVA_BACKEND_URL`、`NEXT_PUBLIC_JAVA_WS_URL` 和 `SESSION_COOKIE_SECURE=true`。`JAVA_BACKEND_URL` 与 `NEXT_PUBLIC_JAVA_WS_URL` 必须在前端构建时提供；后者需为浏览器可访问的 `wss://` 地址。前端路由代理会向 Java 查询当前会话，故应用间网络必须互通。验证 `/api/system/ping`、`/actuator/health`、匿名访问受保护页面的重定向、普通用户登录与管理员页面拒绝、管理员登录与管理接口后，再开放流量。当前会话保存在单实例内存中，应用重启会使用户重新登录；WebSocket 推送也仅在该实例内完成。
