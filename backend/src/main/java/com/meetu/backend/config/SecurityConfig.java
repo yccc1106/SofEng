@@ -93,6 +93,7 @@ public class SecurityConfig {
                                 "/api/posts", "/api/posts/*/comments", "/api/teams").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users", "/api/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/feedback").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/profile").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/users/profile").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/auth/logout").authenticated()

@@ -238,6 +238,7 @@ model ChatMessage {
   createdAt DateTime @default(now())
 
   reports   Feedback[]
+  moderationStatus String @default("VISIBLE")
 }
 
 model Feedback {
@@ -261,10 +262,23 @@ model Feedback {
   reportedMessage   ChatMessage? @relation(fields: [reportedMessageId], references: [id])
 
   contact   String?
+  handledBy String?
+  handledAt DateTime?
+  handleNote String?
   images    String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ManagementAudit {
+  id String @id
+  actorId String
+  targetType String
+  targetId String
+  action String
+  note String?
+  createdAt DateTime @default(now())
 }
 
 model PostComment {

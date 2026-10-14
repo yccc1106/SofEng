@@ -15,13 +15,13 @@ public interface ChatMapper {
 
     @Select("SELECT id,\"createdAt\",\"senderId\",\"receiverId\",\"teamId\",\"categoryId\" FROM \"ChatMessage\" WHERE id=#{id}")
     Map<String,Object> cursor(String id);
-    @Select("<script>" + MESSAGE_SELECT + "WHERE ((m.\"senderId\"=#{viewer} AND m.\"receiverId\"=#{other}) OR " +
+    @Select("<script>" + MESSAGE_SELECT + "WHERE m.\"moderationStatus\"='VISIBLE' AND ((m.\"senderId\"=#{viewer} AND m.\"receiverId\"=#{other}) OR " +
             "(m.\"senderId\"=#{other} AND m.\"receiverId\"=#{viewer})) " + BEFORE + AFTER + "</script>")
     List<Map<String,Object>> direct(@Param("viewer") String viewer,@Param("other") String other,
                                      @Param("beforeTime") Object beforeTime,@Param("beforeId") String beforeId);
-    @Select("<script>" + MESSAGE_SELECT + "WHERE m.\"teamId\"=#{id} " + BEFORE + AFTER + "</script>")
+    @Select("<script>" + MESSAGE_SELECT + "WHERE m.\"moderationStatus\"='VISIBLE' AND m.\"teamId\"=#{id} " + BEFORE + AFTER + "</script>")
     List<Map<String,Object>> team(@Param("id") String id,@Param("beforeTime") Object beforeTime,@Param("beforeId") String beforeId);
-    @Select("<script>" + MESSAGE_SELECT + "WHERE m.\"categoryId\"=#{id} " + BEFORE + AFTER + "</script>")
+    @Select("<script>" + MESSAGE_SELECT + "WHERE m.\"moderationStatus\"='VISIBLE' AND m.\"categoryId\"=#{id} " + BEFORE + AFTER + "</script>")
     List<Map<String,Object>> category(@Param("id") String id,@Param("beforeTime") Object beforeTime,@Param("beforeId") String beforeId);
 
     @Select("SELECT id FROM \"Friendship\" WHERE status='FRIEND' AND " +
@@ -45,7 +45,7 @@ public interface ChatMapper {
             "JOIN \"Team\" t ON t.id=tm.\"teamId\" WHERE tm.\"userId\"=#{id} AND tm.status='JOINED' AND t.status!='DISBANDED' ORDER BY name")
     List<Map<String,Object>> contacts(String id);
     @Select("<script>SELECT COUNT(*) FROM \"ChatMessage\" m LEFT JOIN \"ChatReadCursor\" c ON c.\"userId\"=#{viewer} " +
-            "AND c.\"scopeType\"=#{scope} AND c.\"scopeId\"=#{id} WHERE m.\"senderId\"&lt;&gt;#{viewer} " +
+            "AND c.\"scopeType\"=#{scope} AND c.\"scopeId\"=#{id} WHERE m.\"moderationStatus\"='VISIBLE' AND m.\"senderId\"&lt;&gt;#{viewer} " +
             "AND m.\"createdAt\" &gt; COALESCE(c.\"lastReadAt\",TIMESTAMP '1970-01-01') " +
             "<choose><when test='scope == \"USER\"'>AND m.\"senderId\"=#{id} AND m.\"receiverId\"=#{viewer}</when>" +
             "<when test='scope == \"TEAM\"'>AND m.\"teamId\"=#{id}</when>" +

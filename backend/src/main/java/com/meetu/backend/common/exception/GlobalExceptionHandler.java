@@ -1,6 +1,7 @@
 package com.meetu.backend.common.exception;
 
 import com.meetu.backend.common.api.ApiResponse;
+import com.meetu.backend.admin.service.ManagementException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.DuplicateEmailException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.InvalidCredentialsException;
 import com.meetu.backend.user.service.impl.UserServiceImpl.RestrictedAccountException;
@@ -16,6 +17,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -125,6 +127,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ChatNotFound.class)
     public ResponseEntity<ApiResponse<Void>> handleChatNotFound() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Conversation not found"));
+    }
+
+    @ExceptionHandler(ManagementException.class)
+    public ResponseEntity<ApiResponse<Void>> handleManagement(ManagementException exception) {
+        HttpStatus status = switch (exception.kind()) {
+            case INVALID -> HttpStatus.BAD_REQUEST;
+            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case CONFLICT -> HttpStatus.CONFLICT;
+            case FORBIDDEN -> HttpStatus.FORBIDDEN;
+        };
+        return ResponseEntity.status(status).body(ApiResponse.error(exception.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataConflict() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("Data conflict"));
     }
 
     @ExceptionHandler(Exception.class)
