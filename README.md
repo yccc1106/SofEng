@@ -88,7 +88,7 @@ MeetU 正在迁移为 React / Next.js 前端与 Spring Boot 独立后端。Java 
 - `POST /api/chat/read`：标记当前会话已读；私聊消息另保存 `isRead` 状态。
 - `/api/chat/ws`：Java WebSocket。客户端发送 `{"event":"join", "userId"|"teamId"|"categoryId":"..."}` 订阅会话，可发送 `leave` 退订、`ping` 保活；服务端发送 `joined`、`new:message`、`read`、`pong` 或 `error`。历史读取、消息发送及订阅均校验好友或队伍成员权限；兴趣房间要求登录。
 
-页面断线后最多重连 5 次，重新连接时补取期间消息；聊天历史和时间戳按 UTC 处理。现有 WebSocket 推送限定在单个 Java 应用实例内。
+页面断线后先按指数退避快速重连 5 次，之后每 30 秒继续尝试；重新连接时补取期间消息。服务端明确拒绝订阅时停止重连并显示错误。聊天历史和时间戳按 UTC 处理。现有 WebSocket 推送限定在单个 Java 应用实例内。
 
 ## 后端验证
 

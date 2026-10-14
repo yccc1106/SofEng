@@ -52,6 +52,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
         let retryTimer: ReturnType<typeof setTimeout> | undefined;
         let heartbeat: ReturnType<typeof setInterval> | undefined;
         let retries = 0;
+        let terminalError = false;
         const recordRead = async () => {
             try { await fetch('/java/chat/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(target) }); }
             catch { /* The next visit can retry. */ }
@@ -115,7 +116,7 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
                             setMessages(current => current.map(item => item.senderId === viewerId ? { ...item, isRead: true } : item));
                     } else if (data.event === 'error') {
                         setError(data.message || 'Unable to join chat');
-                        retries = 5;
+                        terminalError = true;
                         socket?.close();
                     }
                 } catch { setError('Invalid real-time message'); }
@@ -123,10 +124,10 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
             socket.onclose = () => {
                 if (heartbeat) clearInterval(heartbeat);
                 if (!active) return;
-                if (retries >= 5) { setStatus('offline'); return; }
-                const delay = Math.min(1000 * 2 ** retries, 16000);
+                if (terminalError) { setStatus('offline'); return; }
+                const delay = retries < 5 ? Math.min(1000 * 2 ** retries, 16000) : 30000;
                 retries += 1;
-                setStatus('reconnecting');
+                setStatus(retries > 5 ? 'offline' : 'reconnecting');
                 retryTimer = setTimeout(connect, delay);
             };
             socket.onerror = () => socket?.close();
