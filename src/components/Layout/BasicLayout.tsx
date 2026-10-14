@@ -1,8 +1,9 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 
-import { Dropdown, Spin } from 'antd';
+import { Dropdown, Select, Spin } from 'antd';
 import { LogoutOutlined, UserOutlined, DashboardOutlined, MessageOutlined, SafetyOutlined, TagsOutlined } from '@ant-design/icons';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import React from 'react';
 import dynamic from 'next/dynamic';
@@ -24,7 +25,7 @@ export default function BasicLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const router = useRouter();
+    const { t, language, setLanguage } = useLanguage();
     const pathname = usePathname();
 
     // If user route (except login potentially, but generally all user routes), bypass Admin Layout
@@ -39,7 +40,7 @@ export default function BasicLayout({
 
     return (
         <ProLayout
-            title="Admin Console"
+            title={t("Admin Console")}
             logo={null} // Minimalist: specific logo or just text. Let's use text title as primary.
             location={{
                 pathname,
@@ -67,7 +68,7 @@ export default function BasicLayout({
             }}
 
             // Custom Header Render for Glass effect
-            headerContentRender={() => <div className="text-sm text-gray-500">Welcome back</div>}
+            headerContentRender={() => <div className="flex items-center gap-4"><span className="text-sm text-gray-500">{t("Welcome back")}</span><Select aria-label="语言 / Language" value={language} onChange={setLanguage} options={[{ value: 'zh-CN', label: '中文' }, { value: 'en-US', label: 'English' }]} style={{ width: 100 }} /></div>}
 
             splitMenus={false}
             menuItemRender={(item, dom) => (
@@ -79,66 +80,66 @@ export default function BasicLayout({
                 routes: [
                     {
                         path: '/dashboard',
-                        name: 'Overview', // Simpler name
+                        name: t('Overview'), // Simpler name
                         icon: <DashboardOutlined />,
                     },
                     {
                         path: '/user-management',
-                        name: '用户管理',
+                        name: t('User Management'),
                         icon: <UserOutlined />,
                         routes: [
                             {
                                 path: '/user-management/list',
-                                name: '用户列表',
+                                name: t('User List'),
                             },
                             {
                                 path: '/user-management/verification',
-                                name: '学信认证',
+                                name: t('Student Verification'),
                             },
                         ],
                     },
                     {
                         path: '/feedback',
-                        name: 'Feedback',
+                        name: t('Feedback'),
                         icon: <MessageOutlined />,
                         routes: [
                             {
                                 path: '/feedback/suggestions',
-                                name: 'Suggestions',
+                                name: t('Suggestions'),
                             },
                             {
                                 path: '/feedback/reports',
-                                name: 'Reports',
+                                name: t('Reports'),
                             },
                         ],
                     },
                     {
                         path: '/moderation',
-                        name: 'Moderation',
+                        name: t('Moderation'),
                         icon: <SafetyOutlined />,
                         routes: [
                             {
                                 path: '/moderation/chat',
-                                name: 'Chat',
+                                name: t('Chat'),
                             },
                             {
                                 path: '/moderation/post',
-                                name: 'Posts',
+                                name: t('Posts'),
                             },
                             {
                                 path: '/moderation/room',
-                                name: 'Rooms',
+                                name: t('Rooms'),
                             },
                         ],
                     },
                     {
                         path: '/interest',
-                        name: 'Interests',
+                        name: t('Interests'),
                         icon: <TagsOutlined />,
                         routes: [
                             {
                                 path: '/interest/manage',
-                                name: 'Management',
+                                name: t('Management'),
                             },
                         ],
                     },
@@ -147,7 +148,7 @@ export default function BasicLayout({
             avatarProps={{
                 src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
                 size: 'small',
-                title: 'Admin',
+                title: t('Admin'),
                 render: (props, dom) => {
                     return (
                         <Dropdown
@@ -156,7 +157,7 @@ export default function BasicLayout({
                                     {
                                         key: 'logout',
                                         icon: <LogoutOutlined />,
-                                        label: 'Sign Out',
+                                        label: t('Sign Out'),
                                     },
                                 ],
                             }}

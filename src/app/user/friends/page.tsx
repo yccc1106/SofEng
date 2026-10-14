@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { useCallback, useEffect, useState } from 'react';
 import { Tabs, List, Avatar, Button, App, Spin, Badge } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
@@ -9,6 +10,7 @@ type Friend = { id: string; name: string; image: string | null; school: string |
 type FriendRequest = { id: string; message: string | null; sender: Friend };
 
 const FriendsPage = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const { data: session } = useAuth();
     const [friends, setFriends] = useState<Friend[]>([]);
@@ -26,11 +28,11 @@ const FriendsPage = () => {
             setRequests(requestsData);
 
         } catch {
-            message.error('Failed to load data');
+            message.error(t('Failed to load data'));
         } finally {
             setLoading(false);
         }
-    }, [message]);
+    }, [message, t]);
 
     useEffect(() => {
         if (session) void fetchData();
@@ -43,7 +45,7 @@ const FriendsPage = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action }),
             });
-            message.success(action === 'ACCEPT' ? 'Request accepted' : 'Request rejected');
+            message.success(action === 'ACCEPT' ? t('Request accepted') : t('Request rejected'));
             void fetchData();
         } catch {
             message.error('Error');
@@ -52,13 +54,13 @@ const FriendsPage = () => {
 
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
-            <h1 className="text-xl font-bold mb-4 px-2">Friends</h1>
+            <h1 className="text-xl font-bold mb-4 px-2">{t("Friends")}</h1>
 
             {loading ? <Spin className="flex justify-center mt-10" /> : (
                 <Tabs defaultActiveKey="friends" items={[
                     {
                         key: 'friends',
-                        label: 'My Friends',
+                        label: t('My Friends'),
                         children: (
                             <List
                                 dataSource={friends}
@@ -67,9 +69,9 @@ const FriendsPage = () => {
                                         <List.Item.Meta
                                             avatar={<Avatar src={item.image} />}
                                             title={item.name}
-                                            description={item.school || 'No school info'}
+                                            description={item.school || t('No school info')}
                                         />
-                                        <Button href={`/user/chat?targetId=${item.id}`}>Chat</Button>
+                                        <Button href={`/user/chat?targetId=${item.id}`}>{t("Chat")}</Button>
                                     </List.Item>
                                 )}
                             />
@@ -77,7 +79,7 @@ const FriendsPage = () => {
                     },
                     {
                         key: 'requests',
-                        label: <Badge count={requests.length} offset={[10, 0]}>Requests</Badge>,
+                        label: <Badge count={requests.length} offset={[10, 0]}>{t("Requests")}</Badge>,
                         children: (
                             <List
                                 dataSource={requests}
@@ -91,7 +93,7 @@ const FriendsPage = () => {
                                         <List.Item.Meta
                                             avatar={<Avatar src={item.sender.image} />}
                                             title={item.sender.name}
-                                            description={item.message || 'Wants to be your friend'}
+                                            description={item.message || t('Wants to be your friend')}
                                         />
                                     </List.Item>
                                 )}

@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useEffect, useState, useRef } from 'react';
 import { List, Input, Button, Avatar, Spin, App } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
@@ -7,6 +8,7 @@ import { useParams } from 'next/navigation';
 import { useChatRoom } from '@/hooks/useChatRoom';
 
 const InterestChatPage = () => {
+    const { t } = useLanguage();
     const { message: antMessage } = App.useApp();
     const { data: session } = useAuth();
     const params = useParams();
@@ -44,7 +46,7 @@ const InterestChatPage = () => {
             await chat.send(inputValue);
             setInputValue('');
         } catch {
-            antMessage.error('Error sending message');
+            antMessage.error(t('Error sending message'));
         } finally {
             setSending(false);
         }
@@ -53,7 +55,7 @@ const InterestChatPage = () => {
     return (
         <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-100 bg-white z-10">
-                <h2 className="text-xl font-bold text-gray-800">Lobby Chat</h2>
+                <h2 className="text-xl font-bold text-gray-800">{t("Lobby Chat")}</h2>
                 <p className="text-xs text-green-500 flex items-center mt-1">
                     <span className={`w-2 h-2 rounded-full mr-1 ${chat.status === 'live' ? 'bg-green-500' : 'bg-amber-500'}`} />
                     {chat.status === 'live' ? 'Live' : chat.status === 'offline' ? 'Disconnected' : 'Connecting'}
@@ -63,7 +65,7 @@ const InterestChatPage = () => {
             <div ref={messagesPanelRef} className="flex-1 overflow-auto p-6 bg-[#f9fafb]">
                 {chat.loading && <div className="flex justify-center p-10"><Spin /></div>}
                 {chat.error && <div className="text-center text-red-500 text-sm">{chat.error}</div>}
-                {chat.hasOlder && <div className="text-center mb-4"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>Load earlier messages</Button></div>}
+                {chat.hasOlder && <div className="text-center mb-4"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>{t("Load earlier messages")}</Button></div>}
                 <List
                     dataSource={chat.messages}
                     split={false}
@@ -92,7 +94,7 @@ const InterestChatPage = () => {
                         value={inputValue}
                         onChange={e => setInputValue(e.target.value)}
                         onPressEnter={handleSend}
-                        placeholder="Say something to everyone..."
+                        placeholder={t("Say something to everyone...")}
                         size="large"
                         className="rounded-full bg-gray-50 border-none h-12 focus:bg-white transition-all shadow-inner"
                     />

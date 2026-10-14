@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useState } from 'react';
 import { Card, Button, Radio, Progress, App, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -42,6 +43,7 @@ const questions = [
 ];
 
 const PersonalityTestPage = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
@@ -70,13 +72,13 @@ const PersonalityTestPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success('Test complete! Result: ' + data.data.type);
+                message.success(t('Test complete! Result: ') + data.data.type);
                 router.push('/user/profile');
             } else {
-                message.error('Failed to save results');
+                message.error(t('Failed to save results'));
             }
         } catch {
-            message.error('Error submitting test');
+            message.error(t('Error submitting test'));
         } finally {
             setLoading(false);
         }
@@ -88,11 +90,11 @@ const PersonalityTestPage = () => {
     return (
         <div className="p-6 bg-gray-50 min-h-screen flex flex-col items-center justify-center">
             <Card className="w-full shadow-md max-w-lg">
-                <Title level={3} className="text-center mb-6">Personality Test</Title>
+                <Title level={3} className="text-center mb-6">{t("Personality Test")}</Title>
                 <Progress percent={progressPercent} showInfo={false} className="mb-6" />
 
                 <div className="mb-8">
-                    <Title level={5} className="mb-4 text-gray-700">{currentStep + 1}. {currentQ.question}</Title>
+                    <Title level={5} className="mb-4 text-gray-700">{currentStep + 1}. {t(currentQ.question)}</Title>
                     <Radio.Group
                         onChange={e => handleOptionSelect(e.target.value)}
                         value={answers[currentQ.id]}
@@ -100,7 +102,7 @@ const PersonalityTestPage = () => {
                     >
                         {currentQ.options.map(opt => (
                             <Radio key={opt.value} value={opt.value} className="text-base p-2 border rounded-md hover:bg-blue-50 transition-colors">
-                                {opt.label}
+                                {t(opt.label)}
                             </Radio>
                         ))}
                     </Radio.Group>
@@ -111,7 +113,7 @@ const PersonalityTestPage = () => {
                         disabled={currentStep === 0}
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
-                        Previous
+                        {t('Previous')}
                     </Button>
                     <Button
                         type="primary"
@@ -119,7 +121,7 @@ const PersonalityTestPage = () => {
                         disabled={!answers[currentQ.id]}
                         loading={loading}
                     >
-                        {currentStep === questions.length - 1 ? 'Submit' : 'Next'}
+                        {currentStep === questions.length - 1 ? t('Submit') : t('Next')}
                     </Button>
                 </div>
             </Card>

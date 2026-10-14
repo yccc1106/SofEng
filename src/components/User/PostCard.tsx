@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useState } from 'react';
 import { Card, Avatar, Typography, Space, Button, Tag, Flex, theme, List, Input, message, Form } from 'antd';
 import { LikeOutlined, LikeFilled, StarOutlined, StarFilled, MessageOutlined, SendOutlined } from '@ant-design/icons';
@@ -17,6 +18,7 @@ interface PostProps {
 }
 
 const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
+    const { t } = useLanguage();
     const { token } = theme.useToken();
     const [liked, setLiked] = useState(post.isLiked || false);
     const [likeCount, setLikeCount] = useState(post._count?.likes || 0);
@@ -47,7 +49,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
         } catch {
             setLiked(prevLiked);
             setLikeCount(prevCount);
-            message.error('Failed to update like status');
+            message.error(t('Failed to update like status'));
         } finally {
             setActionPending(false);
         }
@@ -67,7 +69,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
         } catch {
             setCollected(prevCollected);
             setCollectionCount(prevCount);
-            message.error('Failed to update collection status');
+            message.error(t('Failed to update collection status'));
         } finally {
             setActionPending(false);
         }
@@ -80,7 +82,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             setComments(await javaRequest<PostCommentResponse[]>(`/posts/${post.id}/comments`));
             setCommentsFetched(true);
         } catch {
-            message.error('Failed to load comments');
+            message.error(t('Failed to load comments'));
         } finally {
             setCommentsLoading(false);
         }
@@ -105,9 +107,9 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             setComments(current => [...current, comment]);
             setCommentCount(current => current + 1);
             form.resetFields();
-            message.success('Comment added');
+            message.success(t('Comment added'));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : 'Error sending comment');
+            message.error(error instanceof Error ? error.message : t('Error sending comment'));
         } finally {
             setSubmittingComment(false);
         }
@@ -175,8 +177,8 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                 </div>
             </Flex>
 
-            {post.status === 'AUDITING' && <Tag color="orange">Pending review</Tag>}
-            {post.status === 'REJECTED' && <Tag color="red">Rejected</Tag>}
+            {post.status === 'AUDITING' && <Tag color="orange">{t("Pending review")}</Tag>}
+            {post.status === 'REJECTED' && <Tag color="red">{t("Rejected")}</Tag>}
             <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>{post.title}</Title>
 
             <Paragraph
@@ -205,7 +207,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                             }}
                         >
                             {/* In real app, render <Image src={img} ... /> */}
-                            Image {idx + 1}
+                            {t('Image')} {idx + 1}
                         </div>
                     ))}
                 </Flex>
@@ -251,8 +253,8 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                                 void handleSubmitComment(values);
                             }}
                         >
-                            <Form.Item name="content" style={{ flex: 1, marginBottom: 0 }} rules={[{ required: true, message: 'Please enter a comment' }]}>
-                                <Input placeholder="Write a comment..." autoComplete="off" />
+                            <Form.Item name="content" style={{ flex: 1, marginBottom: 0 }} rules={[{ required: true, message: t('Please enter a comment') }]}>
+                                <Input placeholder={t("Write a comment...")} autoComplete="off" />
                             </Form.Item>
                             <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submittingComment} />
                         </Form>

@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useState } from 'react';
 import { Form, Input, Button, Tabs, App } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
@@ -6,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -21,17 +23,17 @@ const LoginPage = () => {
             });
             const javaResult = await javaResponse.json();
             if (!javaResponse.ok) {
-                message.error(javaResult.message || 'Login failed');
+                message.error(javaResult.message || t('Login failed'));
                 return;
             }
             if (!await refresh()) {
                 await fetch('/java/auth/logout', { method: 'POST' }).catch(() => {});
-                throw new Error('Profile unavailable after login');
+                throw new Error(t('Profile unavailable after login'));
             }
-            message.success('Login successful');
+            message.success(t('Login successful'));
             router.push('/');
         } catch {
-            message.error('Login error');
+            message.error(t('Login error'));
         } finally {
             setLoading(false);
         }
@@ -47,13 +49,13 @@ const LoginPage = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success('Registration successful, please login');
+                message.success(t('Registration successful, please login'));
                 // Could auto login here
             } else {
-                message.error(data.message || 'Registration failed');
+                message.error(data.message || t('Registration failed'));
             }
         } catch {
-            message.error('Registration error');
+            message.error(t('Registration error'));
         } finally {
             setLoading(false);
         }
@@ -68,7 +70,7 @@ const LoginPage = () => {
                     items={[
                         {
                             key: 'login',
-                            label: 'Login',
+                            label: t('Login'),
                             children: (
                                 <Form
                                     name="login"
@@ -77,19 +79,19 @@ const LoginPage = () => {
                                 >
                                     <Form.Item
                                         name="email"
-                                        rules={[{ required: true, message: 'Please input your Email!' }]}
+                                        rules={[{ required: true, message: t('Please input your Email!') }]}
                                     >
-                                        <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
+                                        <Input prefix={<MailOutlined />} placeholder={t("Email")} size="large" />
                                     </Form.Item>
                                     <Form.Item
                                         name="password"
-                                        rules={[{ required: true, message: 'Please input your Password!' }]}
+                                        rules={[{ required: true, message: t('Please input your Password!') }]}
                                     >
-                                        <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+                                        <Input.Password prefix={<LockOutlined />} placeholder={t("Password")} size="large" />
                                     </Form.Item>
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" block size="large" loading={loading}>
-                                            Log in
+                                            {t("Log in")}
                                         </Button>
                                     </Form.Item>
                                 </Form>
@@ -97,7 +99,7 @@ const LoginPage = () => {
                         },
                         {
                             key: 'register',
-                            label: 'Register',
+                            label: t('Register'),
                             children: (
                                 <Form
                                     name="register"
@@ -106,25 +108,25 @@ const LoginPage = () => {
                                 >
                                     <Form.Item
                                         name="name"
-                                        rules={[{ required: true, message: 'Please input your Nickname!' }]}
+                                        rules={[{ required: true, message: t('Please input your Nickname!') }]}
                                     >
-                                        <Input prefix={<UserOutlined />} placeholder="Nickname" size="large" />
+                                        <Input prefix={<UserOutlined />} placeholder={t("Nickname")} size="large" />
                                     </Form.Item>
                                     <Form.Item
                                         name="email"
-                                        rules={[{ required: true, message: 'Please input your Email!' }]}
+                                        rules={[{ required: true, message: t('Please input your Email!') }]}
                                     >
-                                        <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
+                                        <Input prefix={<MailOutlined />} placeholder={t("Email")} size="large" />
                                     </Form.Item>
                                     <Form.Item
                                         name="password"
-                                        rules={[{ required: true, message: 'Please input your Password!' }]}
+                                        rules={[{ required: true, message: t('Please input your Password!') }]}
                                     >
-                                        <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+                                        <Input.Password prefix={<LockOutlined />} placeholder={t("Password")} size="large" />
                                     </Form.Item>
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" block size="large" loading={loading}>
-                                            Register
+                                            {t("Register")}
                                         </Button>
                                     </Form.Item>
                                 </Form>

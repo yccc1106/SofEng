@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Avatar, Button, Typography, App, Tag } from 'antd';
 import { RadarChartOutlined, UserAddOutlined } from '@ant-design/icons';
@@ -9,6 +10,7 @@ const { Paragraph } = Typography;
 type Match = { id: string; name: string | null; image: string | null; bio: string | null; personalityType: string; personalityTags: string[]; score: number; scoreReason: string };
 
 const RadarPage = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const [matches, setMatches] = useState<Match[]>([]);
     const [scanning, setScanning] = useState(true);
@@ -23,14 +25,14 @@ const RadarPage = () => {
             if (data.success) {
                 setMatches(data.data);
             } else {
-                message.error('Radar failed');
+                message.error(t('Radar failed'));
             }
         } catch {
-            message.error('Radar error');
+            message.error(t('Radar error'));
         } finally {
             setScanning(false);
         }
-    }, [message]);
+    }, [message, t]);
 
     useEffect(() => {
         void startScan();
@@ -41,17 +43,17 @@ const RadarPage = () => {
             await javaRequest('/friends/requests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ receiverId: userId, message: 'Found you via Matching Radar!' }),
+                body: JSON.stringify({ receiverId: userId, message: t('Found you via Matching Radar!') }),
             });
-            message.success('Friend request sent!');
+            message.success(t('Friend request sent!'));
         } catch {
-            message.error('Error sending request');
+            message.error(t('Error sending request'));
         }
     };
 
     return (
         <div className="min-h-[70vh] rounded-xl bg-gray-900 p-4 pb-8 text-white sm:p-6">
-            <h1 className="text-xl font-bold mb-4 text-center text-blue-400">Matching Radar</h1>
+            <h1 className="text-xl font-bold mb-4 text-center text-blue-400">{t("Matching Radar")}</h1>
 
             {scanning ? (
                 <div className="flex flex-col items-center justify-center h-[60vh]">
@@ -67,13 +69,13 @@ const RadarPage = () => {
                             <RadarChartOutlined className="text-4xl text-green-400 opacity-90 drop-shadow-[0_0_10px_rgba(0,255,0,0.8)]" />
                         </div>
                     </div>
-                    <p className="mt-8 text-green-400 animate-pulse text-lg">Finding compatible users...</p>
+                    <p className="mt-8 text-green-400 animate-pulse text-lg">{t("Finding compatible users...")}</p>
                 </div>
             ) : (
                 <div className="animate-fade-in" style={{ display: 'grid', gap: 12 }}>
                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-400">Found {matches.length} matching users</span>
-                        <Button type="primary" ghost size="small" onClick={startScan}>Rescan</Button>
+                        <span className="text-gray-400">{t('Found')} {matches.length} {t('matching users')}</span>
+                        <Button type="primary" ghost size="small" onClick={startScan}>{t("Rescan")}</Button>
                     </div>
 
                     {matches.map((user) => (
@@ -89,10 +91,10 @@ const RadarPage = () => {
                                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                                         <div style={{ minWidth: 0 }}>
                                             <h3 style={{ margin: 0, color: '#fff', fontSize: 17, fontWeight: 600, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
-                                                {user.name || 'Unnamed user'}
+                                                {user.name || t('Unnamed user')}
                                             </h3>
                                             <div style={{ color: '#93c5fd', fontSize: 13, lineHeight: 1.5, marginTop: 3 }}>
-                                                {user.personalityType} · {user.score} points
+                                                {user.personalityType} · {user.score} {t('points')}
                                             </div>
                                         </div>
                                         <Button
@@ -105,7 +107,7 @@ const RadarPage = () => {
                                     </div>
                                     <Paragraph ellipsis={{ rows: 2 }}
                                         style={{ color: '#d1d5db', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
-                                        {user.scoreReason} · {user.bio || 'No bio provided.'}
+                                        {user.scoreReason} · {user.bio || t('No bio provided.')}
                                     </Paragraph>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 2 }}>
                                         {user.personalityTags?.slice(0, 3).map((tag: string) => (
@@ -121,8 +123,8 @@ const RadarPage = () => {
 
                     {matches.length === 0 && (
                         <div className="text-center text-gray-500 mt-20">
-                            <p>No matches found right now.</p>
-                            <Button onClick={startScan}>Try Again</Button>
+                            <p>{t("No matches found right now.")}</p>
+                            <Button onClick={startScan}>{t("Try Again")}</Button>
                         </div>
                     )}
                 </div>

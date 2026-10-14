@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useEffect, useState, useRef } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
 import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined } from '@ant-design/icons';
@@ -21,6 +22,7 @@ interface Contact {
 }
 
 const ChatContent = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const { data: session } = useAuth();
     const router = useRouter();
@@ -54,7 +56,7 @@ const ChatContent = () => {
                 setContacts(data.data);
             }
         } catch (error) {
-            console.error("Fetch contacts error", error);
+            console.error(t("Fetch contacts error"), error);
         } finally {
             setLoadingContacts(false);
         }
@@ -84,7 +86,7 @@ const ChatContent = () => {
             await chat.send(inputValue);
             setInputValue('');
         } catch {
-            message.error('Error sending message');
+            message.error(t('Error sending message'));
         } finally {
             setSending(false);
         }
@@ -119,9 +121,9 @@ const ChatContent = () => {
             >
                 <div className="p-6 border-b border-gray-100/50">
                     <div className="flex justify-between items-center mb-6">
-                        <Title level={3} className="!mb-0 !font-bold text-slate-800">Chats</Title>
+                        <Title level={3} className="!mb-0 !font-bold text-slate-800">{t("Chats")}</Title>
                         <Space>
-                            <Tooltip title="Create Group">
+                            <Tooltip title={t("Create Group")}>
                                 <Button shape="circle" icon={<TeamOutlined />} type="text" />
                             </Tooltip>
                             {/* <Button shape="circle" icon={<MoreOutlined />} type="text" /> */}
@@ -129,7 +131,7 @@ const ChatContent = () => {
                     </div>
                     <Input
                         prefix={<SearchOutlined className="text-gray-400" />}
-                        placeholder="Search contacts..."
+                        placeholder={t("Search contacts...")}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         className="rounded-xl bg-white/50 border-gray-200/50 h-10 hover:bg-white focus:bg-white transition-all"
@@ -168,7 +170,7 @@ const ChatContent = () => {
                                         description={
                                             <div className="flex justify-between items-center mt-1">
                                                 <Text type="secondary" className="text-sm truncate pr-2">
-                                                    {item.type === 'TEAM' ? `Team · ${item.subType || 'General'}` : 'Click to chat'}
+                                                    {item.type === 'TEAM' ? `${t('Team')} · ${item.subType || t('General')}` : t('Click to chat')}
                                                 </Text>
                                                 <Badge count={item.unreadCount} size="small" />
                                             </div>
@@ -176,7 +178,7 @@ const ChatContent = () => {
                                     />
                                 </List.Item>
                             )}
-                            locale={{ emptyText: <Empty description="No contacts" className="mt-20 opacity-60" /> }}
+                            locale={{ emptyText: <Empty description={t("No contacts")} className="mt-20 opacity-60" /> }}
                         />
                     )}
                 </div>
@@ -205,7 +207,7 @@ const ChatContent = () => {
                                     <Text strong className="text-lg leading-tight text-slate-800">{activeContact?.name}</Text>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <span className={`w-2 h-2 rounded-full ${chat.status === 'live' ? 'bg-green-500' : 'bg-amber-500'}`} />
-                                        <Text type="secondary" className="text-xs font-medium">{chat.status === 'live' ? 'Live' : chat.status === 'offline' ? 'Disconnected' : 'Connecting'}</Text>
+                                        <Text type="secondary" className="text-xs font-medium">{chat.status === 'live' ? t('Live') : chat.status === 'offline' ? t('Disconnected') : t('Connecting')}</Text>
                                     </div>
                                 </div>
                             </Space>
@@ -219,7 +221,7 @@ const ChatContent = () => {
                         <div ref={messagesPanelRef} className="flex-1 overflow-auto p-6 space-y-6 scroll-smooth customize-scrollbar bg-[#f8f9fa]/50">
                             {chat.loading && <div className="text-center py-4"><Spin /></div>}
                             {chat.error && <div className="text-center text-red-500 text-sm">{chat.error}</div>}
-                            {chat.hasOlder && <div className="text-center"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>Load earlier messages</Button></div>}
+                            {chat.hasOlder && <div className="text-center"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>{t("Load earlier messages")}</Button></div>}
 
                             {chat.messages.map((msg, index) => {
                                 const isMe = msg.senderId === session?.user?.id;
@@ -267,7 +269,7 @@ const ChatContent = () => {
                                         value={inputValue}
                                         onChange={e => setInputValue(e.target.value)}
                                         onKeyDown={handleKeyDown}
-                                        placeholder="Type a message..."
+                                        placeholder={t("Type a message...")}
                                         autoSize={{ minRows: 1, maxRows: 4 }}
                                         variant="borderless"
                                         className="!mb-0 !bg-transparent text-base !resize-none py-3"
@@ -300,17 +302,17 @@ const ChatContent = () => {
                             <Badge status="processing" className="absolute bottom-2 right-2 scale-150" />
                         </div>
                         <div className="space-y-2">
-                            <Title level={2} className="!mb-0 text-slate-700">Welcome to Chat</Title>
+                            <Title level={2} className="!mb-0 text-slate-700">{t("Welcome to Chat")}</Title>
                             <Text className="text-slate-500 text-lg block max-w-md mx-auto">
-                                Connect with your friends and teammates in real-time. Select a conversation to start messaging.
+                                {t("Connect with your friends and teammates in real-time. Select a conversation to start messaging.")}
                             </Text>
                         </div>
                         <div className="flex gap-4 mt-4">
                             <Button size="large" className="rounded-full px-8 h-12" onClick={() => router.push('/user/friends')}>
-                                Find Friends
+                                {t("Find Friends")}
                             </Button>
                             <Button type="primary" size="large" className="rounded-full px-8 h-12 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-200" onClick={() => router.push('/user/teams')}>
-                                Join Teams
+                                {t("Join Teams")}
                             </Button>
                         </div>
                     </div>
