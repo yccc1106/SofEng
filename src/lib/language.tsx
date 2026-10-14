@@ -5,6 +5,11 @@ import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import enUS from 'antd/locale/en_US';
 import { translations } from './translations';
+import { adminTranslations } from './admin-translations';
+
+const adminEnglishToChinese = Object.fromEntries(
+  Object.entries(adminTranslations).map(([chinese, english]) => [english, chinese]),
+);
 
 export type Language = 'zh-CN' | 'en-US';
 const storageKey = 'meetu-language';
@@ -26,7 +31,7 @@ function getLanguage(): Language {
 const LanguageContext = createContext<{
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (english: string) => string;
+  t: (text: string) => string;
 } | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -42,7 +47,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t: (english) => language === 'zh-CN' ? translations[english] ?? english : english }}>
+    <LanguageContext.Provider value={{
+      language,
+      setLanguage,
+      t: (text) => language === 'zh-CN'
+        ? translations[text] ?? adminEnglishToChinese[text] ?? text
+        : adminTranslations[text] ?? text,
+    }}>
       <ConfigProvider locale={language === 'zh-CN' ? zhCN : enUS}>{children}</ConfigProvider>
     </LanguageContext.Provider>
   );

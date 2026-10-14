@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { ActionType, ModalForm, PageContainer, ProColumns, ProFormRadio, ProFormTextArea, ProTable } from '@ant-design/pro-components';
 import { Button, message, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
@@ -14,6 +15,7 @@ type SuggestionItem = {
 
 
 const Suggestions: React.FC = () => {
+    const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [currentRow, setCurrentRow] = useState<SuggestionItem | null>(null);
@@ -27,15 +29,15 @@ const Suggestions: React.FC = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success('Processed successfully');
+                message.success(t('Processed successfully'));
                 actionRef.current?.reload();
                 return true;
             } else {
-                message.error('Failed to process');
+                message.error(t('Failed to process'));
                 return false;
             }
         } catch (error) {
-            message.error('Error processing feedback');
+            message.error(t('Error processing feedback'));
             return false;
         }
     };
@@ -49,35 +51,35 @@ const Suggestions: React.FC = () => {
             ellipsis: true,
         },
         {
-            title: '用户',
+            title: t('用户'),
             dataIndex: 'user',
             width: 120,
             ellipsis: true,
         },
         {
-            title: '建议内容',
+            title: t('建议内容'),
             dataIndex: 'suggestion',
             ellipsis: true,
         },
         {
-            title: '状态',
+            title: t('状态'),
             dataIndex: 'status',
             width: 100,
             valueEnum: {
-                PENDING: { text: '待处理', status: 'Processing' },
-                PROCESSED: { text: '已处理', status: 'Success' },
-                ADOPTED: { text: '已采纳', status: 'Success' },
-                IGNORED: { text: '已忽略', status: 'Default' },
+                PENDING: { text: t('待处理'), status: 'Processing' },
+                PROCESSED: { text: t('已处理'), status: 'Success' },
+                ADOPTED: { text: t('已采纳'), status: 'Success' },
+                IGNORED: { text: t('已忽略'), status: 'Default' },
             },
         },
         {
-            title: '提交时间',
+            title: t('提交时间'),
             dataIndex: 'date',
             valueType: 'date',
             width: 120,
         },
         {
-            title: '操作',
+            title: t('操作'),
             valueType: 'option',
             width: 80,
             render: (_, record) => record.status === 'PENDING' ? [
@@ -85,7 +87,7 @@ const Suggestions: React.FC = () => {
                     setCurrentRow(record);
                     setModalVisible(true);
                 }}>
-                    处理
+                    {t("处理")}
                 </a>,
             ] : [],
         },
@@ -100,7 +102,7 @@ const Suggestions: React.FC = () => {
             className="p-0"
         >
             <ProTable<SuggestionItem>
-                headerTitle="User Suggestions"
+                headerTitle={t("User Suggestions")}
                 actionRef={actionRef}
                 rowKey="id"
                 scroll={{ x: 'max-content' }}
@@ -126,7 +128,7 @@ const Suggestions: React.FC = () => {
                 className="bg-white rounded-lg shadow-sm"
             />
             <ModalForm
-                title="处理建议"
+                title={t("处理建议")}
                 open={modalVisible}
                 onOpenChange={setModalVisible}
                 onFinish={async (values) => {
@@ -139,17 +141,17 @@ const Suggestions: React.FC = () => {
             >
                 <ProFormRadio.Group
                     name="method"
-                    label="处理结果"
+                    label={t("处理结果")}
                     options={[
-                        { label: '采纳', value: 'ADOPTED' },
-                        { label: '暂不采纳 / 忽略', value: 'IGNORED' },
+                        { label: t('采纳'), value: 'ADOPTED' },
+                        { label: t('暂不采纳 / 忽略'), value: 'IGNORED' },
                     ]}
-                    rules={[{ required: true, message: '请选择处理结果' }]}
+                    rules={[{ required: true, message: t('请选择处理结果') }]}
                 />
                 <ProFormTextArea
                     name="note"
-                    label="处理备注"
-                    placeholder="请输入备注信息（可选）"
+                    label={t("处理备注")}
+                    placeholder={t("请输入备注信息（可选）")}
                 />
             </ModalForm>
         </PageContainer>

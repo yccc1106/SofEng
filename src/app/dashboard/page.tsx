@@ -12,12 +12,12 @@ export default  function DashboardPage() {
                     width={128}
                     height={128}
                     src="/images/welcome-doodle.png"
-                    alt="Welcome"
+                    alt={t('Welcome')}
                     className="w-16 h-16 md:w-20 md:h-20 object-contain opacity-90"
                 />
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-800">{t("Hello, Admin")}</h1>
-                    <p className="text-gray-500 mt-1">今日项目概况</p>
+                    <p className="text-gray-500 mt-1">{t('今日项目概况')}</p>
                 </div>
             </div>
 

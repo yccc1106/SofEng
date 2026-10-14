@@ -261,4 +261,9 @@ export const translations: Record<string, string> = {
   "Disconnected": "连接已断开",
   "Connecting": "连接中",
   "Approved": "已通过",
+  "Report Management": "举报管理",
+  "Interest Categories": "兴趣分类",
+  "Chat Moderation (Recent Messages)": "聊天审核（近期消息）",
+  "Moderation Queue": "帖子审核队列",
+  "Room/Team Moderation": "房间/队伍审核",
 };

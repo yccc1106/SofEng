@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, message, Image } from 'antd';
 import React, { useRef } from 'react';
@@ -25,6 +26,7 @@ const mockData: PostItem[] = Array.from({ length: 15 }).map((_, i) => ({
 }));
 
 const PostModeration: React.FC = () => {
+    const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
 
     const handleAction = async (id: string, action: 'pass' | 'reject') => {
@@ -55,18 +57,18 @@ const PostModeration: React.FC = () => {
             ellipsis: true,
         },
         {
-            title: '作者',
+            title: t('作者'),
             dataIndex: 'author',
             width: 120,
             ellipsis: true,
         },
         {
-            title: '标题',
+            title: t('标题'),
             dataIndex: 'title',
             ellipsis: true,
         },
         {
-            title: '配图',
+            title: t('配图'),
             dataIndex: 'imageUrl',
             width: 80,
             render: (_, record) => {
@@ -74,34 +76,34 @@ const PostModeration: React.FC = () => {
             },
         },
         {
-            title: '状态',
+            title: t('状态'),
             dataIndex: 'status',
             width: 100,
             valueEnum: {
-                pending: { text: '待审核', status: 'Processing' },
-                approved: { text: '已通过', status: 'Success' },
-                rejected: { text: '已拒绝', status: 'Error' },
+                pending: { text: t('待审核'), status: 'Processing' },
+                approved: { text: t('已通过'), status: 'Success' },
+                rejected: { text: t('已拒绝'), status: 'Error' },
             },
         },
         {
-            title: '发布时间',
+            title: t('发布时间'),
             dataIndex: 'date',
             render: (_, record) => shanghaiDate(record.date),
             width: 120,
         },
         {
-            title: '操作',
+            title: t('操作'),
             valueType: 'option',
             width: 150,
             render: (_, record) => [
-                <a key="view" onClick={() => message.info('查看详情: ' + record.content)}>
-                    查看
+                <a key="view" onClick={() => message.info(t('查看详情:') + ' ' + record.content)}>
+                    {t("查看")}
                 </a>,
                 record.status === 'pending' && <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
-                    通过
+                    {t("通过")}
                 </a>,
                 record.status === 'pending' && <a key="reject" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'reject')}>
-                    拒绝
+                    {t("拒绝")}
                 </a>,
             ],
         },
@@ -115,7 +117,7 @@ const PostModeration: React.FC = () => {
             }}
         >
             <ProTable<PostItem>
-                headerTitle="Moderation Queue"
+                headerTitle={t("Moderation Queue")}
                 actionRef={actionRef}
                 rowKey="id"
                 scroll={{ x: 'max-content' }}
