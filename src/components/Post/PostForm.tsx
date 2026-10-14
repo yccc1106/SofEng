@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, App, Select } from 'antd';
 import type { PostResponse } from '@/types/api';
+import { javaRequest } from '@/lib/java-client';
 
 const { TextArea } = Input;
 
@@ -46,10 +47,10 @@ export const PostForm: React.FC<PostFormProps> = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch('/api/category');
+        const res = await fetch('/java/category');
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setCategories(data);
+        if (res.ok && data.success && Array.isArray(data.data)) {
+          setCategories(data.data);
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
@@ -69,23 +70,16 @@ export const PostForm: React.FC<PostFormProps> = ({
   const handleSubmit = async (values: Record<string, unknown>) => {
     setSubmitting(true);
     try {
-      const res = await fetch('/api/posts', {
+      const data = await javaRequest<PostResponse>('/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-
-      const data = await res.json();
-
-      if (data.success) {
-        message.success('Post created');
-        onSuccess?.(data.data);
-        form.resetFields();
-      } else {
-        message.error(data.message || 'Failed to save post');
-      }
+      message.success('Post submitted for review');
+      onSuccess?.(data);
+      form.resetFields();
     } catch (error) {
-      message.error('Network error');
+      message.error(error instanceof Error ? error.message : 'Network error');
       console.error(error);
     } finally {
       setSubmitting(false);

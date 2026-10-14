@@ -1,10 +1,11 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
-import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, SmileOutlined, PaperClipOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
+import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined } from '@ant-design/icons';
+import { useAuth } from '@/lib/auth-context';
 import { useSearchParams, useRouter } from 'next/navigation';
-import dayjs from 'dayjs';
+import { shanghaiDateTime } from '@/lib/shanghai-time';
+import { useChatRoom } from '@/hooks/useChatRoom';
 
 const { Content, Sider } = Layout;
 const { Text, Title } = Typography;
@@ -16,45 +17,38 @@ interface Contact {
     image: string | null;
     type: 'USER' | 'TEAM';
     subType?: string;
-    lastMessage?: string; // Optional: if API supports it later
-    lastActive?: string;
-}
-
-interface Message {
-    id: string;
-    content: string;
-    senderId: string;
-    sender: {
-        name: string;
-        image: string;
-    };
-    createdAt: string;
+    unreadCount: number;
 }
 
 const ChatContent = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
+    const { data: session } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const targetUserId = searchParams.get('targetId');
     const teamId = searchParams.get('teamId');
+    const chat = useChatRoom(targetUserId ? { userId: targetUserId } : teamId ? { teamId } : null, session?.user?.id);
 
     const [contacts, setContacts] = useState<Contact[]>([]);
-    const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [loadingContacts, setLoadingContacts] = useState(true);
-    const [loadingMessages, setLoadingMessages] = useState(false);
     const [sending, setSending] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesPanelRef = useRef<HTMLDivElement>(null);
+    const olderAnchor = useRef<{ height: number; top: number } | null>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const panel = messagesPanelRef.current;
+        if (!panel) return;
+        if (olderAnchor.current) {
+            panel.scrollTop = panel.scrollHeight - olderAnchor.current.height + olderAnchor.current.top;
+            olderAnchor.current = null;
+        } else panel.scrollTop = panel.scrollHeight;
     };
 
     const fetchContacts = async () => {
         try {
-            const res = await fetch('/api/chat/contacts');
+            const res = await fetch('/java/chat/contacts');
             const data = await res.json();
             if (data.success) {
                 setContacts(data.data);
@@ -66,66 +60,30 @@ const ChatContent = () => {
         }
     };
 
-    const fetchMessages = async (showLoading = false) => {
-        if (!targetUserId && !teamId) return;
-        if (showLoading) setLoadingMessages(true);
-        try {
-            let url = '/api/chat?';
-            if (targetUserId) url += `userId=${targetUserId}`;
-            if (teamId) url += `teamId=${teamId}`;
-
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.success) {
-                setMessages(data.data);
-            }
-        } catch (error) {
-            console.error("Fetch message error", error);
-        } finally {
-            if (showLoading) setLoadingMessages(false);
-        }
-    };
-
     useEffect(() => {
         fetchContacts();
+        window.addEventListener('focus', fetchContacts);
+        return () => window.removeEventListener('focus', fetchContacts);
     }, []);
 
     useEffect(() => {
-        if (targetUserId || teamId) {
-            fetchMessages(true);
-            const interval = setInterval(() => fetchMessages(false), 3000);
-            return () => clearInterval(interval);
-        } else {
-            setMessages([]);
-        }
-    }, [targetUserId, teamId]);
-
-    useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [chat.messages]);
+
+    const handleLoadOlder = async () => {
+        const panel = messagesPanelRef.current;
+        if (panel) olderAnchor.current = { height: panel.scrollHeight, top: panel.scrollTop };
+        if (!await chat.loadOlder()) olderAnchor.current = null;
+    };
 
     const handleSend = async () => {
         if (!inputValue.trim() || sending) return;
         setSending(true);
 
         try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: inputValue,
-                    receiverId: targetUserId,
-                    teamId: teamId
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                setInputValue('');
-                fetchMessages();
-            } else {
-                message.error('Failed to send');
-            }
-        } catch (error) {
+            await chat.send(inputValue);
+            setInputValue('');
+        } catch {
             message.error('Error sending message');
         } finally {
             setSending(false);
@@ -145,6 +103,11 @@ const ChatContent = () => {
 
     const activeId = targetUserId || teamId;
     const activeContact = contacts.find(c => c.id === activeId);
+
+    useEffect(() => {
+        if (activeId && !chat.loading && !chat.error)
+            setContacts(current => current.map(contact => contact.id === activeId ? { ...contact, unreadCount: 0 } : contact));
+    }, [activeId, chat.loading, chat.error]);
 
     return (
         <Layout className="h-[calc(100vh-100px)] bg-transparent p-4 md:p-6 gap-6">
@@ -205,9 +168,9 @@ const ChatContent = () => {
                                         description={
                                             <div className="flex justify-between items-center mt-1">
                                                 <Text type="secondary" className="text-sm truncate pr-2">
-                                                    {item.type === 'TEAM' ? `Team · ${item.subType}` : 'Click to chat'}
+                                                    {item.type === 'TEAM' ? `Team · ${item.subType || 'General'}` : 'Click to chat'}
                                                 </Text>
-                                                {/* <Badge count={2} className="site-badge-count-4" color="#3b82f6" /> */}
+                                                <Badge count={item.unreadCount} size="small" />
                                             </div>
                                         }
                                     />
@@ -241,8 +204,8 @@ const ChatContent = () => {
                                 <div className="flex flex-col">
                                     <Text strong className="text-lg leading-tight text-slate-800">{activeContact?.name}</Text>
                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                                        <Text type="secondary" className="text-xs font-medium">Online</Text>
+                                        <span className={`w-2 h-2 rounded-full ${chat.status === 'live' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                        <Text type="secondary" className="text-xs font-medium">{chat.status === 'live' ? 'Live' : chat.status === 'offline' ? 'Disconnected' : 'Connecting'}</Text>
                                     </div>
                                 </div>
                             </Space>
@@ -253,12 +216,14 @@ const ChatContent = () => {
                         </div>
 
                         {/* Messages List */}
-                        <div className="flex-1 overflow-auto p-6 space-y-6 scroll-smooth customize-scrollbar bg-[#f8f9fa]/50">
-                            {loadingMessages && <div className="text-center py-4"><Spin /></div>}
+                        <div ref={messagesPanelRef} className="flex-1 overflow-auto p-6 space-y-6 scroll-smooth customize-scrollbar bg-[#f8f9fa]/50">
+                            {chat.loading && <div className="text-center py-4"><Spin /></div>}
+                            {chat.error && <div className="text-center text-red-500 text-sm">{chat.error}</div>}
+                            {chat.hasOlder && <div className="text-center"><Button loading={chat.loadingOlder} onClick={handleLoadOlder}>Load earlier messages</Button></div>}
 
-                            {messages.map((msg, index) => {
+                            {chat.messages.map((msg, index) => {
                                 const isMe = msg.senderId === session?.user?.id;
-                                const isSequence = index > 0 && messages[index - 1].senderId === msg.senderId;
+                                const isSequence = index > 0 && chat.messages[index - 1].senderId === msg.senderId;
 
                                 return (
                                     <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
@@ -283,15 +248,15 @@ const ChatContent = () => {
                                                 >
                                                     {msg.content}
                                                 </div>
-                                                <span className={`text-[10px] text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity mx-1`}>
-                                                    {dayjs(msg.createdAt).format('h:mm A')}
+                                                <span className={`text-[10px] text-gray-400 mt-1 transition-opacity mx-1 ${isMe && targetUserId && msg.isRead ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                                    {shanghaiDateTime(msg.createdAt).slice(11, 16)}
+                                                    {isMe && targetUserId && msg.isRead ? ' · Read' : ''}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                 );
                             })}
-                            <div ref={messagesEndRef} />
                         </div>
 
                         {/* Input Area */}

@@ -1,50 +1,25 @@
-import type { AnalysisData, CategoryItem } from '@/types/analysis';
+import { javaRequest } from '@/lib/java-client';
 
-export async function fakeChartData(): Promise<AnalysisData> {
-  try {
-    const response = await fetch('/api/admin/stats');
-    if (!response.ok) {
-      throw new Error('Failed to fetch stats');
-    }
-    const statsResult = await response.json();
+export type Point = { x: string; y: number };
+export type DashboardStats = {
+  userCount: number;
+  dailyActiveUsers: number;
+  weeklyActiveUsers: number;
+  newUsers: number;
+  postCount: number;
+  newPosts: number;
+  pendingReports: number;
+  processedReports: number;
+  interactionRate: number;
+  overallProcessingRate: number;
+  weeklyGrowth: number;
+  dailyGrowth: number;
+  visitData: Point[];
+  postweeklyGrowth: Point[];
+  salesData: Point[];
+  salesTypeData: Point[];
+};
 
-    const categoryResponse = await fetch('/api/category');
-    if (!categoryResponse.ok) {
-      throw new Error('Failed to fetch categories');
-    }
-    const categoryData: CategoryItem[] = await categoryResponse.json();
-
-    // API 返回的格式是 { success, message, data }，需要提取 data 字段
-    const statsData = statsResult.data || statsResult;
-
-    // 类型安全的分类数据处理
-    const sortedCategoryData: CategoryItem[] = Array.isArray(categoryData)
-      ? [...categoryData]
-          .sort((a, b) => b.usageCount - a.usageCount)
-      : [];
-
-    return {
-      ...statsData,
-      categoryData: sortedCategoryData,
-    };
-  } catch (error) {
-    console.error("Failed to fetch chart data", error);
-    return createEmptyAnalysisData();
-  }
-}
-
-export function createEmptyAnalysisData(): AnalysisData {
-  return {
-    visitData: [],
-    salesData: [],
-    salesTypeData: [],
-    visitData2: [],
-    searchData: [],
-    offlineData: [],
-    offlineChartData: [],
-    salesTypeDataOnline: [],
-    salesTypeDataOffline: [],
-    postweeklyGrowth: [],
-    categoryData: [],
-  };
+export function loadDashboardStats(): Promise<DashboardStats> {
+  return javaRequest<DashboardStats>('/admin/stats');
 }

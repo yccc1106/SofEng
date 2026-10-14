@@ -1,56 +1,51 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Tabs, List, Avatar, Button, App, Spin, Badge } from 'antd';
-import { UserAddOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { useAuth } from '@/lib/auth-context';
+import { javaAction, javaRequest } from '@/lib/java-client';
+
+type Friend = { id: string; name: string; image: string | null; school: string | null };
+type FriendRequest = { id: string; message: string | null; sender: Friend };
 
 const FriendsPage = () => {
     const { message } = App.useApp();
-    const { data: session } = useSession();
-    const [friends, setFriends] = useState<any[]>([]);
-    const [requests, setRequests] = useState<any[]>([]);
+    const { data: session } = useAuth();
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [friendsRes, requestsRes] = await Promise.all([
-                fetch('/api/friends'),
-                fetch('/api/friends/requests?type=received')
+            const [friendsData, requestsData] = await Promise.all([
+                javaRequest<Friend[]>('/friends'),
+                javaRequest<FriendRequest[]>('/friends/requests?type=received')
             ]);
+            setFriends(friendsData);
+            setRequests(requestsData);
 
-            const friendsData = await friendsRes.json();
-            const requestsData = await requestsRes.json();
-
-            if (friendsData.success) setFriends(friendsData.data);
-            if (requestsData.success) setRequests(requestsData.data);
-
-        } catch (error) {
+        } catch {
             message.error('Failed to load data');
         } finally {
             setLoading(false);
         }
-    };
+    }, [message]);
 
     useEffect(() => {
-        if (session) fetchData();
-    }, [session]);
+        if (session) void fetchData();
+    }, [session, fetchData]);
 
     const handleRequestAction = async (id: string, action: 'ACCEPT' | 'REJECT') => {
         try {
-            const res = await fetch(`/api/friends/requests/${id}`, {
+            await javaAction(`/friends/requests/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action }),
             });
-            const data = await res.json();
-            if (data.success) {
-                message.success(`Request ${action.toLowerCase()}ed`);
-                fetchData();
-            } else {
-                message.error('Operation failed');
-            }
-        } catch (error) {
+            message.success(action === 'ACCEPT' ? 'Request accepted' : 'Request rejected');
+            void fetchData();
+        } catch {
             message.error('Error');
         }
     };
@@ -67,7 +62,7 @@ const FriendsPage = () => {
                         children: (
                             <List
                                 dataSource={friends}
-                                renderItem={(item: any) => (
+                                renderItem={(item: Friend) => (
                                     <List.Item className="bg-white p-4 mb-2 rounded-lg shadow-sm">
                                         <List.Item.Meta
                                             avatar={<Avatar src={item.image} />}
@@ -86,7 +81,7 @@ const FriendsPage = () => {
                         children: (
                             <List
                                 dataSource={requests}
-                                renderItem={(item: any) => (
+                                renderItem={(item: FriendRequest) => (
                                     <List.Item className="bg-white p-4 mb-2 rounded-lg shadow-sm"
                                         actions={[
                                             <Button key="accept" type="primary" shape="circle" icon={<CheckOutlined />} onClick={() => handleRequestAction(item.id, 'ACCEPT')} />,

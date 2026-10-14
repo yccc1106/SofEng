@@ -3,6 +3,7 @@ import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro
 import { Button, message, Image, Space, Modal, Input, Tag } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import React, { useRef, useState } from 'react';
+import { shanghaiDateTime } from '@/lib/shanghai-time';
 
 type VerificationRequest = {
     id: string;
@@ -31,7 +32,7 @@ const VerificationPage: React.FC = () => {
 
     const handleAudit = async (action: 'approve' | 'reject', request: VerificationRequest, reason?: string) => {
         try {
-            const res = await fetch('/api/admin/verification', {
+            const res = await fetch('/java/admin/verification', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -119,7 +120,7 @@ const VerificationPage: React.FC = () => {
         {
             title: '申请时间',
             dataIndex: 'createdAt',
-            valueType: 'dateTime',
+            render: (_, record) => shanghaiDateTime(record.createdAt),
         },
         {
             title: '操作',
@@ -169,7 +170,8 @@ const VerificationPage: React.FC = () => {
                     searchParams.append('pageSize', params.pageSize?.toString() || '10');
                     if (params.status) searchParams.append('status', params.status);
 
-                    return await fetch(`/api/admin/verification?${searchParams.toString()}`).then(res => res.json());
+                    const result = await fetch(`/java/admin/verification?${searchParams.toString()}`).then(res => res.json());
+                    return { ...result, total: result.pagination?.total };
                 }}
                 columns={columns}
             />

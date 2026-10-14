@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Card, Avatar, Typography, Space, Button, Tag, Flex, theme, List, Input, message, Form } from 'antd';
 import { LikeOutlined, LikeFilled, StarOutlined, StarFilled, MessageOutlined, SendOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { javaAction, javaRequest } from '@/lib/java-client';
+import type { PostResponse, PostCommentResponse } from '@/types/api';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
@@ -10,7 +12,7 @@ dayjs.extend(relativeTime);
 const { Title, Paragraph, Text } = Typography;
 
 interface PostProps {
-    post: any;
+    post: PostResponse;
     showActions?: boolean;
 }
 
@@ -20,9 +22,11 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
     const [likeCount, setLikeCount] = useState(post._count?.likes || 0);
     const [collected, setCollected] = useState(post.isCollected || false);
     const [collectionCount, setCollectionCount] = useState(post._count?.collections || 0);
+    const [actionPending, setActionPending] = useState(false);
 
     const [showComments, setShowComments] = useState(false);
-    const [comments, setComments] = useState<any[]>([]);
+    const [comments, setComments] = useState<PostCommentResponse[]>([]);
+    const [commentCount, setCommentCount] = useState<number>(post._count?.comments || 0);
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
 
@@ -30,6 +34,8 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
     const [commentsFetched, setCommentsFetched] = useState(false);
 
     const handleLike = async () => {
+        if (actionPending) return;
+        setActionPending(true);
         const prevLiked = liked;
         const prevCount = likeCount;
 
@@ -37,16 +43,19 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
         setLikeCount(prevLiked ? prevCount - 1 : prevCount + 1);
 
         try {
-            const res = await fetch(`/api/posts/${post.id}/like`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to like');
-        } catch (error) {
+            await javaAction(`/posts/${post.id}/like`, { method: 'POST' });
+        } catch {
             setLiked(prevLiked);
             setLikeCount(prevCount);
             message.error('Failed to update like status');
+        } finally {
+            setActionPending(false);
         }
     };
 
     const handleCollect = async () => {
+        if (actionPending) return;
+        setActionPending(true);
         const prevCollected = collected;
         const prevCount = collectionCount;
 
@@ -54,12 +63,13 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
         setCollectionCount(prevCollected ? prevCount - 1 : prevCount + 1);
 
         try {
-            const res = await fetch(`/api/posts/${post.id}/collect`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to collect');
-        } catch (error) {
+            await javaAction(`/posts/${post.id}/collect`, { method: 'POST' });
+        } catch {
             setCollected(prevCollected);
             setCollectionCount(prevCount);
             message.error('Failed to update collection status');
+        } finally {
+            setActionPending(false);
         }
     };
 
@@ -67,13 +77,9 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
         if (commentsFetched) return;
         setCommentsLoading(true);
         try {
-            const res = await fetch(`/api/posts/${post.id}/comments`);
-            const data = await res.json();
-            if (data.success) {
-                setComments(data.data);
-                setCommentsFetched(true);
-            }
-        } catch (error) {
+            setComments(await javaRequest<PostCommentResponse[]>(`/posts/${post.id}/comments`));
+            setCommentsFetched(true);
+        } catch {
             message.error('Failed to load comments');
         } finally {
             setCommentsLoading(false);
@@ -91,23 +97,17 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
     const handleSubmitComment = async (values: { content: string }) => {
         setSubmittingComment(true);
         try {
-            const res = await fetch(`/api/posts/${post.id}/comments`, {
+            const comment = await javaRequest<PostCommentResponse>(`/posts/${post.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: values.content })
             });
-            const data = await res.json();
-            if (data.success) {
-                setComments([...comments, data.data]);
-                message.success('Comment added');
-                // You might want to reset the form here, but Antd Form useForm hook is needed for that outside render.
-                // Or we can just rely on the input being cleared if we controlled it, but List/Form interaction is tricky without ref.
-                // Simple workaround: reload or just append. 
-            } else {
-                message.error(data.message || 'Failed to add comment');
-            }
+            setComments(current => [...current, comment]);
+            setCommentCount(current => current + 1);
+            form.resetFields();
+            message.success('Comment added');
         } catch (error) {
-            message.error('Error sending comment');
+            message.error(error instanceof Error ? error.message : 'Error sending comment');
         } finally {
             setSubmittingComment(false);
         }
@@ -116,7 +116,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
     // Form instance to reset
     const [form] = Form.useForm();
 
-    const actions = showActions ? [
+    const actions = showActions && post.status === 'PUBLISHED' ? [
         <Button
             key="like"
             type="text"
@@ -124,6 +124,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             size="small"
             style={{ fontSize: 12, color: liked ? token.colorPrimary : token.colorTextSecondary }}
             onClick={handleLike}
+            disabled={actionPending}
         >
             {likeCount > 0 ? likeCount : 'Like'}
         </Button>,
@@ -135,7 +136,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             style={{ fontSize: 12, color: showComments ? token.colorPrimary : token.colorTextSecondary }}
             onClick={toggleComments}
         >
-            {post._count?.comments || 'Comment'}
+            {commentCount || 'Comment'}
         </Button>,
         <Button
             key="collect"
@@ -144,6 +145,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             size="small"
             style={{ fontSize: 12, color: collected ? '#faad14' : token.colorTextSecondary }}
             onClick={handleCollect}
+            disabled={actionPending}
         >
             {collectionCount > 0 ? collectionCount : 'Collect'}
         </Button>
@@ -173,6 +175,8 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                 </div>
             </Flex>
 
+            {post.status === 'AUDITING' && <Tag color="orange">Pending review</Tag>}
+            {post.status === 'REJECTED' && <Tag color="red">Rejected</Tag>}
             <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>{post.title}</Title>
 
             <Paragraph
@@ -221,7 +225,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                         loading={commentsLoading}
                         itemLayout="horizontal"
                         dataSource={comments}
-                        renderItem={(item: any) => (
+                        renderItem={(item: PostCommentResponse) => (
                             <List.Item>
                                 <List.Item.Meta
                                     avatar={<Avatar src={item.user?.image} size="small" />}
@@ -244,8 +248,7 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                             form={form}
                             style={{ width: '100%', display: 'flex', gap: 8 }}
                             onFinish={(values) => {
-                                handleSubmitComment(values);
-                                form.resetFields();
+                                void handleSubmitComment(values);
                             }}
                         >
                             <Form.Item name="content" style={{ flex: 1, marginBottom: 0 }} rules={[{ required: true, message: 'Please enter a comment' }]}>

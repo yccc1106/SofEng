@@ -1,29 +1,30 @@
 'use client';
 import React from 'react';
-import { Layout, Menu, Button, Dropdown, Avatar, App, Input, Flex, Typography, theme, Grid } from 'antd';
+import { Layout, Menu, Button, Dropdown, Avatar, Input, Flex, Typography, theme, Grid } from 'antd';
 import { UserOutlined, LogoutOutlined, BellOutlined, CompassOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
+import type { MenuProps } from 'antd';
 
 const { Header } = Layout;
 
 const NavBar = () => {
     const router = useRouter();
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const { data: session, logout } = useAuth();
     const { token } = theme.useToken();
     const screens = Grid.useBreakpoint();
 
     const menuItems = [
         { key: '/user/posts', label: 'Community' },
         { key: '/user/teams', label: 'Teams' },
-        { key: '/user/radar', label: 'AI Radar' },
+        { key: '/user/radar', label: '匹配雷达' },
         { key: '/user/chat', label: 'Chat' },
         ...(session?.user?.role === 'ADMIN' ? [{ key: '/dashboard', label: 'Admin Panel' }] : []),
     ];
 
-    const userMenu = {
+    const userMenu: MenuProps = {
         items: [
             {
                 key: 'profile',
@@ -34,17 +35,17 @@ const NavBar = () => {
                 key: 'dashboard',
                 icon: <CompassOutlined />,
                 label: <Link href="/dashboard">Admin Dashboard</Link>,
-            }, { type: 'divider' }] : []),
+            }, { type: 'divider' as const }] : []),
             {
-                type: 'divider',
+                type: 'divider' as const,
             },
             {
                 key: 'logout',
                 icon: <LogoutOutlined />,
                 label: 'Logout',
-                onClick: () => signOut({ callbackUrl: '/user/login' }),
+                onClick: async () => { await logout(); router.replace('/user/login'); },
             },
-        ] as any,
+        ],
     };
 
     return (

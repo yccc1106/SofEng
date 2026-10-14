@@ -1,39 +1,41 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Button, FloatButton, Spin, Modal, App } from 'antd';
+import { Button, Spin, Modal, App, Pagination } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import PostCard from '@/components/User/PostCard';
 import PostForm, { PostFormProps } from '@/components/Post/PostForm';
 import type { PostResponse } from '@/types/api';
+import { javaPage } from '@/lib/java-client';
 
 const PostsPage = () => {
     const { message } = App.useApp();
     const [posts, setPosts] = useState<PostResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
 
-    const fetchPosts = async () => {
+    const fetchPosts = React.useCallback(async (requestedPage: number) => {
         setLoading(true);
         try {
-            const res = await fetch('/api/posts');
-            const data = await res.json();
-            if (data.success) {
-                setPosts(data.data);
-            }
+            const result = await javaPage<PostResponse>(`/posts?page=${requestedPage}`);
+            setPosts(result.data);
+            setTotal(result.total);
         } catch (error) {
-            message.error('Failed to load posts');
+            message.error(error instanceof Error ? error.message : 'Failed to load posts');
         } finally {
             setLoading(false);
         }
-    };
+    }, [message]);
 
     useEffect(() => {
-        fetchPosts();
-    }, []);
+        void fetchPosts(page);
+    }, [fetchPosts, page]);
 
     const handleSuccess: PostFormProps['onSuccess'] = () => {
         setIsModalOpen(false);
-        fetchPosts();
+        if (page === 1) void fetchPosts(1);
+        else setPage(1);
     };
 
     return (
@@ -53,6 +55,7 @@ const PostsPage = () => {
                         <PostCard key={post.id} post={post} />
                     ))}
                     {posts.length === 0 && <div className="text-center text-gray-400 py-10">No posts yet. Be the first!</div>}
+                    {total > 10 && <Pagination current={page} pageSize={10} total={total} onChange={setPage} />}
                 </div>
             )}
 

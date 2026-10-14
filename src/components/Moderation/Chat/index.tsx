@@ -2,6 +2,7 @@
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, App, Tag } from 'antd';
 import React, { useRef } from 'react';
+import { shanghaiDateTime } from '@/lib/shanghai-time';
 
 type ChatItem = {
     id: string;
@@ -9,6 +10,7 @@ type ChatItem = {
     receiver: string;
     content: string;
     riskLevel: string;
+    moderationStatus: string;
     timestamp: string;
 };
 
@@ -16,19 +18,14 @@ const ChatModeration: React.FC = () => {
     const { message } = App.useApp();
     const actionRef = useRef<ActionType | null>(null);
 
-    const handleAction = async (id: string, action: 'pass' | 'block') => {
-        if (action === 'pass') {
-            message.success('已通过 (Passed)');
-            return;
-        }
-        if (action === 'block') {
+    const handleAction = async (id: string) => {
             try {
-                const res = await fetch(`/api/admin/moderation/chats?id=${id}`, {
+                const res = await fetch(`/java/admin/moderation/chats?id=${id}`, {
                     method: 'DELETE',
                 });
                 const data = await res.json();
                 if (data.success) {
-                    message.success('已屏蔽并删除 (Blocked & Deleted)');
+                    message.success('消息已屏蔽');
                     actionRef.current?.reload();
                 } else {
                     message.error('操作失败');
@@ -36,7 +33,6 @@ const ChatModeration: React.FC = () => {
             } catch (error) {
                 message.error('请求错误');
             }
-        }
     };
 
     const columns: ProColumns<ChatItem>[] = [
@@ -76,7 +72,7 @@ const ChatModeration: React.FC = () => {
         {
             title: '时间',
             dataIndex: 'timestamp',
-            valueType: 'dateTime',
+            render: (_, record) => shanghaiDateTime(record.timestamp),
             width: 160,
         },
         {
@@ -84,10 +80,7 @@ const ChatModeration: React.FC = () => {
             valueType: 'option',
             width: 120,
             render: (_, record) => [
-                <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
-                    通过
-                </a>,
-                <a key="block" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'block')}>
+                record.moderationStatus === 'VISIBLE' && <a key="block" style={{ color: 'red' }} onClick={() => handleAction(record.id)}>
                     屏蔽
                 </a>,
             ],
@@ -121,7 +114,7 @@ const ChatModeration: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 request={async () => {
-                    const res = await fetch('/api/admin/moderation/chats');
+                    const res = await fetch('/java/admin/moderation/chats');
                     return await res.json();
                 }}
                 columns={columns}

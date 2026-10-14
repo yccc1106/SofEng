@@ -3,6 +3,7 @@ import { ActionType, PageContainer, ProColumns, ProDescriptions, ProTable } from
 import { Button, Drawer, Tag, message, Popconfirm, Avatar, Space, Modal } from 'antd';
 import { UserOutlined, StopOutlined, SafetyCertificateOutlined, DeleteOutlined } from '@ant-design/icons';
 import React, { useRef, useState } from 'react';
+import { shanghaiDateTime } from '@/lib/shanghai-time';
 
 type UserItem = {
     id: string;
@@ -35,8 +36,8 @@ const UserList: React.FC = () => {
         try {
             const method = action === 'delete' ? 'DELETE' : 'PUT';
             const url = action === 'delete'
-                ? `/api/admin/users?id=${id}`
-                : `/api/admin/users`;
+                ? `/java/admin/users?id=${id}`
+                : `/java/admin/users`;
 
             const body = action === 'delete' ? undefined : JSON.stringify({ id, action });
 
@@ -112,7 +113,7 @@ const UserList: React.FC = () => {
         {
             title: '注册时间',
             dataIndex: 'createdAt',
-            valueType: 'dateTime',
+            render: (_, record) => shanghaiDateTime(record.createdAt),
             hideInSearch: true,
             sorter: true,
         },
@@ -127,7 +128,7 @@ const UserList: React.FC = () => {
                 }}>
                     详情
                 </a>,
-                record.status === 'ACTIVE' ? (
+                record.role !== 'ADMIN' && (record.status === 'ACTIVE' ? (
                     <Popconfirm
                         key="freeze"
                         title="确定要冻结该用户吗？"
@@ -145,8 +146,8 @@ const UserList: React.FC = () => {
                             <a className="text-green-500">恢复</a>
                         </Popconfirm>
                     )
-                ),
-                record.status !== 'DELETED' && (
+                )),
+                record.role !== 'ADMIN' && record.status !== 'DELETED' && (
                     <Popconfirm
                         key="delete"
                         title="确定要删除该用户吗？"
@@ -176,6 +177,7 @@ const UserList: React.FC = () => {
                     searchParams.append('pageSize', params.pageSize?.toString() || '10');
                     if (params.status) searchParams.append('status', params.status);
                     if (params.verificationStatus) searchParams.append('verificationStatus', params.verificationStatus);
+                    if (params.keyword) searchParams.append('keyword', params.keyword);
                     // ProTable 的 keyword 搜索通常是自定义的，这里假设搜索框把值传给了 name 或 email 等
                     // 我们简化处理，如果 params 中有除了分页和状态以外的字段，也可以传给 API
                     // 但标准的 ProTable 搜索栏会把每个字段传进来
@@ -185,7 +187,8 @@ const UserList: React.FC = () => {
 
                     // 如果需要在搜索栏增加一个通用的关键词搜索：
                     // 我们可以在 columns 里加一个不显示在 table 但显示在 search 的字段
-                    return await fetch(`/api/admin/users?${searchParams.toString()}`).then(res => res.json());
+                    const result = await fetch(`/java/admin/users?${searchParams.toString()}`).then(res => res.json());
+                    return { ...result, total: result.pagination?.total };
                 }}
                 columns={[
                     ...columns,
@@ -213,7 +216,7 @@ const UserList: React.FC = () => {
                         column={2}
                         title="用户详细资料"
                         request={async () => {
-                            const res = await fetch(`/api/admin/users/${currentRow.id}`);
+                            const res = await fetch(`/java/admin/users/${currentRow.id}`);
                             return await res.json();
                         }}
                         params={{
@@ -287,7 +290,7 @@ const UserList: React.FC = () => {
                             {
                                 title: '注册时间',
                                 dataIndex: 'createdAt',
-                                valueType: 'dateTime',
+                                render: (_, record) => shanghaiDateTime(record.createdAt),
                             },
                         ]}
                     />

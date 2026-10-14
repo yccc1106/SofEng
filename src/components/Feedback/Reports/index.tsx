@@ -20,7 +20,7 @@ const Reports: React.FC = () => {
 
     const handleAction = async (id: string, status: string, action?: string, note?: string) => {
         try {
-            const res = await fetch('/api/admin/feedback', {
+            const res = await fetch('/java/admin/feedback', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, status, action, note }),
@@ -45,7 +45,7 @@ const Reports: React.FC = () => {
             case 'USER':
                 return [
                     { label: '封禁用户 (Ban User)', value: 'BAN_USER' },
-                    { label: '警告用户 (Warn User)', value: 'WARN_USER' },
+                    { label: '记录警告（不会通知用户）', value: 'WARN_USER' },
                     { label: '解决 (已处理)', value: 'RESOLVE' },
                     { label: '忽略 (Ignore)', value: 'IGNORE' },
                 ];
@@ -57,7 +57,7 @@ const Reports: React.FC = () => {
                 ];
             case 'MESSAGE':
                 return [
-                    { label: '删除消息 (Delete Message)', value: 'DELETE_MESSAGE' },
+                    { label: '屏蔽消息', value: 'DELETE_MESSAGE' },
                     { label: '忽略 (Ignore)', value: 'IGNORE' },
                 ];
             default:
@@ -168,7 +168,7 @@ const Reports: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 request={async (params) => {
-                    const res = await fetch('/api/admin/feedback?type=REPORT');
+                    const res = await fetch('/java/admin/feedback?type=REPORT');
                     return await res.json();
                 }}
                 columns={columns}

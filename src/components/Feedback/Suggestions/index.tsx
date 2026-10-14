@@ -20,7 +20,7 @@ const Suggestions: React.FC = () => {
 
     const handleAction = async (id: string, status: string, note?: string) => {
         try {
-            const res = await fetch('/api/admin/feedback', {
+            const res = await fetch('/java/admin/feedback', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, status, note }),
@@ -119,7 +119,7 @@ const Suggestions: React.FC = () => {
                     showSizeChanger: true,
                 }}
                 request={async (params) => {
-                    const res = await fetch('/api/admin/feedback?type=SUGGESTION');
+                    const res = await fetch('/java/admin/feedback?type=SUGGESTION');
                     return await res.json();
                 }}
                 columns={columns}

@@ -2,40 +2,45 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Tabs, App } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
-import { signIn } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
     const { message } = App.useApp();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { refresh } = useAuth();
 
-    const onFinishLogin = async (values: any) => {
+    const onFinishLogin = async (values: { email: string; password: string }) => {
         setLoading(true);
         try {
-            const result = await signIn('credentials', {
-                email: values.email,
-                password: values.password,
-                redirect: false,
+            const javaResponse = await fetch('/java/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(values),
             });
-
-            if (result?.error) {
-                message.error('Login failed: ' + result.error);
-            } else {
-                message.success('Login successful');
-                router.push('/');
+            const javaResult = await javaResponse.json();
+            if (!javaResponse.ok) {
+                message.error(javaResult.message || 'Login failed');
+                return;
             }
-        } catch (error) {
+            if (!await refresh()) {
+                await fetch('/java/auth/logout', { method: 'POST' }).catch(() => {});
+                throw new Error('Profile unavailable after login');
+            }
+            message.success('Login successful');
+            router.push('/');
+        } catch {
             message.error('Login error');
         } finally {
             setLoading(false);
         }
     };
 
-    const onFinishRegister = async (values: any) => {
+    const onFinishRegister = async (values: { name: string; email: string; password: string; studentId?: string; school?: string }) => {
         setLoading(true);
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/java/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
@@ -47,7 +52,7 @@ const LoginPage = () => {
             } else {
                 message.error(data.message || 'Registration failed');
             }
-        } catch (error) {
+        } catch {
             message.error('Registration error');
         } finally {
             setLoading(false);

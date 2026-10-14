@@ -1,10 +1,8 @@
 import React from 'react';
-import { PrismaClient } from '@prisma/client';
+import { getCategory } from '@/lib/java-category';
 import { redirect } from 'next/navigation';
 import NavBar from '@/components/User/NavBar';
 import InterestSidebar from '@/components/Interest/InterestSidebar';
-
-const prisma = new PrismaClient();
 
 export default async function InterestLayout({
     children,
@@ -15,9 +13,7 @@ export default async function InterestLayout({
 }) {
     const { interestId } = await params;
 
-    const interest = await prisma.category.findUnique({
-        where: { id: interestId }
-    });
+    const interest = await getCategory(interestId);
 
     if (!interest) {
         redirect('/');
