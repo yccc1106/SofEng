@@ -31,9 +31,11 @@ class PostAccessTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pagination.page").value(2))
                 .andExpect(jsonPath("$.pagination.totalPages").value(3));
-        mvc.perform(post("/api/posts").contentType("application/json").content("{\"content\":\"test\"}"))
+        mvc.perform(post("/api/posts").header("Origin", "http://localhost:3000")
+                        .contentType("application/json").content("{\"content\":\"test\"}"))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/posts/example/like")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/posts/example/like").header("Origin", "http://localhost:3000"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

@@ -55,7 +55,9 @@ public class SecurityConfig {
                         if (!method.equals("GET") && !method.equals("HEAD") && !method.equals("OPTIONS")) {
                             String origin = request.getHeader("Origin");
                             String fetchSite = request.getHeader("Sec-Fetch-Site");
-                            if ((origin != null && !origin.equals(frontendOrigin)) || "cross-site".equals(fetchSite)) {
+                            if ((origin == null && !"same-origin".equals(fetchSite)) ||
+                                    (origin != null && !origin.equals(frontendOrigin)) ||
+                                    "cross-site".equals(fetchSite)) {
                                 writeError(response, mapper, 403, "Forbidden origin");
                                 return;
                             }

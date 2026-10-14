@@ -34,7 +34,8 @@ class ManagementAccessTests {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());
             mvc.perform(get(path).with(user("ordinary"))).andExpect(status().isForbidden());
         }
-        mvc.perform(post("/api/feedback").contentType("application/json").content("{}"))
+        mvc.perform(post("/api/feedback").header("Origin", "http://localhost:3000")
+                        .contentType("application/json").content("{}"))
                 .andExpect(status().isUnauthorized());
     }
 }

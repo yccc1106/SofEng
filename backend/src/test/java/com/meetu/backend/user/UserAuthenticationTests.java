@@ -32,17 +32,21 @@ class UserAuthenticationTests {
     void guestCannotReadProfileAndCrossSiteWriteIsRejected() throws Exception {
         mvc.perform(get("/api/users/profile")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/radar")).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/personality-test").contentType(MediaType.APPLICATION_JSON).content("{\"answers\":{}}"))
+        mvc.perform(post("/api/personality-test").header("Origin", "http://localhost:3000")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"answers\":{}}"))
                 .andExpect(status().isUnauthorized());
         mvc.perform(post("/api/users").header("Origin", "https://evil.example")
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void loginRejectsRestrictedAccounts() throws Exception {
         when(users.login(any(Login.class))).thenThrow(new RestrictedAccountException());
-        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/auth/login").header("Origin", "http://localhost:3000")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"test@example.com\",\"password\":\"Password123\"}"))
                 .andExpect(status().isForbidden());
     }
@@ -53,7 +57,8 @@ class UserAuthenticationTests {
         when(users.login(any(Login.class))).thenReturn(active);
         when(users.findActiveSessionUser("user-id")).thenReturn(Optional.of(active));
         when(users.profile("user-id")).thenReturn(active);
-        var login = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        var login = mvc.perform(post("/api/auth/login").header("Origin", "http://localhost:3000")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"test@example.com\",\"password\":\"Password123\"}"))
                 .andExpect(status().isOk()).andReturn();
         var session = (MockHttpSession) login.getRequest().getSession(false);

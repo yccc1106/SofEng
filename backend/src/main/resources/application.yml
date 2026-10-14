@@ -29,6 +29,7 @@ mybatis:
 
 meetu:
   frontend-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
+  trusted-proxy-address: ${TRUSTED_PROXY_ADDRESS:}
 
 server:
   port: ${SERVER_PORT:8080}
