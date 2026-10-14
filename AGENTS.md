@@ -30,6 +30,10 @@
 - 优先按业务模块组织代码，在模块内划分 controller、service、service/impl、mapper、dto、entity 等职责；保持单体部署。
 - 已有 Controller 直连 Repository / JdbcTemplate 的实现，在后续重构中逐模块迁移到上述分层，迁移时保持接口契约并完成回归验证。
 
+## 时间规范
+
+- 数据库时间字段继续以 UTC 值存储；Java 接口和 React 页面统一按 `Asia/Shanghai` 输出、解析和展示时间，并在接口时间字符串中保留 `+08:00` 偏移。不得把上海本地时间当作 UTC 再转换。
+
 ## 重构工作约定
 
 - 在 `Java-refactor` 分支开展本次重构。

@@ -20,7 +20,8 @@ spring:
         secure: ${SESSION_COOKIE_SECURE:false}
       timeout: 12h
   jackson:
-    time-zone: UTC
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
 
 mybatis:
   configuration:

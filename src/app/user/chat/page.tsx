@@ -4,7 +4,7 @@ import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typograph
 import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import dayjs from 'dayjs';
+import { shanghaiDateTime } from '@/lib/shanghai-time';
 import { useChatRoom } from '@/hooks/useChatRoom';
 
 const { Content, Sider } = Layout;
@@ -249,7 +249,7 @@ const ChatContent = () => {
                                                     {msg.content}
                                                 </div>
                                                 <span className={`text-[10px] text-gray-400 mt-1 transition-opacity mx-1 ${isMe && targetUserId && msg.isRead ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                                    {dayjs(msg.createdAt).format('h:mm A')}
+                                                    {shanghaiDateTime(msg.createdAt).slice(11, 16)}
                                                     {isMe && targetUserId && msg.isRead ? ' · Read' : ''}
                                                 </span>
                                             </div>

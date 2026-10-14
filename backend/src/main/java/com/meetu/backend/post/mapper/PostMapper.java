@@ -18,7 +18,9 @@ import java.util.Optional;
 
 @Mapper
 public interface PostMapper {
-    String POST_SELECT = "SELECT p.*, u.name AS author_name, u.image AS author_image, " +
+    String POST_SELECT = "SELECT p.id,p.title,p.content,p.images,p.tags,p.\"authorId\",p.\"viewCount\",p.status,p.\"categoryId\", " +
+            "p.\"createdAt\" AT TIME ZONE 'UTC' AS \"createdAt\",p.\"updatedAt\" AT TIME ZONE 'UTC' AS \"updatedAt\", " +
+            "u.name AS author_name, u.image AS author_image, " +
             "u.school AS author_school, CAST(u.role AS VARCHAR) AS author_role, " +
             "(SELECT COUNT(*) FROM \"PostLike\" l WHERE l.\"postId\"=p.id) AS likes_count, " +
             "(SELECT COUNT(*) FROM \"PostCollection\" c WHERE c.\"postId\"=p.id) AS collections_count, " +
@@ -26,7 +28,8 @@ public interface PostMapper {
             "EXISTS(SELECT 1 FROM \"PostLike\" l WHERE l.\"postId\"=p.id AND l.\"userId\"=#{viewerId}) AS is_liked, " +
             "EXISTS(SELECT 1 FROM \"PostCollection\" c WHERE c.\"postId\"=p.id AND c.\"userId\"=#{viewerId}) AS is_collected " +
             "FROM \"Post\" p JOIN \"User\" u ON u.id=p.\"authorId\" ";
-    String COMMENT_SELECT = "SELECT c.*, u.name AS user_name, u.image AS user_image, u.school AS user_school, " +
+    String COMMENT_SELECT = "SELECT c.id,c.content,c.\"userId\",c.\"postId\",c.\"createdAt\" AT TIME ZONE 'UTC' AS \"createdAt\", " +
+            "c.\"updatedAt\" AT TIME ZONE 'UTC' AS \"updatedAt\",u.name AS user_name, u.image AS user_image, u.school AS user_school, " +
             "CAST(u.role AS VARCHAR) AS user_role FROM \"PostComment\" c " +
             "JOIN \"User\" u ON u.id=c.\"userId\" ";
 
@@ -55,7 +58,7 @@ public interface PostMapper {
     @Insert("INSERT INTO \"Post\" (id,title,content,images,tags,\"authorId\",\"categoryId\",status,\"createdAt\",\"updatedAt\") " +
             "VALUES (#{id},#{title},#{content},#{images,typeHandler=com.meetu.backend.post.mapper.StringArrayTypeHandler}," +
             "#{tags,typeHandler=com.meetu.backend.post.mapper.StringArrayTypeHandler},#{authorId},#{categoryId}," +
-            "'AUDITING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
+            "'AUDITING',CURRENT_TIMESTAMP AT TIME ZONE 'UTC',CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
     int insertPost(@Param("id") String id, @Param("title") String title, @Param("content") String content,
                    @Param("images") String[] images, @Param("tags") String[] tags,
                    @Param("authorId") String authorId, @Param("categoryId") String categoryId);
@@ -68,11 +71,11 @@ public interface PostMapper {
 
     @Delete("DELETE FROM \"PostLike\" WHERE \"userId\"=#{userId} AND \"postId\"=#{postId}")
     int deleteLike(@Param("userId") String userId, @Param("postId") String postId);
-    @Insert("INSERT INTO \"PostLike\" (id,\"userId\",\"postId\",\"createdAt\") VALUES (#{id},#{userId},#{postId},CURRENT_TIMESTAMP)")
+    @Insert("INSERT INTO \"PostLike\" (id,\"userId\",\"postId\",\"createdAt\") VALUES (#{id},#{userId},#{postId},CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
     int insertLike(@Param("id") String id, @Param("userId") String userId, @Param("postId") String postId);
     @Delete("DELETE FROM \"PostCollection\" WHERE \"userId\"=#{userId} AND \"postId\"=#{postId}")
     int deleteCollection(@Param("userId") String userId, @Param("postId") String postId);
-    @Insert("INSERT INTO \"PostCollection\" (id,\"userId\",\"postId\",\"createdAt\") VALUES (#{id},#{userId},#{postId},CURRENT_TIMESTAMP)")
+    @Insert("INSERT INTO \"PostCollection\" (id,\"userId\",\"postId\",\"createdAt\") VALUES (#{id},#{userId},#{postId},CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
     int insertCollection(@Param("id") String id, @Param("userId") String userId, @Param("postId") String postId);
 
     @Select(COMMENT_SELECT + "WHERE c.\"postId\"=#{postId} ORDER BY c.\"createdAt\" ASC,c.id ASC")
@@ -80,7 +83,7 @@ public interface PostMapper {
     @Select(COMMENT_SELECT + "WHERE c.id=#{id}")
     Map<String, Object> selectComment(String id);
     @Insert("INSERT INTO \"PostComment\" (id,content,\"userId\",\"postId\",\"createdAt\",\"updatedAt\") " +
-            "VALUES (#{id},#{content},#{userId},#{postId},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
+            "VALUES (#{id},#{content},#{userId},#{postId},CURRENT_TIMESTAMP AT TIME ZONE 'UTC',CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
     int insertComment(@Param("id") String id, @Param("content") String content,
                       @Param("userId") String userId, @Param("postId") String postId);
 

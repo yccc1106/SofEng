@@ -33,13 +33,13 @@ public interface UserMapper {
                                     @org.apache.ibatis.annotations.Param("q") String q);
 
     @Insert("INSERT INTO \"User\" (id,name,email,password,\"studentId\",school,\"createdAt\",\"updatedAt\",\"personalityTags\") " +
-            "VALUES (#{id},#{name},#{email},#{password},#{studentId},#{school},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,ARRAY[]::text[])")
+            "VALUES (#{id},#{name},#{email},#{password},#{studentId},#{school},CURRENT_TIMESTAMP AT TIME ZONE 'UTC',CURRENT_TIMESTAMP AT TIME ZONE 'UTC',ARRAY[]::text[])")
     int insert(@Param("id") String id, @Param("name") String name, @Param("email") String email,
                @Param("password") String password, @Param("studentId") String studentId,
                @Param("school") String school);
 
     @Update("UPDATE \"User\" SET name=#{name},school=#{school},major=#{major},grade=#{grade},bio=#{bio}," +
-            "\"updatedAt\"=CURRENT_TIMESTAMP WHERE id=#{id}")
+            "\"updatedAt\"=CURRENT_TIMESTAMP AT TIME ZONE 'UTC' WHERE id=#{id}")
     int updateProfile(@Param("id") String id, @Param("name") String name, @Param("school") String school,
                       @Param("major") String major, @Param("grade") String grade, @Param("bio") String bio);
 
