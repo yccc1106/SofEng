@@ -7,6 +7,7 @@ import com.meetu.backend.moderation.service.ModerationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
+/** 处理帖子、消息和队伍的人工审核，并留下操作记录。 */
 @Service
 public class ModerationServiceImpl implements ModerationService {
     private final ModerationMapper mapper;
@@ -16,6 +17,7 @@ public class ModerationServiceImpl implements ModerationService {
         if (status!=null && !Set.of("pending","approved","rejected").contains(status)) throw ManagementException.invalid("Invalid post status");
         return mapper.posts(status).stream().map(row -> { Map<String,Object> result=new LinkedHashMap<>(row); String s=(String)row.get("status"); result.put("status","AUDITING".equals(s)?"pending":"PUBLISHED".equals(s)?"approved":"rejected"); return result; }).toList();
     }
+    /** 帖子仅可从待审核状态转移，避免重复审批覆盖已有决定。 */
     @Override @Transactional public void decidePost(String admin,Decision decision) {
         if (!Set.of("pass","reject").contains(decision.action())) throw ManagementException.invalid("Invalid post action");
         String status=mapper.lockPost(decision.id());

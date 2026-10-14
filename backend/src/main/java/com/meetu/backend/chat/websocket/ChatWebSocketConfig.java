@@ -16,6 +16,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.util.Map;
 
+/** WebSocket 握手沿用 Java 登录会话，并限制允许连接的前端来源。 */
 @Configuration
 @EnableWebSocket
 public class ChatWebSocketConfig implements WebSocketConfigurer {

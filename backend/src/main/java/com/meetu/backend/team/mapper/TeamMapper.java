@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.*;
 import java.util.List;
 import java.util.Map;
 
+/** 队伍和成员的 SQL 映射；容量统计仅计算已加入成员。 */
 @Mapper
 public interface TeamMapper {
     String TEAM_SELECT = "SELECT t.id,t.name,t.description,t.type,t.\"maxMembers\",t.status,t.\"requiresApproval\",t.\"creatorId\",t.\"categoryId\", " +
@@ -20,6 +21,7 @@ public interface TeamMapper {
             "(POSITION(LOWER(#{q}) IN LOWER(t.name))>0 OR POSITION(LOWER(#{q}) IN LOWER(COALESCE(t.description,'')))>0) " +
             "ORDER BY t.\"createdAt\" DESC LIMIT 5")
     List<Map<String,Object>> search(String q);
+    // 加入和审批都锁同一队伍行，使容量检查串行执行。
     @Select("SELECT id,\"creatorId\",status,\"maxMembers\",\"requiresApproval\" FROM \"Team\" WHERE id=#{id} FOR UPDATE")
     Map<String,Object> lockTeam(String id);
     @Select("SELECT id FROM \"Category\" WHERE id=#{id}") String category(String id);

@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/** 提供队伍查询、创建和申请审批接口；业务约束由 TeamService 执行。 */
 @RestController
 @RequestMapping("/api/teams")
 public class TeamController {

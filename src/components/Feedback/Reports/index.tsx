@@ -1,6 +1,7 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { ActionType, ModalForm, PageContainer, ProColumns, ProFormRadio, ProFormTextArea, ProTable } from '@ant-design/pro-components';
-import { Button, message, Tag } from 'antd';
+import { message } from 'antd';
 import React, { useRef, useState } from 'react';
 
 type ReportItem = {
@@ -10,10 +11,12 @@ type ReportItem = {
     status: string;
     date: string;
     reportType: string;
-    target: any;
+    target: { name?: string; title?: string; content?: string } | null;
 };
 
+/** 管理员按举报对象选择处理措施并记录备注。 */
 const Reports: React.FC = () => {
+    const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [currentRow, setCurrentRow] = useState<ReportItem | null>(null);
@@ -27,15 +30,15 @@ const Reports: React.FC = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success('Processed successfully');
+                message.success(t('Processed successfully'));
                 actionRef.current?.reload();
                 return true;
             } else {
-                message.error('Failed to process');
+                message.error(t('Failed to process'));
                 return false;
             }
-        } catch (error) {
-            message.error('Error processing report');
+        } catch {
+            message.error(t('Error processing report'));
             return false;
         }
     };
@@ -44,26 +47,26 @@ const Reports: React.FC = () => {
         switch (reportType) {
             case 'USER':
                 return [
-                    { label: '封禁用户 (Ban User)', value: 'BAN_USER' },
-                    { label: '记录警告（不会通知用户）', value: 'WARN_USER' },
-                    { label: '解决 (已处理)', value: 'RESOLVE' },
-                    { label: '忽略 (Ignore)', value: 'IGNORE' },
+                    { label: t('封禁用户'), value: 'BAN_USER' },
+                    { label: t('记录警告（不会通知用户）'), value: 'WARN_USER' },
+                    { label: t('解决 (已处理)'), value: 'RESOLVE' },
+                    { label: t('忽略'), value: 'IGNORE' },
                 ];
             case 'POST':
                 return [
-                    { label: '删除帖子 (Delete Post)', value: 'DELETE_POST' },
-                    { label: '解决 (Keep Post)', value: 'RESOLVE' },
-                    { label: '忽略 (Ignore)', value: 'IGNORE' },
+                    { label: t('删除帖子'), value: 'DELETE_POST' },
+                    { label: t('保留帖子并解决'), value: 'RESOLVE' },
+                    { label: t('忽略'), value: 'IGNORE' },
                 ];
             case 'MESSAGE':
                 return [
-                    { label: '屏蔽消息', value: 'DELETE_MESSAGE' },
-                    { label: '忽略 (Ignore)', value: 'IGNORE' },
+                    { label: t('屏蔽消息'), value: 'DELETE_MESSAGE' },
+                    { label: t('忽略'), value: 'IGNORE' },
                 ];
             default:
                 return [
-                    { label: '标记为已解决', value: 'RESOLVE' },
-                    { label: '忽略', value: 'IGNORE' },
+                    { label: t('标记为已解决'), value: 'RESOLVE' },
+                    { label: t('忽略'), value: 'IGNORE' },
                 ];
         }
     };
@@ -77,23 +80,23 @@ const Reports: React.FC = () => {
             ellipsis: true,
         },
         {
-            title: '举报人',
+            title: t('举报人'),
             dataIndex: 'user',
             width: 120,
             ellipsis: true,
         },
         {
-            title: '举报对象',
+            title: t('举报对象'),
             dataIndex: 'reportType',
             valueEnum: {
-                USER: { text: '用户', status: 'Error' },
-                POST: { text: '帖子', status: 'Warning' },
-                MESSAGE: { text: '消息', status: 'Processing' },
+                USER: { text: t('用户'), status: 'Error' },
+                POST: { text: t('帖子'), status: 'Warning' },
+                MESSAGE: { text: t('消息'), status: 'Processing' },
             },
             width: 100,
         },
         {
-            title: '举报详情',
+            title: t('举报详情'),
             dataIndex: 'suggestion',
             ellipsis: true,
             render: (dom, record) => (
@@ -101,32 +104,32 @@ const Reports: React.FC = () => {
                     <div>{dom}</div>
                     {record.target && (
                         <div className="text-xs text-gray-500 mt-1">
-                            Target: {record.reportType === 'USER' ? record.target.name :
-                                record.reportType === 'POST' ? record.target.title : 'Content'}
+                            {t('目标')}: {record.reportType === 'USER' ? record.target.name :
+                                record.reportType === 'POST' ? record.target.title : t('Content')}
                         </div>
                     )}
                 </div>
             )
         },
         {
-            title: '状态',
+            title: t('状态'),
             dataIndex: 'status',
             width: 100,
             valueEnum: {
-                PENDING: { text: '待处理', status: 'Processing' },
-                PROCESSED: { text: '已处理', status: 'Success' },
-                RESOLVED: { text: '已解决', status: 'Success' },
-                IGNORED: { text: '已忽略', status: 'Default' },
+                PENDING: { text: t('待处理'), status: 'Processing' },
+                PROCESSED: { text: t('已处理'), status: 'Success' },
+                RESOLVED: { text: t('已解决'), status: 'Success' },
+                IGNORED: { text: t('已忽略'), status: 'Default' },
             },
         },
         {
-            title: '提交时间',
+            title: t('提交时间'),
             dataIndex: 'date',
             valueType: 'date',
             width: 120,
         },
         {
-            title: '操作',
+            title: t('操作'),
             valueType: 'option',
             width: 80,
             render: (_, record) => record.status === 'PENDING' ? [
@@ -134,7 +137,7 @@ const Reports: React.FC = () => {
                     setCurrentRow(record);
                     setModalVisible(true);
                 }}>
-                    处理
+                    {t("处理")}
                 </a>,
             ] : [],
         },
@@ -149,7 +152,7 @@ const Reports: React.FC = () => {
             className="p-0"
         >
             <ProTable<ReportItem>
-                headerTitle="Report Management"
+                headerTitle={t("Report Management")}
                 actionRef={actionRef}
                 rowKey="id"
                 scroll={{ x: 'max-content' }}
@@ -167,7 +170,7 @@ const Reports: React.FC = () => {
                     pageSize: 10,
                     showSizeChanger: true,
                 }}
-                request={async (params) => {
+                request={async () => {
                     const res = await fetch('/java/admin/feedback?type=REPORT');
                     return await res.json();
                 }}
@@ -175,7 +178,7 @@ const Reports: React.FC = () => {
                 className="bg-white rounded-lg shadow-sm"
             />
             <ModalForm
-                title={`处理举报 - ${currentRow?.reportType || 'General'}`}
+                title={`${t('处理举报')} - ${currentRow?.reportType ? t(({ USER: '用户', POST: '帖子', MESSAGE: '消息' } as Record<string, string>)[currentRow.reportType] || currentRow.reportType) : t('General')}`}
                 open={modalVisible}
                 onOpenChange={setModalVisible}
                 onFinish={async (values) => {
@@ -190,14 +193,14 @@ const Reports: React.FC = () => {
             >
                 <ProFormRadio.Group
                     name="method"
-                    label="处理措施"
+                    label={t("处理措施")}
                     options={getOptions(currentRow?.reportType || '')}
-                    rules={[{ required: true, message: '请选择处理结果' }]}
+                    rules={[{ required: true, message: t('请选择处理结果') }]}
                 />
                 <ProFormTextArea
                     name="note"
-                    label="处理备注"
-                    placeholder="请输入备注信息（可选）"
+                    label={t("处理备注")}
+                    placeholder={t("请输入备注信息（可选）")}
                 />
             </ModalForm>
         </PageContainer>

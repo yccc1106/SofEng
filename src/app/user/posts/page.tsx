@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useEffect, useState } from 'react';
 import { Button, Spin, Modal, App, Pagination } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -7,7 +8,9 @@ import PostForm, { PostFormProps } from '@/components/Post/PostForm';
 import type { PostResponse } from '@/types/api';
 import { javaPage } from '@/lib/java-client';
 
+/** 分页展示社区帖子，发布成功后回到最新一页。 */
 const PostsPage = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const [posts, setPosts] = useState<PostResponse[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,11 +25,11 @@ const PostsPage = () => {
             setPosts(result.data);
             setTotal(result.total);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : 'Failed to load posts');
+            message.error(error instanceof Error ? error.message : t('Failed to load posts'));
         } finally {
             setLoading(false);
         }
-    }, [message]);
+    }, [message, t]);
 
     useEffect(() => {
         void fetchPosts(page);
@@ -41,9 +44,9 @@ const PostsPage = () => {
     return (
         <div className="">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 m-0">Community Feed</h1>
+                <h1 className="text-2xl font-bold text-gray-800 m-0">{t("Community Feed")}</h1>
                 <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => setIsModalOpen(true)}>
-                    Create Post
+                    {t("Create Post")}
                 </Button>
             </div>
 
@@ -54,13 +57,13 @@ const PostsPage = () => {
                     {posts.map(post => (
                         <PostCard key={post.id} post={post} />
                     ))}
-                    {posts.length === 0 && <div className="text-center text-gray-400 py-10">No posts yet. Be the first!</div>}
+                    {posts.length === 0 && <div className="text-center text-gray-400 py-10">{t("No posts yet. Be the first!")}</div>}
                     {total > 10 && <Pagination current={page} pageSize={10} total={total} onChange={setPage} />}
                 </div>
             )}
 
             <Modal
-                title="Create Post"
+                title={t("Create Post")}
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}

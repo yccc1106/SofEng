@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React from 'react';
 import { Menu, MenuProps } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
@@ -12,6 +13,7 @@ interface InterestSidebarProps {
 }
 
 const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
+    const { t } = useLanguage();
     const router = useRouter();
     const pathname = usePathname();
     const basePath = `/interest/${interest.id}`;
@@ -20,17 +22,17 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
         {
             key: basePath,
             icon: <AppstoreOutlined />,
-            label: 'Posts',
+            label: t('Posts'),
         },
         {
             key: `${basePath}/chat`,
             icon: <MessageOutlined />,
-            label: 'Chat Lobby',
+            label: t('Chat Lobby'),
         },
         {
             key: `${basePath}/teams`,
             icon: <TeamOutlined />,
-            label: 'Teams',
+            label: t('Teams'),
         },
         {
             type: 'divider',
@@ -38,11 +40,11 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
         {
             key: '/',
             icon: <ArrowLeftOutlined />,
-            label: 'Switch Interest',
+            label: t('Switch Interest'),
         },
     ];
 
-    const handleClick = (e: any) => {
+    const handleClick: MenuProps['onClick'] = (e) => {
         if (e.key === '/') {
             router.push('/');
         } else {
@@ -50,9 +52,7 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
         }
     };
 
-    // Determine active key to highlight. Match exact or prefix if needed?
-    // Simply check exact match for sub-tabs.
-    // If pathname is /interest/[id], key is basePath.
+    // 依据当前子路由高亮帖子、聊天或队伍入口。
     let selectedKey = basePath;
     if (pathname.includes('/chat')) selectedKey = `${basePath}/chat`;
     if (pathname.includes('/teams')) selectedKey = `${basePath}/teams`;
@@ -61,7 +61,7 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
         <div className="w-64 flex-shrink-0 hidden md:block">
             <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
                 <h2 className="text-xl font-bold text-gray-800 mb-1">{interest.name}</h2>
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Community</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{t("Community")}</p>
             </div>
             <Menu
                 mode="vertical"

@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React from 'react';
 import { Card, Typography, Statistic, Row, Col } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,7 @@ interface InterestSelectorProps {
 }
 
 const InterestSelector: React.FC<InterestSelectorProps> = ({ categories }) => {
+    const { t } = useLanguage();
     const router = useRouter();
 
     const handleSelect = (id: string) => {
@@ -46,7 +48,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({ categories }) => {
                                 <div className="mb-4">
                                     <Title level={4} className="mb-2 !text-gray-800">{category.name}</Title>
                                     <Paragraph className="text-gray-500 line-clamp-2" ellipsis={{ rows: 2 }}>
-                                        {category.description || 'Join this community to connect with others.'}
+                                        {category.description || t('Join this community to connect with others.')}
                                     </Paragraph>
                                 </div>
                                 <div className="mt-auto flex justify-between items-end">

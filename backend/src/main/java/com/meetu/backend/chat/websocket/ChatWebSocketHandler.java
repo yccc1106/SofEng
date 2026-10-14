@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/** 维护单实例内的会话订阅，并在发送前重新核验连接和会话权限。 */
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final ChatService chat;
@@ -65,6 +66,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         session.close(CloseStatus.SERVER_ERROR);
     }
 
+    // 事务提交后才广播，避免客户端收到最终回滚的消息。
     @TransactionalEventListener(phase=TransactionPhase.AFTER_COMMIT)
     public void onMessage(MessageSaved event) {
         var message=event.message();
@@ -78,6 +80,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String room=directRoom(event.readerId(),event.target().userId());
         publish(room,event.target(),Map.of("event","read","readerId",event.readerId()));
     }
+    /** 推送前复查账号与会话权限，及时移除失效订阅。 */
     private void publish(String room,ChatDtos.Target target,Object payload) {
         for (var entry:sessions.entrySet()) {
             String userId=(String)entry.getValue().getAttributes().get("userId");

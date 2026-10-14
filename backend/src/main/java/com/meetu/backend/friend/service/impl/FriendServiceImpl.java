@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/** 处理好友申请与双向关系，统一校验接收方权限和重复关系。 */
 @Service
 public class FriendServiceImpl implements FriendService {
     private final FriendMapper mapper;
@@ -27,6 +28,7 @@ public class FriendServiceImpl implements FriendService {
             return toRequest(r,"sent".equals(type) ? null : person,"sent".equals(type) ? person : null);
         }).toList();
     }
+    /** 发送申请前锁定双方账号，避免相反方向的并发申请绕过重复校验。 */
     @Override @Transactional public FriendDtos.Request send(String userId, FriendDtos.Send input) {
         String receiver = input.receiverId().trim();
         if (userId.equals(receiver)) throw new InvalidFriendRequest("Cannot add yourself");
@@ -41,6 +43,7 @@ public class FriendServiceImpl implements FriendService {
         }
         return toRequest(mapper.request(id),null,null);
     }
+    /** 审批申请，并在同一事务中建立好友关系或记录拒绝结果。 */
     @Override @Transactional public void decide(String userId, String requestId, FriendDtos.Decision input) {
         if (!"ACCEPT".equals(input.action()) && !"REJECT".equals(input.action())) throw new InvalidFriendRequest("Invalid action");
         var first = mapper.request(requestId);
@@ -65,6 +68,7 @@ public class FriendServiceImpl implements FriendService {
             throw new FriendConflict("Request already processed");
         }
     }
+    // 固定锁顺序，降低双方同时发起操作时的死锁风险。
     private void lockPair(String a, String b) {
         if (mapper.lockActiveUser(a.compareTo(b)<0 ? a : b) == null || mapper.lockActiveUser(a.compareTo(b)<0 ? b : a) == null)
             throw new FriendNotFound();

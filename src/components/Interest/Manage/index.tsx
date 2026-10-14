@@ -1,6 +1,7 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { ActionType, ModalForm, PageContainer, ProColumns, ProFormSelect, ProFormText, ProFormTextArea, ProTable } from '@ant-design/pro-components';
-import { Button, message, Modal, Popconfirm } from 'antd';
+import { Button, message, Popconfirm } from 'antd';
 import React, { useRef, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
@@ -8,19 +9,14 @@ type InterestItem = {
     id: string;
     name: string;
     parent: string;
-    description: string;
+    parentId?: string | null;
+    description: string | null;
     count: number;
 };
 
-const mockData: InterestItem[] = [
-    { id: '1', name: '篮球', parent: '运动', description: '篮球爱好者聚集地', count: 5000 },
-    { id: '2', name: '足球', parent: '运动', description: '绿茵场上的激情', count: 3200 },
-    { id: '3', name: '编程', parent: '学习', description: '代码改变世界', count: 8000 },
-    { id: '4', name: '摄影', parent: '艺术', description: '记录美好瞬间', count: 1500 },
-    { id: '5', name: '原神', parent: '游戏', description: '开放世界冒险', count: 12000 },
-];
-
+/** 维护兴趣分类及父子关系，保存后重新加载列表。 */
 const InterestManage: React.FC = () => {
+    const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [currentRow, setCurrentRow] = useState<InterestItem | null>(null);
@@ -33,17 +29,17 @@ const InterestManage: React.FC = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success('删除成功');
+                message.success(t('删除成功'));
                 actionRef.current?.reload();
             } else {
-                message.error('删除失败');
+                message.error(t('删除失败'));
             }
-        } catch (error) {
-            message.error('删除错误');
+        } catch {
+            message.error(t('删除错误'));
         }
     };
 
-    const handleSubmit = async (values: any) => {
+    const handleSubmit = async (values: { name: string; parentId?: string; description?: string }) => {
         const method = currentRow ? 'PUT' : 'POST';
         const body = currentRow ? { ...values, id: currentRow.id } : values;
 
@@ -55,16 +51,16 @@ const InterestManage: React.FC = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success(currentRow ? '更新成功' : '创建成功');
+                message.success(currentRow ? t('更新成功') : t('创建成功'));
                 setModalVisible(false);
                 actionRef.current?.reload();
                 return true;
             } else {
-                message.error('操作失败');
+                message.error(t('操作失败'));
                 return false;
             }
-        } catch (error) {
-            message.error('操作异常');
+        } catch {
+            message.error(t('操作异常'));
             return false;
         }
     };
@@ -76,37 +72,37 @@ const InterestManage: React.FC = () => {
             width: 48,
         },
         {
-            title: '分类名称',
+            title: t('分类名称'),
             dataIndex: 'name',
         },
         {
-            title: '父分类',
+            title: t('父分类'),
             dataIndex: 'parent',
             filters: true,
             onFilter: true,
         },
         {
-            title: '描述',
+            title: t('描述'),
             dataIndex: 'description',
         },
         {
-            title: '关注人数',
+            title: t('关注人数'),
             dataIndex: 'count',
             sorter: true,
         },
         {
-            title: '操作',
+            title: t('操作'),
             valueType: 'option',
             render: (_, record) => [
                 <a key="edit" onClick={() => {
                     setCurrentRow(record);
                     setModalVisible(true);
                 }}>
-                    编辑
+                    {t("编辑")}
                 </a>,
-                <Popconfirm key="delete" title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
+                <Popconfirm key="delete" title={t("确定删除吗?")} onConfirm={() => handleDelete(record.id)}>
                     <a style={{ color: 'red' }}>
-                        删除
+                        {t("删除")}
                     </a>
                 </Popconfirm>,
             ],
@@ -122,7 +118,7 @@ const InterestManage: React.FC = () => {
             className="p-0"
         >
             <ProTable<InterestItem>
-                headerTitle="Interest Categories"
+                headerTitle={t("Interest Categories")}
                 actionRef={actionRef}
                 rowKey="id"
                 search={{
@@ -144,14 +140,14 @@ const InterestManage: React.FC = () => {
                         setCurrentRow(null);
                         setModalVisible(true);
                     }}>
-                        Add Category
+                        {t("Add Category")}
                     </Button>,
                 ]}
                 request={async () => {
                     const res = await fetch('/java/admin/interest');
-                    const json = await res.json();
+                    const json = await res.json() as { success: boolean; data: InterestItem[] };
                     if (json.success) {
-                        setCategoryOptions(json.data.map((item: any) => ({ label: item.name, value: item.id })));
+                        setCategoryOptions(json.data.map((item) => ({ label: item.name, value: item.id })));
                     }
                     return json;
                 }}
@@ -159,7 +155,7 @@ const InterestManage: React.FC = () => {
                 className="bg-white rounded-lg shadow-sm"
             />
             <ModalForm
-                title={currentRow ? '编辑分类' : '新建分类'}
+                title={currentRow ? t('编辑分类') : t('新建分类')}
                 open={modalVisible}
                 onOpenChange={setModalVisible}
                 modalProps={{ destroyOnClose: true }}
@@ -168,20 +164,20 @@ const InterestManage: React.FC = () => {
             >
                 <ProFormText
                     name="name"
-                    label="分类名称"
-                    placeholder="请输入名称"
-                    rules={[{ required: true, message: '请输入名称' }]}
+                    label={t("分类名称")}
+                    placeholder={t("请输入名称")}
+                    rules={[{ required: true, message: t('请输入名称') }]}
                 />
                 <ProFormSelect
                     name="parentId"
-                    label="父分类"
-                    placeholder="选择父分类（可选）"
+                    label={t("父分类")}
+                    placeholder={t("选择父分类（可选）")}
                     options={categoryOptions.filter(opt => opt.value !== currentRow?.id)}
                 />
                 <ProFormTextArea
                     name="description"
-                    label="描述"
-                    placeholder="请输入描述"
+                    label={t("描述")}
+                    placeholder={t("请输入描述")}
                 />
             </ModalForm>
         </PageContainer>

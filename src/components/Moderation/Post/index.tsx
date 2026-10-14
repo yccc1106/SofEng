@@ -1,6 +1,7 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Image } from 'antd';
+import { message, Image } from 'antd';
 import React, { useRef } from 'react';
 import { shanghaiDate } from '@/lib/shanghai-time';
 
@@ -14,17 +15,9 @@ type PostItem = {
     date: string;
 };
 
-const mockData: PostItem[] = Array.from({ length: 15 }).map((_, i) => ({
-    id: `${i + 1}`,
-    author: `Author ${i}`,
-    title: `这是帖子标题 ${i}`,
-    content: `这是帖子内容详情，包含一些文字描述...`,
-    imageUrl: i % 2 === 0 ? 'https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png' : undefined,
-    status: 'pending',
-    date: `2024-05-21`,
-}));
-
+/** 审核待发布帖子并刷新审核列表。 */
 const PostModeration: React.FC = () => {
+    const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
 
     const handleAction = async (id: string, action: 'pass' | 'reject') => {
@@ -41,7 +34,7 @@ const PostModeration: React.FC = () => {
             } else {
                 message.error('Failed');
             }
-        } catch (error) {
+        } catch {
             message.error('Error');
         }
     };
@@ -55,53 +48,53 @@ const PostModeration: React.FC = () => {
             ellipsis: true,
         },
         {
-            title: '作者',
+            title: t('作者'),
             dataIndex: 'author',
             width: 120,
             ellipsis: true,
         },
         {
-            title: '标题',
+            title: t('标题'),
             dataIndex: 'title',
             ellipsis: true,
         },
         {
-            title: '配图',
+            title: t('配图'),
             dataIndex: 'imageUrl',
             width: 80,
             render: (_, record) => {
-                return record.imageUrl ? <Image src={record.imageUrl} width={50} /> : '-';
+                return record.imageUrl ? <Image src={record.imageUrl} alt={record.title} width={50} /> : '-';
             },
         },
         {
-            title: '状态',
+            title: t('状态'),
             dataIndex: 'status',
             width: 100,
             valueEnum: {
-                pending: { text: '待审核', status: 'Processing' },
-                approved: { text: '已通过', status: 'Success' },
-                rejected: { text: '已拒绝', status: 'Error' },
+                pending: { text: t('待审核'), status: 'Processing' },
+                approved: { text: t('已通过'), status: 'Success' },
+                rejected: { text: t('已拒绝'), status: 'Error' },
             },
         },
         {
-            title: '发布时间',
+            title: t('发布时间'),
             dataIndex: 'date',
             render: (_, record) => shanghaiDate(record.date),
             width: 120,
         },
         {
-            title: '操作',
+            title: t('操作'),
             valueType: 'option',
             width: 150,
             render: (_, record) => [
-                <a key="view" onClick={() => message.info('查看详情: ' + record.content)}>
-                    查看
+                <a key="view" onClick={() => message.info(t('查看详情:') + ' ' + record.content)}>
+                    {t("查看")}
                 </a>,
                 record.status === 'pending' && <a key="pass" onClick={() => handleAction(record.id, 'pass')}>
-                    通过
+                    {t("通过")}
                 </a>,
                 record.status === 'pending' && <a key="reject" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'reject')}>
-                    拒绝
+                    {t("拒绝")}
                 </a>,
             ],
         },
@@ -115,7 +108,7 @@ const PostModeration: React.FC = () => {
             }}
         >
             <ProTable<PostItem>
-                headerTitle="Moderation Queue"
+                headerTitle={t("Moderation Queue")}
                 actionRef={actionRef}
                 rowKey="id"
                 scroll={{ x: 'max-content' }}
@@ -133,10 +126,7 @@ const PostModeration: React.FC = () => {
                     pageSize: 10,
                     showSizeChanger: true,
                 }}
-                request={async (params) => {
-                    // params contains pageSize, current, and filters
-                    // For simplicity, we just fetch all or filter by mapped status if we implemented server side filtering strictly
-                    // Here we fetch all from our simple API
+                request={async () => {
                     const res = await fetch('/java/admin/moderation/posts');
                     return await res.json();
                 }}

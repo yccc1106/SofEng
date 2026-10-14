@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.*;
 import java.util.List;
 import java.util.Map;
 
+/** 好友申请与关系的 SQL 映射；双方账号行用于并发操作加锁。 */
 @Mapper
 public interface FriendMapper {
     @Select("SELECT id FROM \"User\" WHERE id=#{id} AND status='ACTIVE' FOR UPDATE")

@@ -3,8 +3,10 @@ import { HomeOutlined, TeamOutlined, UserOutlined, MessageOutlined, CompassOutli
 import { Flex, theme } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
+import { useLanguage } from '@/lib/language';
 
 const TabBar = () => {
+    const { t } = useLanguage();
     const router = useRouter();
     const pathname = usePathname();
     const { token } = theme.useToken();
@@ -12,11 +14,11 @@ const TabBar = () => {
     if (pathname.startsWith('/user/login')) return null;
 
     const tabs = [
-        { key: '/user/posts', icon: <HomeOutlined />, label: '首页' },
-        { key: '/user/teams', icon: <TeamOutlined />, label: '组队' },
-        { key: '/user/radar', icon: <CompassOutlined />, label: '雷达' },
-        { key: '/user/chat', icon: <MessageOutlined />, label: '消息' },
-        { key: '/user/profile', icon: <UserOutlined />, label: '我的' },
+        { key: '/user/posts', icon: <HomeOutlined />, label: t('Home') },
+        { key: '/user/teams', icon: <TeamOutlined />, label: t('Teams') },
+        { key: '/user/radar', icon: <CompassOutlined />, label: t('Radar') },
+        { key: '/user/chat', icon: <MessageOutlined />, label: t('Messages') },
+        { key: '/user/profile', icon: <UserOutlined />, label: t('Me') },
     ];
 
     return (

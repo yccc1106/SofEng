@@ -53,7 +53,7 @@ const ProportionSales = ({
         innerRadius={0.5}
         angleField="y"
         colorField="x"
-        data={salesPieData as any}
+        data={salesPieData}
         legend={false}
         label={{
           position: 'spider',

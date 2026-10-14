@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
+/** 校验用户反馈及举报目标，并处理管理员操作与审计。 */
 @Service
 public class FeedbackServiceImpl implements FeedbackService {
     private final FeedbackMapper mapper;
@@ -28,6 +29,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         result.put("target",target);
         return result;
     }
+    /** 举报只能指向一个有效且对提交者可见的目标。 */
     @Override @Transactional
     public Map<String,Object> submit(String user,Submit request) {
         String type=request.type()==null?"SUGGESTION":request.type();
@@ -59,6 +61,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         if (type!=null && !Set.of("SUGGESTION","REPORT","OTHER").contains(type)) throw ManagementException.invalid("Invalid feedback type");
         return mapper.all(type).stream().map(FeedbackServiceImpl::display).toList();
     }
+    /** 在同一事务内处理举报措施、反馈状态和管理审计。 */
     @Override @Transactional
     public void handle(String admin,Handle request) {
         Map<String,Object> row=mapper.lock(request.id());

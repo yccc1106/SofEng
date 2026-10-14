@@ -10,6 +10,7 @@ import com.meetu.backend.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+/** 聚合用户、已公开帖子和招募队伍的搜索结果。 */
 @Service
 public class SearchServiceImpl implements SearchService {
     private final UserMapper users;

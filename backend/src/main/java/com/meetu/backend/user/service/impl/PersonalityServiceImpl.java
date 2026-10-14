@@ -11,6 +11,7 @@ import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
 
+/** 根据问卷答案保存四字母性格类型，并提供可解释的规则匹配。 */
 @Service
 public class PersonalityServiceImpl implements PersonalityService {
     private static final Set<String> ALLOWED_TAGS = Set.of("Outgoing","Reflective","Realistic","Dreamer","Analytical","Empathetic");
@@ -19,6 +20,7 @@ public class PersonalityServiceImpl implements PersonalityService {
     private final UserMapper users;
     public PersonalityServiceImpl(PersonalityMapper mapper, UserMapper users) { this.mapper=mapper; this.users=users; }
 
+    /** 仅根据四道有效答案计算结果，不接受客户端自行提交的类型或标签。 */
     @Override @Transactional public PersonalityDtos.Result save(String userId, PersonalityDtos.Answers request) {
         Map<Integer,String> answers=request==null ? null : request.answers();
         if (answers==null || answers.size()!=4) throw new InvalidPersonalityAnswers();
@@ -41,6 +43,7 @@ public class PersonalityServiceImpl implements PersonalityService {
         return result.toArray(String[]::new);
     }
 
+    /** 按类型与共同标签积分，过滤零分后稳定排序并返回前五名。 */
     @Override public List<PersonalityDtos.Match> matches(String userId) {
         UserEntity viewer=users.findById(userId).orElseThrow();
         if (!validType(viewer.personalityType())) return List.of();

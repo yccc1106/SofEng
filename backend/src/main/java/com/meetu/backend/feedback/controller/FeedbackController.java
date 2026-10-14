@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/** 区分用户自己的反馈接口与管理员处理接口。 */
 @RestController
 public class FeedbackController {
     private final FeedbackService service;

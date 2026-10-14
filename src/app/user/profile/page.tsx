@@ -1,4 +1,5 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import React, { useEffect, useState } from 'react';
 import { Card, Avatar, Button, Descriptions, Tag, Spin, Form, Input, App, Modal } from 'antd';
 import { UserOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons';
@@ -18,7 +19,9 @@ type Profile = {
     personalityTags?: string[];
 };
 
+/** 加载当前用户资料，保存修改后同步前端会话并支持退出。 */
 const ProfilePage = () => {
+    const { t } = useLanguage();
     const { message } = App.useApp();
     const { data: session, status, logout, refresh } = useAuth();
     const router = useRouter();
@@ -39,14 +42,14 @@ const ProfilePage = () => {
             if (data.success) {
                 setUser(data.data);
             } else {
-                message.error(data.message || 'Failed to load profile');
+                message.error(data.message || t('Failed to load profile'));
             }
         } catch {
-            message.error('Failed to load profile');
+            message.error(t('Failed to load profile'));
         } finally {
             setLoading(false);
         }
-    }, [message, router]);
+    }, [message, router, t]);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -75,20 +78,20 @@ const ProfilePage = () => {
                 return;
             }
             if (data.success) {
-                message.success('Profile updated');
+                message.success(t('Profile updated'));
                 setUser(data.data);
                 await refresh();
                 setIsModalOpen(false);
             } else {
-                message.error('Failed to update');
+                message.error(t('Failed to update'));
             }
         } catch {
-            message.error('Error saving profile');
+            message.error(t('Error saving profile'));
         }
     };
 
     if (loading) return <div className="flex justify-center items-center h-screen"><Spin size="large" /></div>;
-    if (!user) return <div className="p-4">Failed to load user data</div>;
+    if (!user) return <div className="p-4">{t("Failed to load user data")}</div>;
 
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
@@ -103,51 +106,51 @@ const ProfilePage = () => {
                 )}
             </div>
 
-            <Card title="Personal Info" extra={<Button icon={<EditOutlined />} type="text" onClick={handleEdit} />} className="mb-4 shadow-sm">
+            <Card title={t("Personal Info")} extra={<Button icon={<EditOutlined />} type="text" onClick={handleEdit} />} className="mb-4 shadow-sm">
                 <Descriptions column={1}>
-                    <Descriptions.Item label="School">{user.school || 'Not set'}</Descriptions.Item>
-                    <Descriptions.Item label="Major">{user.major || 'Not set'}</Descriptions.Item>
-                    <Descriptions.Item label="Grade">{user.grade || 'Not set'}</Descriptions.Item>
-                    <Descriptions.Item label="Bio">{user.bio || 'No bio yet'}</Descriptions.Item>
+                    <Descriptions.Item label={t("School")}>{user.school || t('Not set')}</Descriptions.Item>
+                    <Descriptions.Item label={t("Major")}>{user.major || t('Not set')}</Descriptions.Item>
+                    <Descriptions.Item label={t("Grade")}>{user.grade || t('Not set')}</Descriptions.Item>
+                    <Descriptions.Item label={t("Bio")}>{user.bio || t('No bio yet')}</Descriptions.Item>
                 </Descriptions>
             </Card>
 
-            <Card title="Personality Tags" className="mb-4 shadow-sm">
+            <Card title={t("Personality Tags")} className="mb-4 shadow-sm">
                 <div className="flex flex-wrap gap-2">
                     {user.personalityTags && user.personalityTags.length > 0 ? (
                         user.personalityTags.map((tag: string) => (
                             <Tag key={tag} color="blue">{tag}</Tag>
                         ))
                     ) : (
-                        <div className="text-gray-400">No tags yet. Take the test!</div>
+                        <div className="text-gray-400">{t("No tags yet. Take the test!")}</div>
                     )}
                 </div>
                 <div className="mt-4">
                     <Button type="primary" block href="/user/personality-test">
-                        Retake Personality Test
+                        {t("Retake Personality Test")}
                     </Button>
                 </div>
             </Card>
 
             <Button danger block icon={<LogoutOutlined />} onClick={async () => { await logout(); router.replace('/user/login'); }}>
-                Logout
+                {t("Logout")}
             </Button>
 
-            <Modal title="Edit Profile" open={isModalOpen} onOk={handleSave} onCancel={() => setIsModalOpen(false)}>
+            <Modal title={t("Edit Profile")} open={isModalOpen} onOk={handleSave} onCancel={() => setIsModalOpen(false)}>
                 <Form form={form} layout="vertical">
-                    <Form.Item name="name" label="Nickname" rules={[{ required: true }]}>
+                    <Form.Item name="name" label={t("Nickname")} rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="school" label="School">
+                    <Form.Item name="school" label={t("School")}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="major" label="Major">
+                    <Form.Item name="major" label={t("Major")}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="grade" label="Grade">
+                    <Form.Item name="grade" label={t("Grade")}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="bio" label="Bio">
+                    <Form.Item name="bio" label={t("Bio")}>
                         <Input.TextArea />
                     </Form.Item>
                 </Form>

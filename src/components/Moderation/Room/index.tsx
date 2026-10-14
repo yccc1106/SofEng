@@ -1,6 +1,7 @@
 'use client';
+import { useLanguage } from '@/lib/language';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Tag } from 'antd';
+import { message } from 'antd';
 import React, { useRef } from 'react';
 
 type RoomItem = {
@@ -12,7 +13,9 @@ type RoomItem = {
     status: string;
 };
 
+/** 管理员查看队伍并关闭违规房间。 */
 const RoomModeration: React.FC = () => {
+    const { t } = useLanguage();
     const actionRef = useRef<ActionType | null>(null);
 
     const handleAction = async (id: string, action: 'close') => {
@@ -24,13 +27,13 @@ const RoomModeration: React.FC = () => {
             });
             const data = await res.json();
             if (data.success) {
-                message.success('已解散房间');
+                message.success(t('已解散房间'));
                 actionRef.current?.reload();
             } else {
-                message.error('操作失败');
+                message.error(t('操作失败'));
             }
-        } catch (error) {
-            message.error('操作异常');
+        } catch {
+            message.error(t('操作异常'));
         }
     };
 
@@ -43,49 +46,49 @@ const RoomModeration: React.FC = () => {
             ellipsis: true,
         },
         {
-            title: '房间名',
+            title: t('房间名'),
             dataIndex: 'name',
             width: 150,
             ellipsis: true,
         },
         {
-            title: '房主',
+            title: t('房主'),
             dataIndex: 'owner',
             width: 120,
             ellipsis: true,
         },
         {
-            title: '简介',
+            title: t('简介'),
             dataIndex: 'description',
             ellipsis: true,
         },
         {
-            title: '成员数',
+            title: t('成员数'),
             dataIndex: 'members',
             width: 80,
             sorter: true,
         },
         {
-            title: '状态',
+            title: t('状态'),
             dataIndex: 'status',
             width: 100,
             valueEnum: {
-                recruiting: { text: '招募中', status: 'Processing' },
-                full: { text: '已满员', status: 'Success' },
-                disbanded: { text: '已解散', status: 'Error' },
+                recruiting: { text: t('招募中'), status: 'Processing' },
+                full: { text: t('已满员'), status: 'Success' },
+                disbanded: { text: t('已解散'), status: 'Error' },
             },
         },
         {
-            title: '操作',
+            title: t('操作'),
             valueType: 'option',
             width: 120,
             render: (_, record) => [
-                <a key="check" onClick={() => message.info('检查房间信息: ' + record.name)}>
-                    检查
+                <a key="check" onClick={() => message.info(t('检查房间信息:') + ' ' + record.name)}>
+                    {t("检查")}
                 </a>,
                 record.status !== 'disbanded' && (
                     <a key="close" style={{ color: 'red' }} onClick={() => handleAction(record.id, 'close')}>
-                        解散
+                        {t("解散")}
                     </a>
                 ),
             ],
@@ -100,7 +103,7 @@ const RoomModeration: React.FC = () => {
             }}
         >
             <ProTable<RoomItem>
-                headerTitle="Room/Team Moderation"
+                headerTitle={t("Room/Team Moderation")}
                 actionRef={actionRef}
                 rowKey="id"
                 scroll={{ x: 'max-content' }}

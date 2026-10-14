@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/** 处理帖子发布、可见性和评论、点赞、收藏等互动。 */
 @Service
 public class PostServiceImpl implements PostService {
     private final PostMapper posts;
@@ -76,6 +77,7 @@ public class PostServiceImpl implements PostService {
         return true;
     }
 
+    // 未发布帖子对互动请求表现为不存在；写操作先锁定状态，避免审核同时改变可见性。
     private void requirePublished(String id, boolean lock) {
         String status = lock ? posts.lockStatus(id) : posts.selectStatus(id);
         if (!"PUBLISHED".equals(status)) throw new PostNotFoundException();
