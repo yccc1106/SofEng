@@ -95,15 +95,16 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
             socket.onopen = () => {
                 if (!active || !socket) return;
                 socket.send(JSON.stringify({ event: 'join', ...target }));
-                setStatus('live');
-                retries = 0;
-                void sync(false);
                 heartbeat = setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ event: 'ping' })); }, 30000);
             };
             socket.onmessage = event => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.event === 'new:message' && data.data) {
+                    if (data.event === 'joined') {
+                        setStatus('live');
+                        retries = 0;
+                        void sync(false);
+                    } else if (data.event === 'new:message' && data.data) {
                         const item = data.data as ChatMessage;
                         setMessages(current => {
                             const next = merged(current, [item]);
