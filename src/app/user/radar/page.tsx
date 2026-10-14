@@ -81,30 +81,35 @@ const RadarPage = () => {
                             key={user.id}
                             className="hover:border-blue-500 transition-colors"
                             style={{ backgroundColor: '#1f2937', borderColor: '#374151' }}
-                            styles={{ body: { padding: '16px' } }}
+                            styles={{ body: { padding: '20px' } }}
                         >
-                            <div className="flex items-center">
-                                <Avatar size={64} src={user.image} className="mr-4 border-2 border-blue-400" />
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="m-0 break-words text-lg font-bold text-white">{user.name || 'Unnamed user'}</h3>
-                                            <div className="text-blue-300 text-sm mb-1">{user.personalityType} · {user.score} points</div>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                                <Avatar size={56} src={user.image} style={{ flexShrink: 0, border: '2px solid #60a5fa' }} />
+                                <div style={{ minWidth: 0, flex: 1, display: 'grid', rowGap: 8 }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                                        <div style={{ minWidth: 0 }}>
+                                            <h3 style={{ margin: 0, color: '#fff', fontSize: 17, fontWeight: 600, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+                                                {user.name || 'Unnamed user'}
+                                            </h3>
+                                            <div style={{ color: '#93c5fd', fontSize: 13, lineHeight: 1.5, marginTop: 3 }}>
+                                                {user.personalityType} · {user.score} points
+                                            </div>
                                         </div>
                                         <Button
                                             type="primary"
                                             shape="circle"
                                             icon={<UserAddOutlined />}
                                             onClick={() => handleAddFriend(user.id)}
+                                            style={{ flexShrink: 0 }}
                                         />
                                     </div>
-                                    <Paragraph ellipsis={{ rows: 2 }} className="text-sm m-0 mb-2"
-                                        style={{ color: '#d1d5db' }}>
+                                    <Paragraph ellipsis={{ rows: 2 }}
+                                        style={{ color: '#d1d5db', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
                                         {user.scoreReason} · {user.bio || 'No bio provided.'}
                                     </Paragraph>
-                                    <div className="flex gap-1 flex-wrap">
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 2 }}>
                                         {user.personalityTags?.slice(0, 3).map((tag: string) => (
-                                            <Tag key={tag} color="#108ee9" className="mr-0 text-xs border-none bg-blue-900 text-blue-200">
+                                            <Tag key={tag} color="blue" style={{ margin: 0, fontSize: 12 }}>
                                                 {tag}
                                             </Tag>
                                         ))}
