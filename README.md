@@ -70,9 +70,9 @@ $env:TRTC_SECRET_KEY = "你的 SecretKey"
 $env:TRTC_USER_SIG_EXPIRE_SECONDS = "86400"
 
 # AI 雷达需求理解（没有 Key 时自动回退本地规则）
-$env:DASHSCOPE_API_KEY = "你的百炼 API Key"
-$env:QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-$env:QWEN_MODEL = "qwen-plus"
+$env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
+$env:DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+$env:DEEPSEEK_MODEL = "deepseek-chat"
 ```
 
 Bash / macOS / Linux 示例：
@@ -86,13 +86,14 @@ export FRONTEND_ORIGIN="http://localhost:3000"
 export TRTC_SDK_APP_ID="你的 SDKAppID"
 export TRTC_SECRET_KEY="你的 SecretKey"
 export TRTC_USER_SIG_EXPIRE_SECONDS="86400"
-export DASHSCOPE_API_KEY="你的百炼 API Key"
-export QWEN_MODEL="qwen-plus"
+export DEEPSEEK_API_KEY="你的 DeepSeek API Key"
+export DEEPSEEK_BASE_URL="https://api.deepseek.com"
+export DEEPSEEK_MODEL="deepseek-chat"
 ```
 
 `example.env` 是配置模板，包含前端和后端变量；不要把它当成 Spring Boot 会自动加载的配置文件。
 
-如果通过 IntelliJ IDEA 运行 `MeetUBackendApplication`，请把同样的键值对填到 **Run/Debug Configurations → Environment variables**（或使用 EnvFile 插件），否则 TRTC 和 Qwen 配置不会进入 Java 进程。
+如果通过 IntelliJ IDEA 运行 `MeetUBackendApplication`，请把同样的键值对填到 **Run/Debug Configurations → Environment variables**（或使用 EnvFile 插件），否则 TRTC 和 DeepSeek 配置不会进入 Java 进程。
 
 ### 4. 启动 Java 后端
 
@@ -229,12 +230,12 @@ TRTC_USER_SIG_EXPIRE_SECONDS=86400
 
 Java 后端依次执行：
 
-1. Qwen 需求理解；
+1. DeepSeek 需求理解；
 2. 候选用户筛选；
 3. 本地规则评分；
 4. 推荐理由生成。
 
-Qwen 只负责把需求转换为筛选条件，不读取候选人完整资料，也不直接决定排名。未配置 `DASHSCOPE_API_KEY`、模型超时或返回格式不合法时，会继续使用本地规则，页面显示“本地匹配”。
+DeepSeek 只负责把需求转换为筛选条件，不读取候选人完整资料，也不直接决定排名。未配置 `DEEPSEEK_API_KEY`、模型超时或返回格式不合法时，会继续使用本地规则，页面显示“本地匹配”。
 
 ### 9. 验证命令
 
@@ -280,9 +281,9 @@ Java 后端没有收到 `TRTC_SDK_APP_ID` 或 `TRTC_SECRET_KEY`。在两个环�
 
 确认 Java 后端已启动，`NEXT_PUBLIC_JAVA_WS_URL` 指向可访问的 `ws://`/`wss://` 地址，并确认浏览器携带与 Java REST 相同的 `JSESSIONID`。跨主机部署时，反向代理必须转发 WebSocket Upgrade。
 
-**Qwen 没有生效**
+**DeepSeek 没有生效**
 
-检查 Java 进程是否真的拿到了 `DASHSCOPE_API_KEY`。未配置时系统会正常回退本地规则，页面会显示“本地匹配”，不会中断雷达。
+检查 Java 进程是否真的拿到了 `DEEPSEEK_API_KEY`。未配置时系统会正常回退本地规则，页面会显示“本地匹配”，不会中断雷达。
 
 **Flyway 迁移失败**
 

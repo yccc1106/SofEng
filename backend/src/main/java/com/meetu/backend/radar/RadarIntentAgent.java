@@ -27,7 +27,7 @@ public class RadarIntentAgent {
              "preferSameSchool":true,
              "preferSameMajor":false,
              "summary":"不超过30字的中文需求摘要"}。
-            无法判断时使用空数组或 false。
+            无法判断时使用空数组或 false。只输出一个 json 对象。
             """;
     private final String apiKey;
     private final String baseUrl;
@@ -37,13 +37,13 @@ public class RadarIntentAgent {
             .connectTimeout(Duration.ofSeconds(3))
             .build();
 
-    public RadarIntentAgent(@Value("${meetu.ai.dashscope-api-key:}") String apiKey,
-                            @Value("${meetu.ai.base-url:https://dashscope.aliyuncs.com/compatible-mode/v1}") String baseUrl,
-                            @Value("${meetu.ai.model:qwen-plus}") String model,
+    public RadarIntentAgent(@Value("${meetu.ai.api-key:}") String apiKey,
+                            @Value("${meetu.ai.base-url:https://api.deepseek.com}") String baseUrl,
+                            @Value("${meetu.ai.model:deepseek-chat}") String model,
                             ObjectMapper json) {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.baseUrl = baseUrl == null ? "" : baseUrl.replaceAll("/+$", "");
-        this.model = model == null || model.isBlank() ? "qwen-plus" : model;
+        this.model = model == null || model.isBlank() ? "deepseek-chat" : model;
         this.json = json;
     }
 
@@ -56,6 +56,7 @@ public class RadarIntentAgent {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("model", model);
             payload.put("temperature", 0.1);
+            payload.put("response_format", Map.of("type", "json_object"));
             payload.put("messages", List.of(
                     Map.of("role", "system", "content", SYSTEM_PROMPT),
                     Map.of("role", "user", "content", text)
@@ -82,7 +83,7 @@ public class RadarIntentAgent {
                     bounded(parsed.path("summary").asText(""), 30)
             );
         } catch (Exception exception) {
-            log.debug("TRTC AI radar intent request failed", exception);
+            log.debug("AI radar intent request failed", exception);
             return null;
         }
     }
