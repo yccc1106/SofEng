@@ -36,8 +36,9 @@ public interface ChatMapper {
     @Select("SELECT id FROM \"Category\" WHERE id=#{id}") String categoryExists(String id);
 
     @Insert("INSERT INTO \"ChatMessage\" (id,content,type,\"senderId\",\"receiverId\",\"teamId\",\"categoryId\",\"isRead\",\"createdAt\") " +
-            "VALUES (#{id},#{content},'TEXT',#{sender},#{receiver},#{team},#{category},false,CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
-    int insert(@Param("id") String id,@Param("content") String content,@Param("sender") String sender,
+            "VALUES (#{id},#{content},#{type},#{sender},#{receiver},#{team},#{category},false,CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
+    int insert(@Param("id") String id,@Param("content") String content,@Param("type") String type,
+               @Param("sender") String sender,
                @Param("receiver") String receiver,@Param("team") String team,@Param("category") String category);
     @Select(MESSAGE_SELECT + "WHERE m.id=#{id}") Map<String,Object> message(String id);
     @Select("SELECT u.id,u.name,u.image,CAST('USER' AS TEXT) AS type,CAST(NULL AS TEXT) AS \"subType\" FROM \"Friendship\" f " +

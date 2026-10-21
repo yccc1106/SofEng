@@ -15,6 +15,7 @@ import com.meetu.backend.chat.service.impl.ChatServiceImpl.InvalidChatRequest;
 import com.meetu.backend.chat.service.impl.ChatServiceImpl.ChatForbidden;
 import com.meetu.backend.chat.service.impl.ChatServiceImpl.ChatNotFound;
 import com.meetu.backend.trtc.TrtcUserSigService.TrtcUnavailableException;
+import com.meetu.backend.upload.InvalidUploadException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +87,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleTrtcUnavailable() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ApiResponse.error("TRTC is not configured"));
+    }
+
+    @ExceptionHandler(InvalidUploadException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidUpload(InvalidUploadException exception) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(InvalidPostRequestException.class)

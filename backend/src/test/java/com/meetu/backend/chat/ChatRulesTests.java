@@ -22,7 +22,7 @@ class ChatRulesTests {
         var target=new ChatDtos.Target("other",null,null);
         assertThrows(ChatServiceImpl.ChatForbidden.class,() -> chat.history("viewer",target,null));
         assertThrows(ChatServiceImpl.ChatForbidden.class,() -> chat.send("viewer",new ChatDtos.Send("hello","other",null,null,null)));
-        verify(mapper,never()).insert(anyString(),anyString(),anyString(),any(),any(),any());
+        verify(mapper,never()).insert(anyString(),anyString(),anyString(),anyString(),any(),any(),any());
     }
 
     @Test void pendingTeamMemberCannotReadOrSend() {

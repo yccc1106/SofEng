@@ -10,7 +10,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /** 统一处理三类会话的访问权限、消息历史及已读状态。 */
@@ -73,9 +75,12 @@ public class ChatServiceImpl implements ChatService {
         authorize(userId,target);
         String content=input.content()==null ? "" : input.content().trim();
         if (content.isEmpty() || content.length()>4000) throw new InvalidChatRequest("Message must contain 1 to 4000 characters");
-        if (input.type()!=null && !"TEXT".equals(input.type())) throw new InvalidChatRequest("Only text messages are supported");
+        String type=input.type()==null || input.type().isBlank() ? "TEXT" : input.type().trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("TEXT","IMAGE").contains(type)) throw new InvalidChatRequest("Only TEXT and IMAGE messages are supported");
+        if ("IMAGE".equals(type) && !content.startsWith("/java/uploads/chat/"))
+            throw new InvalidChatRequest("Image messages must use an uploaded local image");
         String id=UUID.randomUUID().toString();
-        mapper.insert(id,content,userId,target.userId(),target.teamId(),target.categoryId());
+        mapper.insert(id,content,type,userId,target.userId(),target.teamId(),target.categoryId());
         var saved=message(mapper.message(id));
         events.publishEvent(new MessageSaved(target,saved));
         return saved;

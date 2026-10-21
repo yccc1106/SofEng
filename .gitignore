@@ -20,6 +20,8 @@
 # build outputs
 /build
 **/target/
+/backend/uploads/
+/uploads/
 
 # Java runtime artifacts
 *.class

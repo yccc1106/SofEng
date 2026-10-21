@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 export interface ChatMessage {
     id: string;
     content: string;
+    type: string;
     senderId: string;
     receiverId: string | null;
     teamId: string | null;
@@ -144,12 +145,12 @@ export function useChatRoom(target: ChatTarget | null, viewerId?: string) {
         return () => { active = false; if (retryTimer) clearTimeout(retryTimer); if (heartbeat) clearInterval(heartbeat); socket?.close(); };
     }, [key, viewerId]);
 
-    const send = async (content: string) => {
+    const send = async (content: string, type: 'TEXT' | 'IMAGE' = 'TEXT') => {
         if (!target) throw new Error('Select a conversation');
         const recipient = 'userId' in target ? { receiverId: target.userId } : target;
         const sent = await api<ChatMessage>('/java/chat', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...recipient, content })
+            body: JSON.stringify({ ...recipient, content, type })
         });
         setMessages(current => {
             const next = merged(current, [sent]);

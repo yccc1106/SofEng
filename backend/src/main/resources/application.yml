@@ -13,6 +13,9 @@ spring:
     baseline-version: 1
     locations: classpath:db/migration
   servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
     session:
       cookie:
         http-only: true
@@ -38,6 +41,7 @@ meetu:
     api-key: ${DEEPSEEK_API_KEY:}
     base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
     model: ${DEEPSEEK_MODEL:deepseek-chat}
+  upload-dir: ${UPLOAD_DIR:./uploads}
 
 server:
   port: ${SERVER_PORT:8080}

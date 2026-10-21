@@ -73,6 +73,9 @@ $env:TRTC_USER_SIG_EXPIRE_SECONDS = "86400"
 $env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
 $env:DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 $env:DEEPSEEK_MODEL = "deepseek-chat"
+
+# 聊天图片保存目录
+$env:UPLOAD_DIR = "./uploads"
 ```
 
 Bash / macOS / Linux 示例：
@@ -89,6 +92,7 @@ export TRTC_USER_SIG_EXPIRE_SECONDS="86400"
 export DEEPSEEK_API_KEY="你的 DeepSeek API Key"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com"
 export DEEPSEEK_MODEL="deepseek-chat"
+export UPLOAD_DIR="./uploads"
 ```
 
 `example.env` 是配置模板，包含前端和后端变量；不要把它当成 Spring Boot 会自动加载的配置文件。
@@ -304,6 +308,18 @@ Java 后端依次执行：
 4. 推荐理由生成。
 
 DeepSeek 只负责把需求转换为筛选条件，不读取候选人完整资料，也不直接决定排名。未配置 `DEEPSEEK_API_KEY`、模型超时或返回格式不合法时，会继续使用本地规则，页面显示“本地匹配”。
+
+#### 聊天图片上传
+
+聊天输入框右侧的图片按钮支持本地上传：
+
+- 支持 JPEG、PNG、WEBP、GIF；
+- 单张图片最大 5MB；
+- 默认保存到 Java 工作目录下的 `uploads/chat/`，实际路径可通过 `UPLOAD_DIR` 修改；
+- 数据库保存的是 `/java/uploads/chat/<文件名>` 访问路径，不保存二进制图片；
+- 图片消息仍通过 Java REST 落库，并由 Java WebSocket 实时推送。
+
+本地存储适合课程演示和单机运行。正式部署时应替换为对象存储，并增加访问控制、图片压缩和清理策略。
 
 ### 9. 验证命令
 

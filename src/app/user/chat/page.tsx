@@ -1,8 +1,8 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
-import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, PhoneOutlined } from '@ant-design/icons';
+import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip, Image } from 'antd';
+import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, PhoneOutlined, PictureOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { shanghaiDateTime } from '@/lib/shanghai-time';
@@ -39,8 +39,10 @@ const ChatContent = () => {
     const [sending, setSending] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [callModalOpen, setCallModalOpen] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const messagesPanelRef = useRef<HTMLDivElement>(null);
     const olderAnchor = useRef<{ height: number; top: number } | null>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
 
     // 加载更早消息时保持原阅读位置；新消息到来则滚动到底部。
     const scrollToBottom = () => {
@@ -83,7 +85,7 @@ const ChatContent = () => {
     };
 
     const handleSend = async () => {
-        if (!inputValue.trim() || sending) return;
+        if (!inputValue.trim() || sending || uploadingImage) return;
         setSending(true);
 
         try {
@@ -93,6 +95,36 @@ const ChatContent = () => {
             message.error(t('Error sending message'));
         } finally {
             setSending(false);
+        }
+    };
+
+    const handleImageSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            message.error(t('Only image files are supported'));
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            message.error(t('Image must be smaller than 5MB'));
+            return;
+        }
+
+        setUploadingImage(true);
+        try {
+            const form = new FormData();
+            form.append('file', file);
+            const response = await fetch('/java/uploads/chat-image', { method: 'POST', body: form });
+            const result = await response.json();
+            if (!response.ok || !result.success || !result.data?.url) {
+                throw new Error(result.message || t('Image upload failed'));
+            }
+            await chat.send(result.data.url, 'IMAGE');
+        } catch (reason) {
+            message.error(reason instanceof Error ? reason.message : t('Image upload failed'));
+        } finally {
+            setUploadingImage(false);
         }
     };
 
@@ -263,16 +295,25 @@ const ChatContent = () => {
 
                                                 <div
                                                     className={`px-5 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed break-words relative transition-all duration-200 hover:shadow-md
-                                                    ${isMe
+                                                    ${msg.type === 'IMAGE'
+                                                        ? '!p-1 !bg-transparent !shadow-none'
+                                                        : isMe
                                                             ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-tr-sm'
                                                             : 'bg-white text-slate-700 rounded-tl-sm border border-gray-100'
                                                         }`}
                                                 >
-                                                    {msg.content}
+                                                    {msg.type === 'IMAGE' ? (
+                                                        <Image
+                                                            src={msg.content}
+                                                            alt={t('Image')}
+                                                            width={240}
+                                                            className="max-h-64 max-w-full rounded-lg object-cover"
+                                                        />
+                                                    ) : msg.content}
                                                 </div>
                                                 <span className={`text-[10px] text-gray-400 mt-1 transition-opacity mx-1 ${isMe && targetUserId && msg.isRead ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                                                     {shanghaiDateTime(msg.createdAt).slice(11, 16)}
-                                                    {isMe && targetUserId && msg.isRead ? ' · Read' : ''}
+                                                    {isMe && targetUserId && msg.isRead ? ` · ${t('Read')}` : ''}
                                                 </span>
                                             </div>
                                         </div>
@@ -295,15 +336,30 @@ const ChatContent = () => {
                                         className="!mb-0 !bg-transparent text-base !resize-none py-3"
                                     />
                                     <div className="flex pb-2 pr-2 gap-2">
-                                        {/* <Button type="text" shape="circle" icon={<PaperClipOutlined className="text-gray-400 text-lg" />} />
-                                        <Button type="text" shape="circle" icon={<SmileOutlined className="text-gray-400 text-lg" />} /> */}
+                                        <input
+                                            ref={imageInputRef}
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp,image/gif"
+                                            className="hidden"
+                                            onChange={handleImageSelected}
+                                        />
+                                        <Tooltip title={t('Upload image')}>
+                                            <Button
+                                                type="text"
+                                                shape="circle"
+                                                icon={<PictureOutlined className="text-gray-500 text-lg" />}
+                                                loading={uploadingImage}
+                                                disabled={!activeId || sending || uploadingImage}
+                                                onClick={() => imageInputRef.current?.click()}
+                                            />
+                                        </Tooltip>
                                         <Button
                                             type="primary"
                                             shape="circle"
                                             size="large"
                                             icon={sending ? <Spin className="text-white" size="small" /> : <SendOutlined className="ml-0.5" />}
                                             onClick={handleSend}
-                                            disabled={!inputValue.trim() || sending}
+                                            disabled={!inputValue.trim() || sending || uploadingImage}
                                             className={`${inputValue.trim() ? 'bg-blue-600 shadow-blue-300 shadow-lg scale-100' : 'bg-gray-300 scale-90 opacity-70'} transition-all duration-300 border-none w-10 h-10 flex items-center justify-center`}
                                         />
                                     </div>
