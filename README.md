@@ -214,6 +214,43 @@ TRTC_USER_SIG_EXPIRE_SECONDS=86400
 
 不要用同一个普通浏览器窗口的两个标签页登录两个账号，它们共享 `JSESSIONID` Cookie，后登录会覆盖先登录。通话页面必须使用 `localhost` 或 HTTPS。
 
+#### TRTC 演示好友对
+
+先按第 6 节导入 `scripts/demo-data.sql`。以下两组账号已经在脚本中建立好友关系，可以直接测试私聊和通话：
+
+| 组合 | 账号 A | 账号 B | 固定用户 ID |
+|---|---|---|---|
+| 1 | `demo01@example.test` / `MeetUdemo2026!`（林小雨） | `demo21@example.test` / `MeetUdemo2026!`（邓静宜） | `demo-u01` ↔ `demo-u21` |
+| 2 | `demo02@example.test` / `MeetUdemo2026!`（陈子航） | `demo22@example.test` / `MeetUdemo2026!`（韩逸飞） | `demo-u02` ↔ `demo-u22` |
+
+组合 1 的两个固定会话地址：
+
+```text
+账号 A：http://localhost:3000/user/chat?targetId=demo-u21
+账号 B：http://localhost:3000/user/chat?targetId=demo-u01
+```
+
+组合 2 的两个固定会话地址：
+
+```text
+账号 A：http://localhost:3000/user/chat?targetId=demo-u22
+账号 B：http://localhost:3000/user/chat?targetId=demo-u02
+```
+
+#### 双账号通话测试流程
+
+1. 确认 PostgreSQL、Java 后端和前端都已启动，且 Java 后端已配置 **有效** 的 `TRTC_SDK_APP_ID`、`TRTC_SECRET_KEY`。
+2. 用普通浏览器窗口登录账号 A，打开对应的 `/user/chat?targetId=...` 地址。
+3. 用 InPrivate/无痕窗口或另一个浏览器配置文件登录账号 B，打开自己的会话地址。不要使用两个普通标签页。
+4. 两边都先确认聊天页可以正常加载；打开一次电话弹窗，确认没有显示“通话服务未就绪”，且“语音通话/视频通话”按钮可用。
+5. 账号 A 点击聊天头部电话图标，或在好友页头像下方的“操作”菜单中选择“语音/视频通话”。
+6. 在弹窗中选择语音或视频；首次呼叫允许麦克风和摄像头权限。
+7. 账号 B 应出现来电界面。保持被叫页面在前台，并在约 30 秒内点击接听。
+8. 接通后验证双向音频、静音、挂断；视频通话再验证摄像头画面和挂断。
+9. 如果主叫侧收到 `onUserNoResponse`，优先检查账号 B 是否真的登录到了不同的浏览器配置文件、是否停留在已登录页面，以及它的 TRTC 是否初始化成功。
+
+该脚本只能导入独立的空演示库或仅含演示数据的库；不要在生产库使用演示密码。
+
 ### 8. AI 雷达
 
 雷达页面支持输入一句话需求，例如：
