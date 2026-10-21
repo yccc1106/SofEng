@@ -8,15 +8,15 @@ INSERT INTO "User" (
   "createdAt", "updatedAt", status
 ) VALUES (
   '11111111-1111-4111-8111-111111111111',
-  'TRTC 测试 A',
-  'trtc-test-a-20261021@example.test',
+  'TRTC 演示 A',
+  'trtc.a@example.com',
   '$2a$10$gLqyzxVWB4vsiUteK9J9pOwDt3hbLLqECgv9Th9dNtz9FC9YRcYWy',
   'USER',
   'SECRET',
   '测试大学',
   '计算机科学与技术',
   '2023级',
-  'TRTC 通话测试账号 A',
+  'TRTC 音视频通话演示账号 A',
   'INFP',
   ARRAY['友善', '测试']::text[],
   'UNVERIFIED',
@@ -32,15 +32,15 @@ INSERT INTO "User" (
   "createdAt", "updatedAt", status
 ) VALUES (
   '22222222-2222-4222-8222-222222222222',
-  'TRTC 测试 B',
-  'trtc-test-b-20261021@example.test',
+  'TRTC 演示 B',
+  'trtc.b@example.com',
   '$2a$10$gLqyzxVWB4vsiUteK9J9pOwDt3hbLLqECgv9Th9dNtz9FC9YRcYWy',
   'USER',
   'SECRET',
   '测试大学',
   '软件工程',
   '2023级',
-  'TRTC 通话测试账号 B',
+  'TRTC 音视频通话演示账号 B',
   'ENFP',
   ARRAY['友善', '测试']::text[],
   'UNVERIFIED',
@@ -49,6 +49,14 @@ INSERT INTO "User" (
   'ACTIVE'
 )
 ON CONFLICT DO NOTHING;
+
+UPDATE "User"
+SET email = 'trtc.a@example.com', name = 'TRTC 演示 A'
+WHERE id = '11111111-1111-4111-8111-111111111111';
+
+UPDATE "User"
+SET email = 'trtc.b@example.com', name = 'TRTC 演示 B'
+WHERE id = '22222222-2222-4222-8222-222222222222';
 
 INSERT INTO "Friendship" (
   id, "userAId", "userBId", status, "createdAt"

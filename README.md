@@ -227,6 +227,22 @@ docker exec meetu_postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/
 
 脚本执行后会输出两个用户和一条好友关系，预期各为 2 行和 1 行。测试账号统一密码为 `MeetUdemo2026!`。
 
+演示账号：
+
+```text
+账号 A：trtc.a@example.com / MeetUdemo2026!
+账号 B：trtc.b@example.com / MeetUdemo2026!
+```
+
+直接会话地址：
+
+```text
+账号 A：http://localhost:3000/user/chat?targetId=22222222-2222-4222-8222-222222222222
+账号 B：http://localhost:3000/user/chat?targetId=11111111-1111-4111-8111-111111111111
+```
+
+脚本可以重复执行：已存在的固定用户 ID 会被更新为新邮箱和演示名称，好友关系不会重复创建。
+
 如果你刚才在 DataGrip/IDEA 数据库控制台执行过 `demo-data.sql` 并看到 `P0001`，先在原控制台执行 `ROLLBACK;`，或者直接使用上面的新 `psql` 连接执行独立脚本；不要在已经报错的旧事务里继续粘贴 SQL。
 
 #### TRTC 演示好友对
