@@ -2,7 +2,293 @@
 
 MeetU 使用 React / Next.js 前端与 Spring Boot 单体后端。业务接口、登录会话、权限及数据访问由 Java 提供；后端按 Controller → Service 接口 → ServiceImpl → MyBatis Mapper 分层，使用 PostgreSQL 和 Flyway。
 
-## 快速开始
+## 完整启动指南
+
+### 1. 环境要求
+
+| 组件 | 要求 |
+|---|---|
+| Node.js | 20.9 或更高版本，推荐 Node.js 22/24 |
+| pnpm | `10.33.4`（项目已写入 `packageManager`） |
+| Java | JDK 17 |
+| Maven | 3.9 或更高版本；也可以使用 IntelliJ IDEA 自带的 Maven |
+| Docker | Docker Desktop，用于运行 PostgreSQL 15 |
+| 浏览器 | Chrome、Edge、Firefox 或 Safari 的当前版本 |
+
+如果 `pnpm` 版本不一致，可以使用 Corepack：
+
+```powershell
+corepack enable
+corepack prepare pnpm@10.33.4 --activate
+pnpm --version
+```
+
+如果命令行找不到 `mvn`，可以用 IntelliJ IDEA 打开 `backend/pom.xml`，在 Maven 工具窗口运行 Spring Boot，或者安装 Maven 3.9+ 并加入 `PATH`。
+
+### 2. 启动 PostgreSQL
+
+在项目根目录执行：
+
+```powershell
+docker compose up -d
+docker compose ps
+```
+
+数据库配置固定为：
+
+```text
+数据库：meetu
+用户：postgres
+密码：password
+宿主机端口：5433
+容器内端口：5432
+```
+
+停止数据库但保留数据：
+
+```powershell
+docker compose down
+```
+
+只有在确定要清空数据库时才使用 `docker compose down -v`。
+
+### 3. 配置 Java 后端环境变量
+
+Spring Boot 不会自动读取项目根目录的 `.env`。请在实际启动后端的终端中设置环境变量。Windows PowerShell 示例：
+
+```powershell
+$env:DB_URL = "jdbc:postgresql://localhost:5433/meetu"
+$env:DB_USERNAME = "postgres"
+$env:DB_PASSWORD = "password"
+$env:SERVER_PORT = "8080"
+$env:FRONTEND_ORIGIN = "http://localhost:3000"
+$env:SESSION_COOKIE_SECURE = "false"
+
+# 音视频通话（服务端专用，不能加 NEXT_PUBLIC_ 前缀）
+$env:TRTC_SDK_APP_ID = "你的 SDKAppID"
+$env:TRTC_SECRET_KEY = "你的 SecretKey"
+$env:TRTC_USER_SIG_EXPIRE_SECONDS = "86400"
+
+# AI 雷达需求理解（没有 Key 时自动回退本地规则）
+$env:DASHSCOPE_API_KEY = "你的百炼 API Key"
+$env:QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+$env:QWEN_MODEL = "qwen-plus"
+```
+
+Bash / macOS / Linux 示例：
+
+```bash
+export DB_URL="jdbc:postgresql://localhost:5433/meetu"
+export DB_USERNAME="postgres"
+export DB_PASSWORD="password"
+export SERVER_PORT="8080"
+export FRONTEND_ORIGIN="http://localhost:3000"
+export TRTC_SDK_APP_ID="你的 SDKAppID"
+export TRTC_SECRET_KEY="你的 SecretKey"
+export TRTC_USER_SIG_EXPIRE_SECONDS="86400"
+export DASHSCOPE_API_KEY="你的百炼 API Key"
+export QWEN_MODEL="qwen-plus"
+```
+
+`example.env` 是配置模板，包含前端和后端变量；不要把它当成 Spring Boot 会自动加载的配置文件。
+
+如果通过 IntelliJ IDEA 运行 `MeetUBackendApplication`，请把同样的键值对填到 **Run/Debug Configurations → Environment variables**（或使用 EnvFile 插件），否则 TRTC 和 Qwen 配置不会进入 Java 进程。
+
+### 4. 启动 Java 后端
+
+```powershell
+cd backend
+mvn spring-boot:run
+```
+
+首次启动时，Flyway 会自动执行 `V1`–`V6`：
+
+```text
+backend/src/main/resources/db/migration/
+├── V1__initialize_migration_baseline.sql
+├── V2__user_identity_constraints.sql
+├── V3__post_status_constraint.sql
+├── V4__friend_team_invariants.sql
+├── V5__chat_realtime.sql
+└── V6__management_audit.sql
+```
+
+如果数据库不是空库，启动前先备份，并查看启动日志中的 Flyway 和 `flyway_schema_history` 结果。已存在旧 Prisma 业务表的数据库会使用 Flyway baseline，继续执行后续迁移；不要在已有业务表上手工执行 V1。
+
+后端启动后可访问：
+
+- 服务检查：<http://localhost:8080/api/system/ping>
+- 健康检查：<http://localhost:8080/actuator/health>
+- OpenAPI：<http://localhost:8080/v3/api-docs>
+- Swagger UI：<http://localhost:8080/swagger-ui.html>
+
+### 5. 配置并启动前端
+
+在项目根目录创建 `.env.local`：
+
+```env
+JAVA_BACKEND_URL=http://localhost:8080
+NEXT_PUBLIC_JAVA_WS_URL=ws://localhost:8080/api/chat/ws
+```
+
+安装依赖并启动：
+
+```powershell
+pnpm install
+pnpm dev
+```
+
+浏览器打开 <http://localhost:3000>。
+
+前端所有业务请求通过 `/java/*` 代理到 Java 的 `/api/*`。如果 Java 不在默认端口，必须同时修改：
+
+```env
+JAVA_BACKEND_URL=http://localhost:18080
+NEXT_PUBLIC_JAVA_WS_URL=ws://localhost:18080/api/chat/ws
+```
+
+然后重启 `pnpm dev`。`NEXT_PUBLIC_JAVA_WS_URL` 必须在启动/构建时提供；HTTPS 部署时改为 `wss://`。
+
+生产构建：
+
+```powershell
+pnpm build
+pnpm start
+```
+
+### 6. 创建管理员和演示数据
+
+空数据库首次启动没有管理员。先在页面注册一个账号，再由可信数据库管理员执行：
+
+```sql
+UPDATE "User" SET role = 'ADMIN'
+WHERE email = 'your-admin@example.test' AND status = 'ACTIVE'
+RETURNING id, email, role;
+```
+
+如果要使用演示数据，先确认 Java 后端已完成 Flyway V1–V6，再在项目根目录执行：
+
+```powershell
+docker cp .\scripts\demo-data.sql meetu_postgres:/tmp/meetu-demo-data.sql
+docker compose exec postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/meetu-demo-data.sql
+```
+
+演示脚本只适用于独立空库或仅含演示数据的库，包含 40 个普通用户、1 个管理员、内容、好友、队伍、聊天、反馈和认证申请。演示账号：
+
+```text
+管理员：admin.demo@example.test / MeetUdemo2026!
+普通用户：demo01@example.test 至 demo40@example.test / MeetUdemo2026!
+```
+
+不要在生产库运行演示脚本或沿用演示密码。
+
+### 7. TRTC 音视频通话
+
+当前前端使用 `@trtc/calls-uikit-react`，UserSig 由 Java 后端生成：
+
+```text
+浏览器 → /java/trtc/usersig → Java /api/trtc/usersig
+                                  ↓
+                          TRTC SDKAppID + SecretKey
+```
+
+必须同时配置后端的：
+
+```env
+TRTC_SDK_APP_ID=你的 SDKAppID
+TRTC_SECRET_KEY=你的 SecretKey
+TRTC_USER_SIG_EXPIRE_SECONDS=86400
+```
+
+`TRTC_SECRET_KEY` 只能放在服务端，不能写入 `NEXT_PUBLIC_*`。配置后重启 Java 后端。
+
+使用方式：
+
+1. 打开好友页，在每个好友头像下方的“操作”下拉中选择“语音/视频通话”；
+2. 或进入好友聊天，点击右上角电话图标；
+3. 在弹窗中选择“语音通话”或“视频通话”；
+4. 首次呼叫允许浏览器访问麦克风和摄像头；
+5. 被叫端必须在另一个浏览器配置文件、无痕窗口或另一台设备上登录，并保持在登录后的页面（推荐停留在 `/user/*` 页面）；
+6. 来电通常约 30 秒内需要接听，超时会显示无人接听。
+
+不要用同一个普通浏览器窗口的两个标签页登录两个账号，它们共享 `JSESSIONID` Cookie，后登录会覆盖先登录。通话页面必须使用 `localhost` 或 HTTPS。
+
+### 8. AI 雷达
+
+雷达页面支持输入一句话需求，例如：
+
+```text
+想找周末打球、性格开朗的同学
+```
+
+前端请求：
+
+```text
+/java/radar?q=<需求>
+```
+
+Java 后端依次执行：
+
+1. Qwen 需求理解；
+2. 候选用户筛选；
+3. 本地规则评分；
+4. 推荐理由生成。
+
+Qwen 只负责把需求转换为筛选条件，不读取候选人完整资料，也不直接决定排名。未配置 `DASHSCOPE_API_KEY`、模型超时或返回格式不合法时，会继续使用本地规则，页面显示“本地匹配”。
+
+### 9. 验证命令
+
+后端：
+
+```powershell
+cd backend
+mvn test
+mvn verify
+```
+
+前端：
+
+```powershell
+pnpm exec tsc --noEmit
+pnpm exec eslint src
+pnpm build
+```
+
+### 10. 常见问题
+
+**`mvn` 找不到**
+
+使用 IntelliJ IDEA 的 Maven 工具窗口，或安装 Maven 3.9+ 并加入 `PATH`。IDEA 自带的 Maven 通常位于 IDEA 安装目录的 `plugins/maven/lib/maven3/bin`。
+
+**`pnpm` 版本不一致**
+
+执行 `corepack enable` 和 `corepack prepare pnpm@10.33.4 --activate`。如果本机没有 Corepack，可以安装 `pnpm@10.33.4`。
+
+**数据库连接失败**
+
+确认 `docker compose ps` 中 PostgreSQL 正在运行，端口是 `5433`，并使用 Java 后端的 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`。默认账号是 `postgres`，不是 MySQL 的 `root`。
+
+**`/java/trtc/usersig` 返回 503**
+
+Java 后端没有收到 `TRTC_SDK_APP_ID` 或 `TRTC_SECRET_KEY`。在两个环境变量都设置后重启后端；不要只在浏览器 `.env.local` 中设置。
+
+**来电端没有反应**
+
+确认两个账号使用不同的浏览器配置文件；确认被叫端处于登录后的页面（推荐 `/user/*`）；确认 Java 后端和前端都运行；确认对方在来电窗口出现后点击接听。普通标签页共享登录 Cookie，不能同时承载两个账号。
+
+**聊天一直显示连接中**
+
+确认 Java 后端已启动，`NEXT_PUBLIC_JAVA_WS_URL` 指向可访问的 `ws://`/`wss://` 地址，并确认浏览器携带与 Java REST 相同的 `JSESSIONID`。跨主机部署时，反向代理必须转发 WebSocket Upgrade。
+
+**Qwen 没有生效**
+
+检查 Java 进程是否真的拿到了 `DASHSCOPE_API_KEY`。未配置时系统会正常回退本地规则，页面会显示“本地匹配”，不会中断雷达。
+
+**Flyway 迁移失败**
+
+不要删除 `flyway_schema_history` 或手工跳过版本。先备份数据库，检查失败版本、数据库连接和已有表结构；生产环境使用 `flyway migrate`/后端启动日志确认迁移结果。
+
+## 快速命令索引
 
 1. **启动数据库**
 
@@ -112,7 +398,7 @@ Windows 演示机器需要 Docker Desktop、Java 17、Maven 3.9+、Node.js 和 p
 - `/api/admin/moderation/posts`、`/chats`、`/rooms`：管理员审核帖子、逻辑屏蔽聊天消息、关闭队伍；普通用户的聊天历史不再返回被屏蔽消息。
 - `/api/admin/users`、`/users/{id}`、`/verification`、`/interest`：管理员管理账号、审批认证和维护分类。管理员自身及其他管理员不可通过用户状态接口冻结或删除；有关联内容的分类不可删除。
 
-上述页面已切换到 `/java/*`，对应旧 Next.js 管理 API Routes 已移除。第 8 阶段的统计接口暂留 Next.js，但现在要求 NextAuth 管理员身份。管理操作与审计记录在同一数据库事务内写入。举报中的“记录警告”只留审核记录，不向被举报用户发送通知；当前反馈表单不上传图片。
+上述页面已切换到 `/java/*`，对应旧 Next.js 管理 API Routes 已移除。第 8 阶段的统计接口由 Java 提供，并要求管理员角色。管理操作与审计记录在同一数据库事务内写入。举报中的“记录警告”只留审核记录，不向被举报用户发送通知；当前反馈表单不上传图片。
 
 数据库无时区时间字段继续保存 UTC 值；Java JSON 响应使用带 `+08:00` 的上海时间，前端按 `Asia/Shanghai` 格式化。历史上由早期 Java 写入、未统一为 UTC 的记录可能显示偏差，需在可确认来源后单独校正，不能按日期批量改写。
 
