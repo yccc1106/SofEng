@@ -87,6 +87,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const [ready, setReady] = useState(false);
     const [initializing, setInitializing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [callActive, setCallActive] = useState(false);
 
     useEffect(() => {
         if (!session?.user?.id) {
@@ -119,6 +120,33 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         };
     }, [session?.user?.id]);
 
+    useEffect(() => {
+        if (!ready) {
+            setCallActive(false);
+            return;
+        }
+
+        let cancelled = false;
+        let unwatch: (() => void) | undefined;
+        void import("@trtc/calls-uikit-react").then(({ TUIStore, StoreName, NAME }) => {
+            if (cancelled) return;
+            const handleStatus = (status: unknown) => {
+                setCallActive(status !== "idle");
+            };
+            const watchers = { [NAME.CALL_STATUS]: handleStatus };
+            TUIStore.watch(StoreName.CALL, watchers, { notifyRangeWhenWatch: NAME.MYSELF });
+            handleStatus(TUIStore.getData(StoreName.CALL, NAME.CALL_STATUS));
+            unwatch = () => TUIStore.unwatch(StoreName.CALL, watchers);
+        }).catch(() => {
+            // The call component will still render; only the backdrop state is unavailable.
+        });
+
+        return () => {
+            cancelled = true;
+            unwatch?.();
+        };
+    }, [ready]);
+
     const startCall = useCallback(async (targetUserIds: string[], mediaType: CallMedia) => {
         if (!ready) throw new Error(error || "TRTC 尚未初始化完成");
         const userIDList = targetUserIds.map(toTrtcUserId).filter(Boolean);
@@ -141,7 +169,23 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     return (
         <CallContext.Provider value={value}>
             {children}
-            {ready ? <TUICallKit /> : null}
+            {ready ? (
+                <div
+                    className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-colors ${
+                        callActive ? "bg-black/60 backdrop-blur-sm pointer-events-auto" : "pointer-events-none"
+                    }`}
+                    aria-hidden={!callActive}
+                >
+                    <div className="pointer-events-auto">
+                        <TUICallKit
+                            style={{
+                                width: "min(960px, calc(100vw - 2rem))",
+                                height: "min(630px, calc(100vh - 2rem))",
+                            }}
+                        />
+                    </div>
+                </div>
+            ) : null}
         </CallContext.Provider>
     );
 }
