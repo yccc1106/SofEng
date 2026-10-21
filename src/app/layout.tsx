@@ -7,6 +7,7 @@ import { LanguageProvider } from '@/lib/language';
 import BasicLayout from "@/components/Layout/BasicLayout";
 import { App } from 'antd';
 import { AuthProvider } from "@/lib/auth-context";
+import { CallProvider } from "@/components/Call/CallProvider";
 
 export const metadata: Metadata = {
   title: "MeetU - 兴趣社区",
@@ -54,7 +55,9 @@ export default function RootLayout({
             <LanguageProvider>
               <App>
                 <AuthProvider>
-                  <BasicLayout>{children}</BasicLayout>
+                  <CallProvider>
+                    <BasicLayout>{children}</BasicLayout>
+                  </CallProvider>
                 </AuthProvider>
               </App>
             </LanguageProvider>

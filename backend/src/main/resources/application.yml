@@ -30,6 +30,14 @@ mybatis:
 meetu:
   frontend-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
   trusted-proxy-address: ${TRUSTED_PROXY_ADDRESS:}
+  trtc:
+    sdk-app-id: ${TRTC_SDK_APP_ID:0}
+    secret-key: ${TRTC_SECRET_KEY:}
+    user-sig-expire-seconds: ${TRTC_USER_SIG_EXPIRE_SECONDS:86400}
+  ai:
+    dashscope-api-key: ${DASHSCOPE_API_KEY:}
+    base-url: ${QWEN_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    model: ${QWEN_MODEL:qwen-plus}
 
 server:
   port: ${SERVER_PORT:8080}

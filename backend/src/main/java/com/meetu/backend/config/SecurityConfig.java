@@ -104,7 +104,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts", "/api/posts/*/comments",
                                 "/api/posts/*/like", "/api/posts/*/collect").authenticated()
                         .requestMatchers("/api/friends", "/api/friends/**", "/api/teams/**", "/api/teams", "/api/search",
-                                "/api/chat", "/api/chat/**", "/api/personality-test", "/api/radar").authenticated()
+                                "/api/chat", "/api/chat/**", "/api/personality-test", "/api/radar",
+                                "/api/trtc/**").authenticated()
                         .anyRequest().denyAll())
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, exception) -> writeError(response, mapper, 401, "Unauthorized"))

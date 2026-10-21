@@ -14,6 +14,7 @@ import com.meetu.backend.search.service.impl.SearchServiceImpl.InvalidSearchRequ
 import com.meetu.backend.chat.service.impl.ChatServiceImpl.InvalidChatRequest;
 import com.meetu.backend.chat.service.impl.ChatServiceImpl.ChatForbidden;
 import com.meetu.backend.chat.service.impl.ChatServiceImpl.ChatNotFound;
+import com.meetu.backend.trtc.TrtcUserSigService.TrtcUnavailableException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RestrictedAccountException.class)
     public ResponseEntity<ApiResponse<Void>> handleRestrictedAccount() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Account is restricted"));
+    }
+
+    @ExceptionHandler(TrtcUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTrtcUnavailable() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.error("TRTC is not configured"));
     }
 
     @ExceptionHandler(InvalidPostRequestException.class)

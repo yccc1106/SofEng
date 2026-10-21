@@ -2,11 +2,12 @@
 import { useLanguage } from '@/lib/language';
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Layout, List, Input, Button, Avatar, Spin, Empty, App, Badge, Typography, Space, Tooltip } from 'antd';
-import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined } from '@ant-design/icons';
+import { SendOutlined, TeamOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined, MoreOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { shanghaiDateTime } from '@/lib/shanghai-time';
 import { useChatRoom } from '@/hooks/useChatRoom';
+import { CallModal } from '@/components/Call/CallModal';
 
 const { Content, Sider } = Layout;
 const { Text, Title } = Typography;
@@ -37,6 +38,7 @@ const ChatContent = () => {
     const [loadingContacts, setLoadingContacts] = useState(true);
     const [sending, setSending] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [callModalOpen, setCallModalOpen] = useState(false);
     const messagesPanelRef = useRef<HTMLDivElement>(null);
     const olderAnchor = useRef<{ height: number; top: number } | null>(null);
 
@@ -112,6 +114,10 @@ const ChatContent = () => {
         if (activeId && !chat.loading && !chat.error)
             setContacts(current => current.map(contact => contact.id === activeId ? { ...contact, unreadCount: 0 } : contact));
     }, [activeId, chat.loading, chat.error]);
+
+    useEffect(() => {
+        setCallModalOpen(false);
+    }, [activeId]);
 
     return (
         <Layout className="h-[calc(100vh-100px)] bg-transparent p-4 md:p-6 gap-6">
@@ -215,6 +221,18 @@ const ChatContent = () => {
                             </Space>
                             <Space>
                                 <Button icon={<SearchOutlined />} type="text" shape="circle" className="text-gray-500" />
+                                <Tooltip title={activeContact?.type === 'USER'
+                                    ? t('Voice / Video Call')
+                                    : t('Calls are available in friend conversations')}>
+                                    <Button
+                                        icon={<PhoneOutlined />}
+                                        type="text"
+                                        shape="circle"
+                                        className="text-gray-500"
+                                        disabled={activeContact?.type !== 'USER'}
+                                        onClick={() => setCallModalOpen(true)}
+                                    />
+                                </Tooltip>
                                 <Button icon={<MoreOutlined />} type="text" shape="circle" className="text-gray-500" onClick={() => activeContact?.type === 'TEAM' && router.push(`/user/teams`)} />
                             </Space>
                         </div>
@@ -320,6 +338,12 @@ const ChatContent = () => {
                     </div>
                 )}
             </Content>
+
+            <CallModal
+                open={callModalOpen}
+                contact={activeContact?.type === 'USER' ? activeContact : null}
+                onClose={() => setCallModalOpen(false)}
+            />
         </Layout>
     );
 };
