@@ -3,6 +3,7 @@ package com.meetu.backend.post.service.impl;
 import com.meetu.backend.post.dto.PostDtos;
 import com.meetu.backend.post.mapper.PostMapper;
 import com.meetu.backend.post.service.PostService;
+import com.meetu.backend.upload.LocalImagePath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,14 +32,18 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostDtos.Post create(String userId, PostDtos.CreatePost request) {
         if (request.content().isBlank()) throw new InvalidPostRequestException("Content is required");
-        if (request.images() != null && request.images().size() > 10 ||
+        List<String> images = request.images() == null ? List.of() : request.images();
+        if (images.size() > 10 ||
                 request.tags() != null && request.tags().size() > 10)
             throw new InvalidPostRequestException("Too many images or tags");
+        images = images.stream().map(image -> image == null ? "" : image.trim()).toList();
+        if (images.stream().anyMatch(image -> !LocalImagePath.matches("post",image)))
+            throw new InvalidPostRequestException("Post images must use uploaded local images");
         if (request.categoryId() != null && !posts.categoryExists(request.categoryId()))
             throw new InvalidPostRequestException("Category not found");
         String id = UUID.randomUUID().toString();
         posts.insertPost(id, request.title() == null || request.title().isBlank() ? null : request.title().trim(),
-                request.content().trim(), request.images() == null ? new String[0] : request.images().toArray(String[]::new),
+                request.content().trim(), images.toArray(String[]::new),
                 request.tags() == null ? new String[0] : request.tags().toArray(String[]::new), userId, request.categoryId());
         return PostDtos.Post.from(posts.find(id, userId).orElseThrow());
     }

@@ -11,6 +11,7 @@ export interface TeamSummary {
   id: string;
   name: string;
   description: string | null;
+  image: string | null;
   type: string | null;
   maxMembers: number;
   creator: TeamPerson;
@@ -27,6 +28,7 @@ export interface TeamJoinRequest {
 export interface CreateTeamValues {
   name: string;
   description?: string;
+  image?: string;
   type?: string;
   maxMembers?: number;
 }

@@ -309,15 +309,17 @@ Java 后端依次执行：
 
 DeepSeek 只负责把需求转换为筛选条件，不读取候选人完整资料，也不直接决定排名。未配置 `DEEPSEEK_API_KEY`、模型超时或返回格式不合法时，会继续使用本地规则，页面显示“本地匹配”。
 
-#### 聊天图片上传
+#### 本地图片上传
 
-聊天输入框右侧的图片按钮支持本地上传：
+聊天、帖子和兴趣小组均支持从本机选择图片：
 
 - 支持 JPEG、PNG、WEBP、GIF；
 - 单张图片最大 5MB；
-- 默认保存到 Java 工作目录下的 `uploads/chat/`，实际路径可通过 `UPLOAD_DIR` 修改；
-- 数据库保存的是 `/java/uploads/chat/<文件名>` 访问路径，不保存二进制图片；
+- 聊天图片保存到 `uploads/chat/`，帖子最多 10 张图片并保存到 `uploads/post/`，兴趣小组封面保存到 `uploads/team/`；
+- 根目录可通过 `UPLOAD_DIR` 修改，数据库保存 `/java/uploads/<scope>/<文件名>` 访问路径，不保存二进制图片；
 - 图片消息仍通过 Java REST 落库，并由 Java WebSocket 实时推送。
+
+管理员审核页会回显帖子正文、分类、作者和多张配图，以及兴趣小组封面和简介；管理员只能执行帖子通过/拒绝或解散小组等审核操作，不能编辑用户资料或用户发布的内容。
 
 本地存储适合课程演示和单机运行。正式部署时应替换为对象存储，并增加访问控制、图片压缩和清理策略。
 
@@ -477,7 +479,8 @@ Windows 演示机器需要 Docker Desktop、Java 17、Maven 3.9+、Node.js 和 p
 
 - `GET /api/category`、`GET /api/category/{id}`：公开分类查询，统一响应包装。
 - `GET /api/posts`：公开浏览已发布帖子；登录作者也能看到自己的待审或被拒帖子。支持 `categoryId`、`page`、`pageSize`，兼容旧 `limit`，每页最多 100 条，返回 `pagination`。
-- `POST /api/posts`：登录用户发布帖子，新帖状态为 `AUDITING`，审核通过后才对其他用户可见。
+- `POST /api/posts`：登录用户发布帖子，可携带最多 10 个 `/java/uploads/post/` 图片地址；新帖状态为 `AUDITING`，审核通过后才对其他用户可见。
+- `POST /api/uploads/post-image`、`POST /api/uploads/team-image`：登录用户上传帖子配图或兴趣小组封面；GET 图片路径需要登录会话。
 - `GET/POST /api/posts/{id}/comments`：已发布帖子的评论查询与发表。
 - `POST /api/posts/{id}/like`、`POST /api/posts/{id}/collect`：已发布帖子点赞、收藏，再次调用取消。
 
@@ -497,7 +500,7 @@ Windows 演示机器需要 Docker Desktop、Java 17、Maven 3.9+、Node.js 和 p
 
 - `POST/GET /api/feedback`：登录用户提交建议或带目标的举报，并且只能读取自己的反馈历史。
 - `/api/admin/feedback`：管理员查询和处理反馈；处理人、时间、备注及措施写入数据库和管理审计记录。
-- `/api/admin/moderation/posts`、`/chats`、`/rooms`：管理员审核帖子、逻辑屏蔽聊天消息、关闭队伍；普通用户的聊天历史不再返回被屏蔽消息。
+- `/api/admin/moderation/posts`、`/chats`、`/rooms`：管理员只读查看帖子配图、队伍封面和内容后，审核帖子、逻辑屏蔽聊天消息或关闭队伍；普通用户的聊天历史不再返回被屏蔽消息。
 - `/api/admin/users`、`/users/{id}`、`/verification`、`/interest`：管理员管理账号、审批认证和维护分类。管理员自身及其他管理员不可通过用户状态接口冻结或删除；有关联内容的分类不可删除。
 
 上述页面已切换到 `/java/*`，对应旧 Next.js 管理 API Routes 已移除。第 8 阶段的统计接口由 Java 提供，并要求管理员角色。管理操作与审计记录在同一数据库事务内写入。举报中的“记录警告”只留审核记录，不向被举报用户发送通知；当前反馈表单不上传图片。

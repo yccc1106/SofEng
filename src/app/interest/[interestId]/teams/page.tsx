@@ -1,11 +1,12 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button, Spin, Modal, Form, Input, App, Row, Col, Card, Avatar, Tag, Select } from 'antd';
+import { Button, Spin, Modal, Form, Input, App, Row, Col, Card, Avatar, Tag, Select, Image } from 'antd';
 import { PlusOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 import { javaRequest } from '@/lib/java-client';
 import type { CreateTeamValues, TeamSummary } from '@/types/social';
+import ImageUploadField from '@/components/Upload/ImageUploadField';
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -21,6 +22,7 @@ const InterestTeamsPage = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [uploadingTeamImage, setUploadingTeamImage] = useState(false);
     const [form] = Form.useForm();
 
     const fetchTeams = useCallback(async () => {
@@ -92,12 +94,21 @@ const InterestTeamsPage = () => {
                         <Col xs={24} sm={12} lg={8} key={team.id}>
                             <Card
                                 hoverable
+                                cover={team.image ? (
+                                    <Image
+                                        src={team.image}
+                                        alt={team.name}
+                                        height={150}
+                                        width="100%"
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                ) : undefined}
                                 actions={[
                                     <Button type="text" key="join" onClick={() => handleJoin(team.id)}>{t("Apply / Join")}</Button>
                                 ]}
                             >
                                 <Meta
-                                    avatar={<Avatar icon={<TeamOutlined />} size="large" className="bg-indigo-100 text-indigo-500" />}
+                                    avatar={<Avatar src={team.image} icon={<TeamOutlined />} size="large" className="bg-indigo-100 text-indigo-500" />}
                                     title={
                                         <div className="flex justify-between items-center">
                                             <span className="truncate max-w-[150px]">{team.name}</span>
@@ -147,8 +158,15 @@ const InterestTeamsPage = () => {
                     <Form.Item name="description" label={t("Description")}>
                         <Input.TextArea rows={3} placeholder={t("Describe your team goals...")} />
                     </Form.Item>
+                    <Form.Item name="image" label={t('Team image')}>
+                        <ImageUploadField
+                            scope="team"
+                            buttonText="Upload team image"
+                            onUploadingChange={setUploadingTeamImage}
+                        />
+                    </Form.Item>
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" block loading={submitting}>
+                        <Button type="primary" htmlType="submit" block loading={submitting} disabled={uploadingTeamImage}>
                             {t("Create Team")}
                         </Button>
                     </Form.Item>

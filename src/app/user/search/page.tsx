@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import React, { useCallback, useState, useEffect } from 'react';
-import { Input, List, Card, Tabs, Avatar, Tag, Button, Spin, Empty, App } from 'antd';
+import { Input, List, Card, Tabs, Avatar, Tag, Button, Spin, Empty, App, Image } from 'antd';
 import { UserOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PostCard from '@/components/User/PostCard';
@@ -105,7 +105,19 @@ const SearchContent = () => {
                     dataSource={results.teams}
                     renderItem={(team: SearchResults['teams'][number]) => (
                         <List.Item>
-                            <Card title={team.name} extra={<Tag>{team.type || t('General')}</Tag>}>
+                            <Card
+                                title={team.name}
+                                extra={<Tag>{team.type || t('General')}</Tag>}
+                                cover={team.image ? (
+                                    <Image
+                                        src={team.image}
+                                        alt={team.name}
+                                        width="100%"
+                                        height={140}
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                ) : undefined}
+                            >
                                 <p className="text-gray-500 truncate">{team.description}</p>
                                 <div className="flex justify-between text-xs text-gray-400 mt-4">
                                     <span>{t('Members:')} {team._count.members}</span>

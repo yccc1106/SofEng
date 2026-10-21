@@ -6,6 +6,8 @@ import com.meetu.backend.moderation.mapper.ModerationMapper;
 import com.meetu.backend.moderation.service.ModerationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.util.*;
 /** 处理帖子、消息和队伍的人工审核，并留下操作记录。 */
 @Service
@@ -15,7 +17,13 @@ public class ModerationServiceImpl implements ModerationService {
     public ModerationServiceImpl(ModerationMapper mapper,AuditMapper audit) { this.mapper=mapper; this.audit=audit; }
     @Override public List<Map<String,Object>> posts(String status) {
         if (status!=null && !Set.of("pending","approved","rejected").contains(status)) throw ManagementException.invalid("Invalid post status");
-        return mapper.posts(status).stream().map(row -> { Map<String,Object> result=new LinkedHashMap<>(row); String s=(String)row.get("status"); result.put("status","AUDITING".equals(s)?"pending":"PUBLISHED".equals(s)?"approved":"rejected"); return result; }).toList();
+        return mapper.posts(status).stream().map(row -> {
+            Map<String,Object> result=new LinkedHashMap<>(row);
+            String s=(String)row.get("status");
+            result.put("status","AUDITING".equals(s)?"pending":"PUBLISHED".equals(s)?"approved":"rejected");
+            result.put("images",stringArray(row.get("images")));
+            return result;
+        }).toList();
     }
     /** 帖子仅可从待审核状态转移，避免重复审批覆盖已有决定。 */
     @Override @Transactional public void decidePost(String admin,Decision decision) {
@@ -36,6 +44,18 @@ public class ModerationServiceImpl implements ModerationService {
     }
     @Override public List<Map<String,Object>> rooms() {
         return mapper.rooms().stream().map(row -> { Map<String,Object> result=new LinkedHashMap<>(row); result.put("status",((String)row.get("status")).toLowerCase(Locale.ROOT)); return result; }).toList();
+    }
+    private static List<String> stringArray(Object value) {
+        if (value==null) return List.of();
+        if (value instanceof String[] values) return List.of(values);
+        if (value instanceof Array array) {
+            try {
+                return Arrays.stream((Object[])array.getArray()).map(String::valueOf).toList();
+            } catch (SQLException exception) {
+                throw new IllegalStateException("Could not read post images",exception);
+            }
+        }
+        return List.of();
     }
     @Override @Transactional public void closeRoom(String admin,Decision decision) {
         if (!"close".equals(decision.action())) throw ManagementException.invalid("Invalid room action");

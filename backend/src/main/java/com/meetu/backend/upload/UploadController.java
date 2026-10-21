@@ -30,19 +30,39 @@ public class UploadController {
     private static final Set<String> IMAGE_TYPES = Set.of(
             "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"
     );
+    private static final Set<String> SCOPES = Set.of("chat", "post", "team");
     private static final Pattern FILENAME = Pattern.compile(
             "^[0-9a-fA-F-]{36}\\.(jpg|jpeg|png|webp|gif)$"
     );
 
-    private final Path chatDirectory;
+    private final Path uploadRoot;
 
     public UploadController(@Value("${meetu.upload-dir:./uploads}") String uploadDir) throws IOException {
-        this.chatDirectory = Paths.get(uploadDir, "chat").toAbsolutePath().normalize();
-        Files.createDirectories(chatDirectory);
+        this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+        for (String scope : SCOPES) {
+            Files.createDirectories(uploadRoot.resolve(scope));
+        }
     }
 
     @PostMapping(value = "/chat-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<UploadDtos.Image> uploadChatImage(@RequestPart("file") MultipartFile file)
+            throws IOException {
+        return storeImage("chat", file);
+    }
+
+    @PostMapping(value = "/post-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<UploadDtos.Image> uploadPostImage(@RequestPart("file") MultipartFile file)
+            throws IOException {
+        return storeImage("post", file);
+    }
+
+    @PostMapping(value = "/team-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<UploadDtos.Image> uploadTeamImage(@RequestPart("file") MultipartFile file)
+            throws IOException {
+        return storeImage("team", file);
+    }
+
+    private ApiResponse<UploadDtos.Image> storeImage(String scope, MultipartFile file)
             throws IOException {
         if (file == null || file.isEmpty()) {
             throw new InvalidUploadException("Image file is required");
@@ -64,8 +84,9 @@ public class UploadController {
             default -> ".jpg";
         };
         String filename = UUID.randomUUID() + extension;
-        Path target = chatDirectory.resolve(filename).normalize();
-        if (!target.startsWith(chatDirectory)) {
+        Path directory = uploadRoot.resolve(scope).normalize();
+        Path target = directory.resolve(filename).normalize();
+        if (!directory.startsWith(uploadRoot) || !target.startsWith(directory)) {
             throw new InvalidUploadException("Invalid upload path");
         }
         try (InputStream input = file.getInputStream()) {
@@ -73,21 +94,24 @@ public class UploadController {
         }
 
         return ApiResponse.success("Image uploaded", new UploadDtos.Image(
-                "/java/uploads/chat/" + filename,
+                "/java/uploads/" + scope + "/" + filename,
                 file.getOriginalFilename(),
                 contentType,
                 file.getSize()
         ));
     }
 
-    @GetMapping("/chat/{filename:.+}")
-    public ResponseEntity<Resource> readChatImage(@PathVariable String filename) {
-        if (!FILENAME.matcher(filename).matches()) {
+    @GetMapping("/{scope}/{filename:.+}")
+    public ResponseEntity<Resource> readImage(@PathVariable String scope,
+                                               @PathVariable String filename) {
+        if (!SCOPES.contains(scope) || !FILENAME.matcher(filename).matches()) {
             return ResponseEntity.notFound().build();
         }
 
-        Path file = chatDirectory.resolve(filename).normalize();
-        if (!file.startsWith(chatDirectory) || !Files.isRegularFile(file)) {
+        Path directory = uploadRoot.resolve(scope).normalize();
+        Path file = directory.resolve(filename).normalize();
+        if (!directory.startsWith(uploadRoot) || !file.startsWith(directory)
+                || !Files.isRegularFile(file)) {
             return ResponseEntity.notFound().build();
         }
 

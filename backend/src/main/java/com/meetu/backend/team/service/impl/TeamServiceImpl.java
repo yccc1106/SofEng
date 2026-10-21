@@ -3,6 +3,7 @@ package com.meetu.backend.team.service.impl;
 import com.meetu.backend.team.dto.TeamDtos;
 import com.meetu.backend.team.mapper.TeamMapper;
 import com.meetu.backend.team.service.TeamService;
+import com.meetu.backend.upload.LocalImagePath;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +29,13 @@ public class TeamServiceImpl implements TeamService {
         int max=input.maxMembers()==null ? 5 : input.maxMembers();
         if (max<2 || max>20) throw new InvalidTeamRequest("Max members must be 2 to 20");
         if (input.categoryId()!=null && mapper.category(input.categoryId())==null) throw new InvalidTeamRequest("Category not found");
+        String image=input.image()==null || input.image().isBlank() ? null : input.image().trim();
+        if (image!=null && !LocalImagePath.matches("team",image))
+            throw new InvalidTeamRequest("Team image must use an uploaded local image");
         String id=UUID.randomUUID().toString();
         mapper.insertTeam(id,name,input.description()==null ? null : input.description().trim(),
                 input.type()==null ? null : input.type().trim(),max,input.requiresApproval()==null || input.requiresApproval(),
-                userId,input.categoryId());
+                userId,input.categoryId(),image);
         mapper.insertMember(UUID.randomUUID().toString(),id,userId,"LEADER","JOINED",null);
         return team(mapper.team(id));
     }
@@ -89,7 +93,7 @@ public class TeamServiceImpl implements TeamService {
         return member(mapper.member(input.memberId()),null,null);
     }
     public static TeamDtos.Team team(Map<String,Object> r) {
-        return new TeamDtos.Team(s(r,"id"),s(r,"name"),s(r,"description"),s(r,"type"),((Number)r.get("maxMembers")).intValue(),
+        return new TeamDtos.Team(s(r,"id"),s(r,"name"),s(r,"description"),s(r,"image"),s(r,"type"),((Number)r.get("maxMembers")).intValue(),
                 s(r,"status"),Boolean.TRUE.equals(r.get("requiresApproval")),s(r,"creatorId"),s(r,"categoryId"),instant(r.get("createdAt")),
                 new TeamDtos.Person(s(r,"creatorUserId"),s(r,"creatorName"),s(r,"creatorImage"),s(r,"creatorSchool")),
                 new TeamDtos.Count(((Number)r.get("joinedCount")).longValue()));

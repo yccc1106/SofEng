@@ -7,7 +7,7 @@ import java.util.Map;
 /** 队伍和成员的 SQL 映射；容量统计仅计算已加入成员。 */
 @Mapper
 public interface TeamMapper {
-    String TEAM_SELECT = "SELECT t.id,t.name,t.description,t.type,t.\"maxMembers\",t.status,t.\"requiresApproval\",t.\"creatorId\",t.\"categoryId\", " +
+    String TEAM_SELECT = "SELECT t.id,t.name,t.description,t.image,t.type,t.\"maxMembers\",t.status,t.\"requiresApproval\",t.\"creatorId\",t.\"categoryId\", " +
             "t.\"createdAt\" AT TIME ZONE 'UTC' AS \"createdAt\", " +
             "u.id AS \"creatorUserId\",u.name AS \"creatorName\",u.image AS \"creatorImage\",u.school AS \"creatorSchool\", " +
             "(SELECT COUNT(*) FROM \"TeamMember\" m WHERE m.\"teamId\"=t.id AND m.status='JOINED') AS \"joinedCount\" " +
@@ -25,12 +25,12 @@ public interface TeamMapper {
     @Select("SELECT id,\"creatorId\",status,\"maxMembers\",\"requiresApproval\" FROM \"Team\" WHERE id=#{id} FOR UPDATE")
     Map<String,Object> lockTeam(String id);
     @Select("SELECT id FROM \"Category\" WHERE id=#{id}") String category(String id);
-    @Insert("INSERT INTO \"Team\" (id,name,description,type,\"maxMembers\",status,\"requiresApproval\",\"creatorId\",\"categoryId\",\"createdAt\",\"updatedAt\") " +
-            "VALUES (#{id},#{name},#{description},#{type},#{maxMembers},'RECRUITING',#{approval},#{creator},#{categoryId}," +
+    @Insert("INSERT INTO \"Team\" (id,name,description,image,type,\"maxMembers\",status,\"requiresApproval\",\"creatorId\",\"categoryId\",\"createdAt\",\"updatedAt\") " +
+            "VALUES (#{id},#{name},#{description},#{image},#{type},#{maxMembers},'RECRUITING',#{approval},#{creator},#{categoryId}," +
             "CURRENT_TIMESTAMP AT TIME ZONE 'UTC',CURRENT_TIMESTAMP AT TIME ZONE 'UTC')")
     int insertTeam(@Param("id") String id,@Param("name") String name,@Param("description") String description,
                    @Param("type") String type,@Param("maxMembers") int maxMembers,@Param("approval") boolean approval,
-                   @Param("creator") String creator,@Param("categoryId") String categoryId);
+                   @Param("creator") String creator,@Param("categoryId") String categoryId,@Param("image") String image);
     @Select("SELECT COUNT(*) FROM \"TeamMember\" WHERE \"teamId\"=#{teamId} AND status='JOINED'")
     long joinedCount(String teamId);
     @Select("SELECT id,\"teamId\",\"userId\",role,status,\"joinMessage\",\"joinedAt\" AT TIME ZONE 'UTC' AS \"joinedAt\" " +

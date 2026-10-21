@@ -44,7 +44,7 @@ public interface ChatMapper {
     @Select("SELECT u.id,u.name,u.image,CAST('USER' AS TEXT) AS type,CAST(NULL AS TEXT) AS \"subType\" FROM \"Friendship\" f " +
             "JOIN \"User\" u ON u.id=CASE WHEN f.\"userAId\"=#{id} THEN f.\"userBId\" ELSE f.\"userAId\" END " +
             "WHERE f.status='FRIEND' AND (f.\"userAId\"=#{id} OR f.\"userBId\"=#{id}) AND u.status='ACTIVE' " +
-            "UNION ALL SELECT t.id,t.name,CAST(NULL AS TEXT),CAST('TEAM' AS TEXT),t.type FROM \"TeamMember\" tm " +
+            "UNION ALL SELECT t.id,t.name,t.image,CAST('TEAM' AS TEXT),t.type FROM \"TeamMember\" tm " +
             "JOIN \"Team\" t ON t.id=tm.\"teamId\" WHERE tm.\"userId\"=#{id} AND tm.status='JOINED' AND t.status!='DISBANDED' ORDER BY name")
     List<Map<String,Object>> contacts(String id);
     @Select("<script>SELECT COUNT(*) FROM \"ChatMessage\" m LEFT JOIN \"ChatReadCursor\" c ON c.\"userId\"=#{viewer} " +

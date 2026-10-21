@@ -1,7 +1,7 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import React, { useState } from 'react';
-import { Card, Avatar, Typography, Space, Button, Tag, Flex, theme, List, Input, message, Form } from 'antd';
+import { Card, Avatar, Typography, Space, Button, Tag, Flex, theme, List, Input, message, Form, Image } from 'antd';
 import { LikeOutlined, LikeFilled, StarOutlined, StarFilled, MessageOutlined, SendOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { javaAction, javaRequest } from '@/lib/java-client';
@@ -191,26 +191,23 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
 
             {post.images && post.images.length > 0 && (
                 <Flex gap={8} style={{ marginBottom: 12, overflowX: 'auto' }}>
-                    {post.images.map((img: string, idx: number) => (
-                        <div
-                            key={idx}
-                            style={{
-                                height: 96,
-                                width: 96,
-                                backgroundColor: token.colorFillContent,
-                                borderRadius: token.borderRadiusSM,
-                                flexShrink: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 12,
-                                color: token.colorTextSecondary,
-                            }}
-                        >
-                            {/* In real app, render <Image src={img} ... /> */}
-                            {t('Image')} {idx + 1}
-                        </div>
-                    ))}
+                    <Image.PreviewGroup>
+                        {post.images.map((img: string, idx: number) => (
+                            <Image
+                                key={img}
+                                src={img}
+                                alt={`${post.title || t('Post')} ${idx + 1}`}
+                                width={120}
+                                height={120}
+                                style={{
+                                    objectFit: 'cover',
+                                    borderRadius: token.borderRadiusSM,
+                                    flexShrink: 0,
+                                }}
+                                placeholder
+                            />
+                        ))}
+                    </Image.PreviewGroup>
                 </Flex>
             )}
 

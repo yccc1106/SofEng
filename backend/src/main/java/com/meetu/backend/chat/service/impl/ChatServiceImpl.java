@@ -3,6 +3,7 @@ package com.meetu.backend.chat.service.impl;
 import com.meetu.backend.chat.dto.ChatDtos;
 import com.meetu.backend.chat.mapper.ChatMapper;
 import com.meetu.backend.chat.service.ChatService;
+import com.meetu.backend.upload.LocalImagePath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
@@ -77,7 +78,7 @@ public class ChatServiceImpl implements ChatService {
         if (content.isEmpty() || content.length()>4000) throw new InvalidChatRequest("Message must contain 1 to 4000 characters");
         String type=input.type()==null || input.type().isBlank() ? "TEXT" : input.type().trim().toUpperCase(Locale.ROOT);
         if (!Set.of("TEXT","IMAGE").contains(type)) throw new InvalidChatRequest("Only TEXT and IMAGE messages are supported");
-        if ("IMAGE".equals(type) && !content.startsWith("/java/uploads/chat/"))
+        if ("IMAGE".equals(type) && !LocalImagePath.matches("chat",content))
             throw new InvalidChatRequest("Image messages must use an uploaded local image");
         String id=UUID.randomUUID().toString();
         mapper.insert(id,content,type,userId,target.userId(),target.teamId(),target.categoryId());

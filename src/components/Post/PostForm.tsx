@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, App, Select } from 'antd';
 import type { PostResponse } from '@/types/api';
 import { javaRequest } from '@/lib/java-client';
+import ImageUploadField from '@/components/Upload/ImageUploadField';
 
 const { TextArea } = Input;
 
@@ -37,6 +38,7 @@ export const PostForm: React.FC<PostFormProps> = ({
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
 
   useEffect(() => {
@@ -86,6 +88,7 @@ export const PostForm: React.FC<PostFormProps> = ({
       onFinish={handleSubmit}
       initialValues={{
         tags: [],
+        images: [],
       }}
     >
       {showTitle && (
@@ -118,13 +121,26 @@ export const PostForm: React.FC<PostFormProps> = ({
         </Form.Item>
       )}
 
+      <Form.Item
+        name="images"
+        label={t('Post images')}
+        extra={t('Up to 10 images, each no larger than 5MB')}
+      >
+        <ImageUploadField
+          scope="post"
+          max={10}
+          buttonText="Upload post images"
+          onUploadingChange={setUploadingImages}
+        />
+      </Form.Item>
+
       <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
         {onCancel && (
           <Button onClick={onCancel} style={{ marginRight: 8 }}>
             {t("Cancel")}
           </Button>
         )}
-        <Button type="primary" htmlType="submit" loading={submitting || loading}>
+        <Button type="primary" htmlType="submit" loading={submitting || loading} disabled={uploadingImages}>
           {t(submitText)}
         </Button>
       </Form.Item>

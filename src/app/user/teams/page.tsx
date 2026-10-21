@@ -1,11 +1,12 @@
 'use client';
 import { useLanguage } from '@/lib/language';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Button, Avatar, Tag, Spin, Modal, Form, Input, InputNumber, Select, App, Tabs, List, Space, Divider } from 'antd';
+import { Card, Button, Avatar, Tag, Spin, Modal, Form, Input, InputNumber, Select, App, Tabs, List, Space, Divider, Image } from 'antd';
 import { PlusOutlined, UsergroupAddOutlined, CheckOutlined, CloseOutlined, TeamOutlined, GlobalOutlined, BellOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { javaRequest } from '@/lib/java-client';
 import type { CreateTeamValues, TeamJoinRequest, TeamSummary } from '@/types/social';
+import ImageUploadField from '@/components/Upload/ImageUploadField';
 
 const { Meta } = Card;
 
@@ -22,6 +23,8 @@ const TeamsPage = () => {
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [joining, setJoining] = useState(false);
+    const [creatingTeam, setCreatingTeam] = useState(false);
+    const [uploadingTeamImage, setUploadingTeamImage] = useState(false);
 
     const [createForm] = Form.useForm();
     const [joinForm] = Form.useForm();
@@ -47,6 +50,7 @@ const TeamsPage = () => {
     }, [fetchData]);
 
     const handleCreateTeam = async (values: CreateTeamValues) => {
+        setCreatingTeam(true);
         try {
             await javaRequest('/teams', {
                 method: 'POST',
@@ -59,6 +63,8 @@ const TeamsPage = () => {
             fetchData();
         } catch {
             message.error(t('Error creating team'));
+        } finally {
+            setCreatingTeam(false);
         }
     };
 
@@ -104,6 +110,15 @@ const TeamsPage = () => {
 
                 return (
                     <Card key={team.id} className="shadow-sm rounded-lg hover:shadow-md transition-shadow overflow-hidden">
+                        {team.image && (
+                            <Image
+                                src={team.image}
+                                alt={team.name}
+                                width="100%"
+                                height={150}
+                                style={{ objectFit: 'cover', display: 'block' }}
+                            />
+                        )}
                         <div className="p-4">
                             <div className="flex justify-between items-start mb-4">
                                 <Space>
@@ -155,7 +170,7 @@ const TeamsPage = () => {
                     onClick={() => router.push(`/user/chat?teamId=${team.id}`)}
                 >
                     <Meta
-                        avatar={<Avatar src={team.creator?.image} />}
+                        avatar={<Avatar shape="square" size={56} src={team.image || team.creator?.image} />}
                         title={team.name}
                         description={
                             <div>
@@ -233,6 +248,13 @@ const TeamsPage = () => {
                         <Form.Item name="description" label={t("Description")}>
                             <Input.TextArea placeholder={t("What is this team about?")} />
                         </Form.Item>
+                        <Form.Item name="image" label={t('Team image')}>
+                            <ImageUploadField
+                                scope="team"
+                                buttonText="Upload team image"
+                                onUploadingChange={setUploadingTeamImage}
+                            />
+                        </Form.Item>
                         <Form.Item name="type" label={t("Type")} initialValue="GAME">
                             <Select options={[
                                 { label: t('🎮 Game'), value: 'GAME' },
@@ -245,7 +267,9 @@ const TeamsPage = () => {
                         </Form.Item>
                         <Divider />
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" block size="large">{t("Create Team")}</Button>
+                            <Button type="primary" htmlType="submit" block size="large" loading={creatingTeam} disabled={uploadingTeamImage}>
+                                {t("Create Team")}
+                            </Button>
                         </Form.Item>
                     </Form>
                 </Modal>
