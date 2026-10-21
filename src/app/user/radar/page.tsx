@@ -80,9 +80,9 @@ const RadarPage = () => {
     };
 
     return (
-        <div className="min-h-[70vh] rounded-xl bg-gray-900 p-4 pb-8 text-white sm:p-6">
-            <h1 className="text-xl font-bold mb-1 text-center text-blue-400">{t("Matching Radar")}</h1>
-            <p className="text-center text-xs text-slate-400 mb-4">
+        <div className="min-h-[70vh] rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 pb-8 text-slate-900 shadow-sm sm:p-6">
+            <h1 className="text-xl font-bold mb-1 text-center text-slate-900">{t("Matching Radar")}</h1>
+            <p className="text-center text-xs text-slate-500 mb-4">
                 {t("Find partners by shared interests, personality, school and major.")}
             </p>
             <div className="max-w-xl mx-auto mb-4">
@@ -90,7 +90,7 @@ const RadarPage = () => {
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     onSearch={(value) => void startScan(value)}
-                    enterButton={t("Match by Need")}
+                    enterButton={<Button type="primary" style={{ background: '#0f766e', borderColor: '#0f766e' }}>{t("Match by Need")}</Button>}
                     placeholder={t("e.g. find a sporty and outgoing classmate this weekend")}
                     maxLength={160}
                     allowClear
@@ -106,22 +106,22 @@ const RadarPage = () => {
                         <div className="radar-blip" style={{ top: "55%", left: "25%", animationDelay: "0.9s" }}></div>
                         <div className="radar-blip" style={{ top: "75%", left: "60%", animationDelay: "1.7s" }}></div>
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                            <RadarChartOutlined className="text-4xl text-green-400 opacity-90 drop-shadow-[0_0_10px_rgba(0,255,0,0.8)]" />
+                            <RadarChartOutlined className="text-4xl text-teal-600 opacity-90" />
                         </div>
                     </div>
-                    <p className="mt-8 text-green-400 animate-pulse text-lg">{t("Finding compatible users...")}</p>
+                    <p className="mt-8 text-teal-700 animate-pulse text-lg">{t("Finding compatible users...")}</p>
                 </div>
             ) : (
                 <div className="space-y-3 animate-fade-in">
                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-400">{t("Found")} {matches.length} {t("matching users")}</span>
-                        <Button type="primary" ghost size="small" onClick={() => void startScan(query)}>
+                        <span className="text-slate-500">{t("Found")} {matches.length} {t("matching users")}</span>
+                        <Button size="small" style={{ color: '#0f766e', borderColor: '#99f6e4', background: '#f0fdfa' }} onClick={() => void startScan(query)}>
                             {t("Rescan")}
                         </Button>
                     </div>
 
                     {intentSummary && (
-                        <div className="rounded-lg border border-cyan-900 bg-cyan-950/40 px-3 py-2 text-sm text-cyan-100">
+                        <div className="rounded-lg border border-teal-100 bg-teal-50 px-3 py-2 text-sm text-teal-800">
                             {aiAssisted ? t("AI matched for you") : t("Local matching")}: {intentSummary}
                         </div>
                     )}
@@ -129,19 +129,19 @@ const RadarPage = () => {
                     {matches.map((user) => (
                         <Card
                             key={user.id}
-                            className="hover:border-blue-500 transition-colors"
-                            style={{ backgroundColor: "#1f2937", borderColor: "#374151" }}
+                            className="transition-colors hover:border-teal-300"
+                            style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
                             styles={{ body: { padding: 20 } }}
                         >
                             <div className="flex items-start gap-4">
-                                <Avatar size={56} src={user.image} style={{ flexShrink: 0, border: "2px solid #60a5fa" }} />
+                                <Avatar size={56} src={user.image} style={{ flexShrink: 0, border: "2px solid #99f6e4" }} />
                                 <div className="min-w-0 flex-1 space-y-2">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
-                                            <h3 className="m-0 break-words text-[17px] font-semibold leading-tight text-white">
+                                            <h3 className="m-0 break-words text-[17px] font-semibold leading-tight text-slate-900">
                                                 {user.name || t("Unnamed user")}
                                             </h3>
-                                            <div className="mt-1 text-[13px] text-blue-300">
+                                            <div className="mt-1 text-[13px] text-teal-700">
                                                 {user.personalityType || t("Not set")} · {user.score} {t("points")}
                                             </div>
                                         </div>
@@ -151,22 +151,22 @@ const RadarPage = () => {
                                             icon={requestedIds.includes(user.id) ? <CheckOutlined /> : <UserAddOutlined />}
                                             disabled={requestedIds.includes(user.id)}
                                             onClick={() => void handleAddFriend(user.id)}
-                                            style={{ flexShrink: 0 }}
+                                            style={{ flexShrink: 0, background: '#0f766e', borderColor: '#0f766e' }}
                                         />
                                     </div>
-                                    <Paragraph ellipsis={{ rows: 2 }} style={{ color: "#d1d5db", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+                                    <Paragraph ellipsis={{ rows: 2 }} style={{ color: "#475569", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
                                         {user.bio || t("No bio provided.")}
                                     </Paragraph>
                                     <div className="flex flex-wrap gap-1.5">
                                         {user.matchReasons?.map((reason) => (
-                                            <Tag key={reason} color="cyan" style={{ margin: 0, fontSize: 12 }}>
+                                            <Tag key={reason} color="green" style={{ margin: 0, fontSize: 12 }}>
                                                 {reason}
                                             </Tag>
                                         ))}
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
                                         {user.personalityTags?.slice(0, 3).map((tag) => (
-                                            <Tag key={tag} color="blue" style={{ margin: 0, fontSize: 12 }}>
+                                            <Tag key={tag} style={{ margin: 0, fontSize: 12 }}>
                                                 {tag}
                                             </Tag>
                                         ))}
@@ -177,7 +177,7 @@ const RadarPage = () => {
                     ))}
 
                     {matches.length === 0 && (
-                        <div className="text-center text-gray-500 mt-20">
+                        <div className="text-center text-slate-500 mt-20">
                             <p>{t("No matches found right now.")}</p>
                             <Button onClick={() => void startScan(query)}>{t("Try Again")}</Button>
                         </div>
