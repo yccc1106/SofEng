@@ -171,7 +171,7 @@ RETURNING id, email, role;
 
 ```powershell
 docker cp .\scripts\demo-data.sql meetu_postgres:/tmp/meetu-demo-data.sql
-docker compose exec postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/meetu-demo-data.sql
+docker exec meetu_postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/meetu-demo-data.sql
 ```
 
 演示脚本只适用于独立空库或仅含演示数据的库，包含 40 个普通用户、1 个管理员、内容、好友、队伍、聊天、反馈和认证申请。演示账号：
@@ -213,6 +213,21 @@ TRTC_USER_SIG_EXPIRE_SECONDS=86400
 6. 来电通常约 30 秒内需要接听，超时会显示无人接听。
 
 不要用同一个普通浏览器窗口的两个标签页登录两个账号，它们共享 `JSESSIONID` Cookie，后登录会覆盖先登录。通话页面必须使用 `localhost` 或 HTTPS。
+
+#### 已有业务库只插入测试账号
+
+如果当前 `meetu` 库已经有原来的用户、分类和帖子，**不要再次执行 `demo-data.sql`**。该脚本只允许空库或纯演示库。
+
+只创建两个 TRTC 测试用户和一条好友关系，使用独立脚本：
+
+```powershell
+docker cp .\scripts\trtc-test-accounts.sql meetu_postgres:/tmp/trtc-test-accounts.sql
+docker exec meetu_postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/trtc-test-accounts.sql
+```
+
+脚本执行后会输出两个用户和一条好友关系，预期各为 2 行和 1 行。测试账号统一密码为 `MeetUdemo2026!`。
+
+如果你刚才在 DataGrip/IDEA 数据库控制台执行过 `demo-data.sql` 并看到 `P0001`，先在原控制台执行 `ROLLBACK;`，或者直接使用上面的新 `psql` 连接执行独立脚本；不要在已经报错的旧事务里继续粘贴 SQL。
 
 #### TRTC 演示好友对
 
@@ -318,6 +333,16 @@ Java 后端没有收到 `TRTC_SDK_APP_ID` 或 `TRTC_SECRET_KEY`。在两个环�
 
 确认 Java 后端已启动，`NEXT_PUBLIC_JAVA_WS_URL` 指向可访问的 `ws://`/`wss://` 地址，并确认浏览器携带与 Java REST 相同的 `JSESSIONID`。跨主机部署时，反向代理必须转发 WebSocket Upgrade。
 
+**`current transaction is aborted` / `25P02`**
+
+这说明同一个 SQL 控制台里上一条语句已经失败，后续语句都被 PostgreSQL 忽略。先在原控制台执行：
+
+```sql
+ROLLBACK;
+```
+
+或者直接关闭并重新连接 SQL 控制台，然后只执行 `scripts/trtc-test-accounts.sql`。不要把 `demo-data.sql` 和测试账号脚本混在同一个失败事务里执行。
+
 **DeepSeek 没有生效**
 
 检查 Java 进程是否真的拿到了 `DEEPSEEK_API_KEY`。未配置时系统会正常回退本地规则，页面会显示“本地匹配”，不会中断雷达。
@@ -391,7 +416,7 @@ RETURNING id, email, role;
 
 ```powershell
 docker cp .\scripts\demo-data.sql meetu_postgres:/tmp/meetu-demo-data.sql
-docker compose exec postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/meetu-demo-data.sql
+docker exec meetu_postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/meetu-demo-data.sql
 ```
 
 演示账号：管理员 `admin.demo@example.test`、普通用户 `demo01@example.test` 至 `demo40@example.test`，统一密码 `MeetUdemo2026!`。导入前脚本会检查用户表和分类表：如果存在非演示数据，会直接停止，不会混入真实数据。重复导入不会创建重复记录；如需让相对日期重新贴近演示当天，请重新创建独立的空演示库后导入。**不要在生产库运行该脚本或沿用演示密码。**
