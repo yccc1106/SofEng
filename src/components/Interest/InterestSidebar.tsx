@@ -60,7 +60,7 @@ const InterestSidebar: React.FC<InterestSidebarProps> = ({ interest }) => {
     return (
         <div className="w-64 flex-shrink-0 hidden md:block">
             <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-                <h2 className="text-xl font-bold text-gray-800 mb-1">{interest.name}</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-1">{t(interest.name)}</h2>
                 <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{t("Community")}</p>
             </div>
             <Menu

@@ -128,7 +128,7 @@ const TeamsPage = () => {
                                         <div className="text-xs text-gray-400">{t('By')} {team.creator?.name}</div>
                                     </div>
                                 </Space>
-                                <Tag color={team.type === 'GAME' ? 'blue' : 'green'} className="m-0">{team.type || t('General')}</Tag>
+                                <Tag color={team.type === 'GAME' ? 'blue' : 'green'} className="m-0">{t(team.type || 'General')}</Tag>
                             </div>
                             <div className="text-gray-500 mb-4 h-12 line-clamp-2 text-sm">{team.description || t('No description')}</div>
                             <div className="flex justify-between items-center text-xs text-gray-400 mb-4">
@@ -174,7 +174,7 @@ const TeamsPage = () => {
                         title={team.name}
                         description={
                             <div>
-                                <Tag color="blue" className="mt-2">{team.type}</Tag>
+                                <Tag color="blue" className="mt-2">{t(team.type || 'General')}</Tag>
                                 <div className="mt-2 text-xs">{t('Members:')} {team._count?.members}/{team.maxMembers}</div>
                                 <div className="mt-4 text-blue-500 text-xs font-semibold">{t("Click to Chat →")}</div>
                             </div>

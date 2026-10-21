@@ -41,6 +41,11 @@ public class PostController {
                 posts.create(authentication.getName(), request)));
     }
 
+    @GetMapping("/{id}")
+    public ApiResponse<PostDtos.Post> detail(@PathVariable String id, Authentication authentication) {
+        return ApiResponse.success("Post retrieved", posts.detail(viewer(authentication), id));
+    }
+
     @GetMapping("/{id}/comments")
     public ApiResponse<?> comments(@PathVariable String id) {
         return ApiResponse.success("Comments retrieved", posts.comments(id));

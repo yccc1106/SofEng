@@ -94,7 +94,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(PUBLIC).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/category", "/api/category/*",
-                                "/api/posts", "/api/posts/*/comments", "/api/teams").permitAll()
+                                "/api/posts", "/api/posts/*", "/api/posts/*/comments", "/api/teams").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users", "/api/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/feedback").authenticated()

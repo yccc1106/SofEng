@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { javaAction, javaRequest } from '@/lib/java-client';
 import type { PostResponse, PostCommentResponse } from '@/types/api';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useRouter } from 'next/navigation';
 
 dayjs.extend(relativeTime);
 
@@ -15,11 +16,19 @@ const { Title, Paragraph, Text } = Typography;
 interface PostProps {
     post: PostResponse;
     showActions?: boolean;
+    expanded?: boolean;
+    openOnClick?: boolean;
 }
 
 /** 展示帖子互动；点赞和收藏先更新界面，接口失败时回滚计数。 */
-const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
+const PostCard: React.FC<PostProps> = ({
+    post,
+    showActions = true,
+    expanded = false,
+    openOnClick = true,
+}) => {
     const { t } = useLanguage();
+    const router = useRouter();
     const { token } = theme.useToken();
     const [liked, setLiked] = useState(post.isLiked || false);
     const [likeCount, setLikeCount] = useState(post._count?.likes || 0);
@@ -126,7 +135,10 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             icon={liked ? <LikeFilled style={{ color: token.colorPrimary }} /> : <LikeOutlined />}
             size="small"
             style={{ fontSize: 12, color: liked ? token.colorPrimary : token.colorTextSecondary }}
-            onClick={handleLike}
+            onClick={(event) => {
+                event.stopPropagation();
+                void handleLike();
+            }}
             disabled={actionPending}
         >
             {likeCount > 0 ? likeCount : 'Like'}
@@ -137,7 +149,10 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             icon={<MessageOutlined />}
             size="small"
             style={{ fontSize: 12, color: showComments ? token.colorPrimary : token.colorTextSecondary }}
-            onClick={toggleComments}
+            onClick={(event) => {
+                event.stopPropagation();
+                toggleComments();
+            }}
         >
             {commentCount || 'Comment'}
         </Button>,
@@ -147,7 +162,10 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             icon={collected ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
             size="small"
             style={{ fontSize: 12, color: collected ? '#faad14' : token.colorTextSecondary }}
-            onClick={handleCollect}
+            onClick={(event) => {
+                event.stopPropagation();
+                void handleCollect();
+            }}
             disabled={actionPending}
         >
             {collectionCount > 0 ? collectionCount : 'Collect'}
@@ -156,11 +174,14 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
 
     return (
         <Card
+            hoverable={openOnClick}
+            onClick={openOnClick ? () => router.push(`/user/posts/${post.id}`) : undefined}
             style={{
                 marginBottom: 16,
                 borderRadius: token.borderRadiusLG,
                 border: 'none',
                 boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                cursor: openOnClick ? 'pointer' : 'default',
             }}
             styles={{ body: { padding: '16px' } }}
             actions={actions}
@@ -183,22 +204,27 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
             <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>{post.title}</Title>
 
             <Paragraph
-                ellipsis={{ rows: 3, expandable: true, symbol: 'more' }}
+                ellipsis={expanded ? false : { rows: 3 }}
                 style={{ color: token.colorText }}
             >
                 {post.content}
             </Paragraph>
 
             {post.images && post.images.length > 0 && (
-                <Flex gap={8} style={{ marginBottom: 12, overflowX: 'auto' }}>
+                <Flex
+                    gap={8}
+                    wrap={expanded ? 'wrap' : 'nowrap'}
+                    style={{ marginBottom: 12, overflowX: expanded ? undefined : 'auto' }}
+                    onClick={(event) => event.stopPropagation()}
+                >
                     <Image.PreviewGroup>
                         {post.images.map((img: string, idx: number) => (
                             <Image
                                 key={img}
                                 src={img}
                                 alt={`${post.title || t('Post')} ${idx + 1}`}
-                                width={120}
-                                height={120}
+                                width={expanded ? 240 : 120}
+                                height={expanded ? 200 : 120}
                                 style={{
                                     objectFit: 'cover',
                                     borderRadius: token.borderRadiusSM,
@@ -219,8 +245,19 @@ const PostCard: React.FC<PostProps> = ({ post, showActions = true }) => {
                 </Space>
             )}
 
+            {openOnClick && (
+                <div style={{ marginBottom: 4, textAlign: 'right' }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                        {t('Click to view details →')}
+                    </Text>
+                </div>
+            )}
+
             {showComments && (
-                <div style={{ marginTop: 16, borderTop: `1px solid ${token.colorBorderSecondary}`, paddingTop: 16 }}>
+                <div
+                    style={{ marginTop: 16, borderTop: `1px solid ${token.colorBorderSecondary}`, paddingTop: 16 }}
+                    onClick={(event) => event.stopPropagation()}
+                >
                     <List
                         loading={commentsLoading}
                         itemLayout="horizontal"

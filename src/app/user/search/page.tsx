@@ -107,7 +107,7 @@ const SearchContent = () => {
                         <List.Item>
                             <Card
                                 title={team.name}
-                                extra={<Tag>{team.type || t('General')}</Tag>}
+                                extra={<Tag>{t(team.type || 'General')}</Tag>}
                                 cover={team.image ? (
                                     <Image
                                         src={team.image}

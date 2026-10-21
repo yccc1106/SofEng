@@ -478,7 +478,8 @@ Windows 演示机器需要 Docker Desktop、Java 17、Maven 3.9+、Node.js 和 p
 ## 第四阶段接口
 
 - `GET /api/category`、`GET /api/category/{id}`：公开分类查询，统一响应包装。
-- `GET /api/posts`：公开浏览已发布帖子；登录作者也能看到自己的待审或被拒帖子。支持 `categoryId`、`page`、`pageSize`，兼容旧 `limit`，每页最多 100 条，返回 `pagination`。
+- `GET /api/posts`：公开浏览已发布帖子，待审核和已拒绝内容不会出现在社区列表。支持 `categoryId`、`page`、`pageSize`，兼容旧 `limit`，每页最多 100 条，返回 `pagination`。
+- `GET /api/posts/{id}`：打开已发布帖子的独立详情页；待审核、已拒绝或已删除帖子返回 404。
 - `POST /api/posts`：登录用户发布帖子，可携带最多 10 个 `/java/uploads/post/` 图片地址；新帖状态为 `AUDITING`，审核通过后才对其他用户可见。
 - `POST /api/uploads/post-image`、`POST /api/uploads/team-image`：登录用户上传帖子配图或兴趣小组封面；GET 图片路径需要登录会话。
 - `GET/POST /api/posts/{id}/comments`：已发布帖子的评论查询与发表。

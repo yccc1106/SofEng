@@ -33,19 +33,20 @@ public interface PostMapper {
             "CAST(u.role AS VARCHAR) AS user_role FROM \"PostComment\" c " +
             "JOIN \"User\" u ON u.id=c.\"userId\" ";
 
-    @Select(POST_SELECT + "WHERE (p.status='PUBLISHED' OR (p.status IN ('AUDITING','REJECTED') " +
-            "AND p.\"authorId\"=#{viewerId})) AND (CAST(#{categoryId} AS TEXT) IS NULL " +
+    @Select(POST_SELECT + "WHERE p.status='PUBLISHED' AND (CAST(#{categoryId} AS TEXT) IS NULL " +
             "OR p.\"categoryId\"=#{categoryId}) ORDER BY p.\"createdAt\" DESC,p.id DESC LIMIT #{size} OFFSET #{offset}")
     List<Map<String, Object>> selectPage(@Param("viewerId") String viewerId, @Param("categoryId") String categoryId,
                                           @Param("size") int size, @Param("offset") int offset);
 
-    @Select("SELECT COUNT(*) FROM \"Post\" p WHERE (p.status='PUBLISHED' OR " +
-            "(p.status IN ('AUDITING','REJECTED') AND p.\"authorId\"=#{viewerId})) " +
+    @Select("SELECT COUNT(*) FROM \"Post\" p WHERE p.status='PUBLISHED' " +
             "AND (CAST(#{categoryId} AS TEXT) IS NULL OR p.\"categoryId\"=#{categoryId})")
     long count(@Param("viewerId") String viewerId, @Param("categoryId") String categoryId);
 
     @Select(POST_SELECT + "WHERE p.id=#{id}")
     Map<String, Object> selectById(@Param("id") String id, @Param("viewerId") String viewerId);
+
+    @Select(POST_SELECT + "WHERE p.id=#{id} AND p.status='PUBLISHED' AND u.status='ACTIVE'")
+    Map<String, Object> selectPublishedById(@Param("id") String id, @Param("viewerId") String viewerId);
 
     @Select(POST_SELECT + "WHERE p.status='PUBLISHED' AND u.status='ACTIVE' AND " +
             "(POSITION(LOWER(#{q}) IN LOWER(COALESCE(p.title,'')))>0 OR POSITION(LOWER(#{q}) IN LOWER(p.content))>0) " +
@@ -93,6 +94,9 @@ public interface PostMapper {
     default List<PostRow> search(String viewerId,String q) { return selectSearch(viewerId,q).stream().map(PostMapper::post).toList(); }
     default Optional<PostRow> find(String id, String viewerId) {
         return Optional.ofNullable(selectById(id, viewerId)).map(PostMapper::post);
+    }
+    default Optional<PostRow> findPublished(String id, String viewerId) {
+        return Optional.ofNullable(selectPublishedById(id, viewerId)).map(PostMapper::post);
     }
     default List<CommentRow> comments(String postId) {
         return selectComments(postId).stream().map(PostMapper::comment).toList();

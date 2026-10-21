@@ -39,6 +39,14 @@ class PostAccessTests {
     }
 
     @Test
+    void guestCanOpenSinglePublishedPostDetail() throws Exception {
+        when(posts.detail(isNull(), eq("post-1"))).thenReturn(null);
+        mvc.perform(get("/api/posts/post-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
     void commentsOnNonPublishedPostAreHidden() throws Exception {
         when(posts.comments("missing")).thenThrow(new PostNotFoundException());
         mvc.perform(get("/api/posts/missing/comments")).andExpect(status().isNotFound());

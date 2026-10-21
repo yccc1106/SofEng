@@ -112,7 +112,7 @@ const InterestTeamsPage = () => {
                                     title={
                                         <div className="flex justify-between items-center">
                                             <span className="truncate max-w-[150px]">{team.name}</span>
-                                            <Tag color="blue">{team.type || t('General')}</Tag>
+                                            <Tag color="blue">{t(team.type || 'General')}</Tag>
                                         </div>
                                     }
                                     description={

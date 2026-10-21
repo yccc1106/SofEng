@@ -114,7 +114,7 @@ export const PostForm: React.FC<PostFormProps> = ({
           <Select placeholder={t("Select category")} allowClear>
             {categories.map((cat) => (
               <Select.Option key={cat.id} value={cat.id}>
-                {cat.name}
+                {t(cat.name)}
               </Select.Option>
             ))}
           </Select>

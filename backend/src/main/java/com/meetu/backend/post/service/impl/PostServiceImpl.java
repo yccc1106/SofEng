@@ -29,6 +29,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public PostDtos.Post detail(String viewerId, String id) {
+        return PostDtos.Post.from(posts.findPublished(id, viewerId).orElseThrow(PostNotFoundException::new));
+    }
+
+    @Override
     @Transactional
     public PostDtos.Post create(String userId, PostDtos.CreatePost request) {
         if (request.content().isBlank()) throw new InvalidPostRequestException("Content is required");

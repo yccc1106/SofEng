@@ -39,14 +39,14 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({ categories }) => {
                             cover={
                                 <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center rounded-t-lg">
                                     <span className="text-4xl font-bold text-white opacity-90">
-                                        {category.name.charAt(0)}
+                                        {t(category.name).charAt(0)}
                                     </span>
                                 </div>
                             }
                         >
                             <div className="flex flex-col h-full">
                                 <div className="mb-4">
-                                    <Title level={4} className="mb-2 !text-gray-800">{category.name}</Title>
+                                    <Title level={4} className="mb-2 !text-gray-800">{t(category.name)}</Title>
                                     <Paragraph className="text-gray-500 line-clamp-2" ellipsis={{ rows: 2 }}>
                                         {category.description || t('Join this community to connect with others.')}
                                     </Paragraph>
