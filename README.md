@@ -227,19 +227,19 @@ docker exec meetu_postgres psql -U postgres -d meetu -v ON_ERROR_STOP=1 -f /tmp/
 
 脚本执行后会输出两个用户和一条好友关系，预期各为 2 行和 1 行。测试账号统一密码为 `MeetUdemo2026!`。
 
-演示账号：
+演示账号（直接按表格填写登录）：
 
-```text
-账号 A：trtc.a@example.com / MeetUdemo2026!
-账号 B：trtc.b@example.com / MeetUdemo2026!
-```
+| 角色 | 邮箱 | 密码 | 用户 ID |
+|---|---|---|---|
+| A | `trtc.a@example.com` | `MeetUdemo2026!` | `11111111-1111-4111-8111-111111111111` |
+| B | `trtc.b@example.com` | `MeetUdemo2026!` | `22222222-2222-4222-8222-222222222222` |
 
 直接会话地址：
 
-```text
-账号 A：http://localhost:3000/user/chat?targetId=22222222-2222-4222-8222-222222222222
-账号 B：http://localhost:3000/user/chat?targetId=11111111-1111-4111-8111-111111111111
-```
+| 角色 | 打开的地址 |
+|---|---|
+| A → B | `http://localhost:3000/user/chat?targetId=22222222-2222-4222-8222-222222222222` |
+| B → A | `http://localhost:3000/user/chat?targetId=11111111-1111-4111-8111-111111111111` |
 
 脚本可以重复执行：已存在的固定用户 ID 会被更新为新邮箱和演示名称，好友关系不会重复创建。
 
@@ -343,7 +343,13 @@ Java 后端没有收到 `TRTC_SDK_APP_ID` 或 `TRTC_SECRET_KEY`。在两个环�
 
 **来电端没有反应**
 
-确认两个账号使用不同的浏览器配置文件；确认被叫端处于登录后的页面（推荐 `/user/*`）；确认 Java 后端和前端都运行；确认对方在来电窗口出现后点击接听。普通标签页共享登录 Cookie，不能同时承载两个账号。
+先用被叫端浏览器控制台确认是否出现 `onCallReceived`。如果已经出现，说明 TRTC 信令已经到达，问题在通话 UI 或页面状态，而不是 UserSig。
+
+- 确认两个账号使用不同的浏览器配置文件；普通标签页共享 `JSESSIONID` Cookie。
+- 关闭两边已经存在的通话窗口，刷新页面后只发起一次呼叫，不要连续点击。
+- 检查 `TUICallKit` 是否被最小化为悬浮窗，尝试恢复通话窗口。
+- 如果控制台出现 `updateLocalAudio abort: not started`，通常是上一次通话仍处于结束/初始化状态；先挂断或刷新，再发起新通话。
+- 被叫端保持页面在前台，并在约 30 秒内点击接听。
 
 **聊天一直显示连接中**
 
