@@ -345,6 +345,7 @@ Java 后端没有收到 `TRTC_SDK_APP_ID` 或 `TRTC_SECRET_KEY`。在两个环�
 
 先用被叫端浏览器控制台确认是否出现 `onCallReceived`。如果已经出现，说明 TRTC 信令已经到达，问题在通话 UI 或页面状态，而不是 UserSig。
 
+- 如果日志出现 `[kickedOut] type:multipleAccount`，说明同一个 TRTC 用户 ID 同时在多个 Web 实例登录；后登录的实例会把前一个踢下线，`TUICallKit` 随即退出，因此没有来电 UI。关闭该账号的所有其他标签页/窗口，只保留一个。
 - 确认两个账号使用不同的浏览器配置文件；普通标签页共享 `JSESSIONID` Cookie。
 - 关闭两边已经存在的通话窗口，刷新页面后只发起一次呼叫，不要连续点击。
 - 检查 `TUICallKit` 是否被最小化为悬浮窗，尝试恢复通话窗口。
